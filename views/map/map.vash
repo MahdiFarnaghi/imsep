@@ -303,7 +303,7 @@
                                          @if(model.identity.isAdministrator || model.identity.isDataManager){
                                             <button id="cmdAddNewOSMXML" title="Add new OSM Vector layer" class="btn-primary form-control ">Add OSM Vector layer</button>
                                          }
-                                         <button id="cmdWCS" title="Download from Web Coverage Service" class="btn-primary form-control ">Download from WCS</button>
+                                        @* <button id="cmdWCS" title="Download from Web Coverage Service" class="btn-primary form-control ">Download from WCS</button>*@
                                     </div>
                                 </div>
                             </div>
