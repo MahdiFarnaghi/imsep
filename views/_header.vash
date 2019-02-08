@@ -1,0 +1,72 @@
+<nav id="navbar_top" class="navbar navbar-default navbar-static-top">
+    <div class="container">
+        <div class="navbar-header"><button type="button" data-toggle="collapse" data-target="#navbar" class="navbar-toggle collapsed"><span class="sr-only">Toggle navigation</span><span class="icon-bar"></span><span class="icon-bar"></span><span class="icon-bar"></span></button><a href="/" class="navbar-brand">@process.env.SITE_NAME</a></div>
+        <div id="navbar" class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li class="@(html.equals('Home',model.title)?'active':'')"><a href="/"><span class="glyphicon glyphicon-home"></span> Home</a></li>
+                @if(model.displayOptions.showMaps){
+                <li class="@(html.equals('Maps',model.title)?'active':'')"><a href="/maps"><span class="glyphicon glyphicon-globe"></span> Maps</a> </li>
+
+                <li class="@(html.equals('Data layers',model.title)?'active':'')"><a href="/datalayers"><span class="fa fa-layer-group"></span> Data layers</a> </li>    
+                @* <li class="dropdown">
+                     <a class="dropdown-toggle " data-toggle="dropdown" href="#"><span class="fa fa-database"></span> Layers<i class="caret"></i></a>
+                     <ul class="dropdown-menu">
+                      <li class="@(html.equals('Data layers',model.title)?'active':'')"><a href="/datalayers"><span class="fa fa-layer-group"></span> Data layers</a> </li>
+                     </ul>
+                 </li> *@                   
+                }
+
+
+                @if(model.displayOptions.showManagement && model.displayOptions.showUsers){
+                            <li class="@(html.equals('Users',model.title)?'active':'')"><a href="/admin/users"><span class="fa fa-users"></span> Users</a></li>
+                 }
+                 @if(model.identity.isAdministrator ||  model.displayOptions.editUsers){
+                            <li class="@(html.equals('Groups',model.title)?'active':'')"><a href="/admin/groups"><span class="fa fa-user-friends"></span> Groups</a></li>
+                 }
+                @*
+                @if(model.displayOptions.showManagement){
+                <li class="dropdown">
+                    <a class="dropdown-toggle " data-toggle="dropdown" href="#"><span class="glyphicon glyphicon-cog"></span> Management<i class="caret"></i></a>
+                    <ul class="dropdown-menu">
+                        @if(model.displayOptions.showUsers){
+                            <li class="@(html.equals('Users',model.title)?'active':'')"><a href="/admin/users"><span class="glyphicon glyphicon-user"></span> Users</a></li>
+                        }
+                    </ul>
+                </li>
+                }
+                *@
+                <li class="@(html.equals('Contact',model.title)?'active':'')"><a href="/contact"><span class="glyphicon glyphicon-comment"></span> Contact</a></li>
+            </ul>
+            @if(model.user){
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" data-toggle="dropdown" class="navbar-avatar dropdown-toggle">
+                        @if (model.user.avatar){
+                        <img src="/account/@model.user.id/avatar  " />
+                        }else if (model.user.picture){
+                        <img src="@model.user.picture" />
+                        }else if (html.equals('female',model.user.gender)){
+                        <img src="/css/images/avatar-female.png" />
+                        }else if (html.equals('other',model.user.gender)){
+                        <img src="/css/images/avatar-x.png" />
+                        }else{
+                        <img src="/css/images/avatar-male.png" />
+                        }
+                        <span> @(model.user.userName || model.user.email || model.user.id) </span><i class="caret"></i>
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li class="@(html.equals('My Account',model.title)?'active':'')"><a href="/account"><span class="glyphicon glyphicon-user"></span> My Account</a></li>
+                        <li class="divider"></li>
+                        <li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
+                    </ul>
+                </li>
+            </ul>
+            }else{
+            <ul class="nav navbar-nav navbar-right">
+                <li class="@(html.equals('Log in',model.title)?'active':'')"><a href="/login"><span class="glyphicon glyphicon-log-in"></span> Log in</a></li>
+                <li class="@(html.equals('Sign up',model.title)?'active':'')"><a href="/signup"><span class="glyphicon glyphicon-user"></span> Sign up</a></li>
+            </ul>
+            }
+        </div>
+    </div>
+</nav>

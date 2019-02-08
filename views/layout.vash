@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>@model.title</title>
+
+    <link rel='stylesheet' href='/css/bootstrap.min.css' />
+    <link rel='stylesheet' href='/bootstrap3-dialog/css/bootstrap-dialog.min.css' />
+    <link rel='stylesheet' href='/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css' />
+     
+    <link rel='stylesheet' href='/css/fontawesome.min.css' />
+     @*<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">*@
+
+    <link rel='stylesheet' href='/css/jquery-ui-themes-1.12.1/themes/base/jquery-ui.min.css' />
+    <link rel='stylesheet' href='/select2/css/select2.css' />
+    <link rel='stylesheet' href='/select2/css/select2-bootstrap.css' />
+    
+    @*
+    <link rel='stylesheet' href='/DataTables/datatables.min.css' />
+     <link rel='stylesheet' href='/DataTables/DataTables-1.10.18/css/dataTables.bootstrap.min.css' />
+   
+     <link rel='stylesheet' href='/DataTables/Select-1.2.6\css\select.dataTables.min.css' />
+    <link rel='stylesheet' href='/DataTables/Select-1.2.6\css\select.bootstrap.min.css' />
+        *@ 
+         <link rel='stylesheet' href='/bootstrap-table/bootstrap-table.min.css' />
+         
+     
+   
+ <link rel='stylesheet' href='/css/main.css' />
+  <link rel='stylesheet' href='/css/icons.css' />
+     @html.block('styles')
+     
+     
+</head>
+<body>
+
+    @html.include('_header', model)
+    <div class="container my-global-message-container">
+        @if(model.messages && model.messages.notify){
+            @model.messages.notify.forEach(function(item){
+                @if(item.html){
+                    <div style="display:none" data-notify="@item.notify" data-notify-type="@item.type" data-notify-delay="@item.delay"  >@html.raw(item.html)</div>
+                }else{
+                    <div style="display:none" data-notify="@item.notify" data-notify-type="@item.type" data-notify-delay="@item.delay"  >@item.msg</div>
+                }
+            })
+        }
+        @if(model.messages && model.messages.success){
+        <div role="alert" class="alert alert-success fade in alert-dismissible">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            @model.messages.success.forEach(function(item){
+            <div>@item.msg</div>
+            })
+        </div>
+        }
+        @if(model.messages && model.messages.info){
+        <div role="alert" class="alert alert-info fade in alert-dismissible">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            @model.messages.info.forEach(function(item){
+            <div>@item.msg</div>
+            })
+        </div>
+        }
+        @if(model.messages && model.messages.error){
+        <div role="alert" class="alert alert-danger fade in alert-dismissible">
+            <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+            @model.messages.error.forEach(function(item){
+            <div>@item.msg</div>
+            })
+        </div>
+        }
+    </div>
+    @html.block('content')
+
+    @html.include('_footer', model)
+    <script src="/js/lib/jquery.min.js"></script>
+    <script src="/js/lib/jquery-ui-1.12.1/jquery-ui.min.js"></script>
+
+    <script src="/js/lib/bootstrap.min.js"></script>
+    <script src="/bootstrap3-dialog/js/bootstrap-dialog.min.js"></script>
+    <script src="/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js"></script>
+    <script src="/js/lib/bootstrap-notify.js"></script>
+    <script src="/js/lib/FileSaver.js"></script>
+
+    <script src="/select2/js/select2.full.js"></script>
+
+
+@*
+    <script src="/DataTables/datatables.min.js"></script>
+    <script src="/DataTables/DataTables-1.10.18/js/dataTables.bootstrap.min.js"></script>
+    
+        <script src="/DataTables/Select-1.2.6/js/dataTables.select.js"></script>
+    <script src="/DataTables/Select-1.2.6/js/select.bootstrap.js"></script>
+  *@  
+<script src="/bootstrap-table/bootstrap-table.js"></script>
+ 
+
+
+
+
+    <script src="/js/lib/jquery_validate/jquery.validate.js"></script>
+    <script src="/js/lib/jquery_validate/jquery.validate.unobtrusive.js"></script>
+    <script src="/js/lib/jquery_validate/jquery.validate.unobtrusive.bootstrap.js"></script>
+    <script src="/js/main.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        app.setIdentity(atob('@html.getBase64(model.identity)'));
+        app.BING_MAPS_KEY='@process.env.BING_MAPS_KEY';
+        app.set_UPLOAD_SHAPEFILE_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_SHAPEFILE_MAX_SIZE_MB')) ;
+        app.set_UPLOAD_RASTER_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_RASTER_MAX_SIZE_MB')) ;
+       
+        app.initMap_Lon=(parseFloat('@process.env.INITMAP_LONGITUDE')) ;
+        app.initMap_Lat=(parseFloat('@process.env.INITMAP_LATITUDE')) ;
+        app.initMap_Zoom=(parseFloat('@process.env.INITMAP_ZOOM')) ;
+
+    </script>
+    @html.block('scripts')
+
+</body>
+</html>

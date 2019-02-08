@@ -1,0 +1,53 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<script>
+        function getCaptcha() {
+            $("#captcha").attr('src', '/captcha?' + new Date().getTime());
+        }
+</script>
+<div class="login-container container">
+    <div class="panel">
+        <div class="panel-body">
+            
+            
+
+            <form method="POST">
+                <legend>Log In</legend>
+                <div class="form-group">
+                    <label for="userName" class="control-label">Username</label>
+                    <input type="text" name="userName" id="userName" value="@model.userName" placeholder="Username" autofocus class="form-control" data-val="true" data-val-required="The Username field is required.">
+                    <span class="field-validation-valid" data-valmsg-for="userName" data-valmsg-replace="true"></span>
+
+                </div>
+                <div class="form-group">
+                    <label for="password" class="control-label">Password</label>
+                    <input type="password" name="password" id="password" placeholder="Password" class="form-control" data-val="true" data-val-required="Password is required">
+                    <span class="field-validation-valid" data-valmsg-for="password" data-valmsg-replace="true"></span>
+                </div>
+                <div class="form-group">
+                    <label class=" checkbox control-label">
+                        <input type="checkbox" name="remember_me" value="" />Remember me
+                    </label>
+                </div>
+                @if(html.equals(process.env.LOGIN_CAPTCHA,'true')){
+                <div class="form-group">
+                    <img id="captcha" src="/captcha" />
+                    <button type="button" class="btn btn-default btn-sm" onclick="javascript:getCaptcha()">
+                        <span class="glyphicon glyphicon-refresh"></span> Refresh
+                    </button>
+                    <input autocomplete="off" type="text" name="captcha" placeholder="Enter Captcha" class="form-control" data-val="true" data-val-required="Captcha is required" />
+                    <span class="field-validation-valid" data-valmsg-for="captcha" data-valmsg-replace="true"></span>
+                </div>
+                }
+
+                <div class="form-group"><a href="/forgot"><strong>Forgot your password?</strong></a></div><button type="submit" class="btn btn-success">Log in</button>
+            </form>
+            <div class="hr-title"><span>or</span></div>
+            <div class="btn-toolbar text-center"><a href="/auth/google" class="btn btn-google">Sign in with Google</a></div>
+        </div>
+    </div>
+    <p class="text-center">Don't have an account?&nbsp;<a href="/signup"><strong>Sign up</strong></a></p>
+</div>
+
+  })
+})

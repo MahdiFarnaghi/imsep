@@ -1,0 +1,163 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<style>
+.thumbnail {
+    display: flow-root;
+}
+    img.avatar {
+      border-radius: 5%;
+    margin: 0 4px .2em 0;
+    float: right;
+    margin-right: 0.2em !important;
+    box-shadow: grey 2px 2px 5px;
+
+    }
+    a:hover img.avatar {
+      border-radius: 5%;
+    margin: 0 4px .2em 0;
+    float: right;
+    margin-right: 0.2em !important;
+    box-shadow: grey 4px 4px 7px;
+    transform: translate(-2px,-2px);
+
+    }
+    i.avatar {
+        display:none;
+        border-radius: 5%;
+        width: 96px;
+        height: 96px;
+        margin: 0 4px 0 0;
+        float: right;
+         margin-right: 1em !important;
+    }
+    .item-container{
+        padding-top:0.5em;
+        
+    }
+    .list-inline{
+            margin: 0 0 0 -15px;
+            padding: 0.5em;
+    }
+   .list-inline > li {
+        display: inline-block;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+</style>
+
+<div class="container">
+
+<div class="row">
+   <div class="col-sm-4">
+                <div class="panel">
+                    <div class="panel-body">
+                        <h3>Maps
+                        <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#maps">?</a>
+                        </h3>
+                        <p>Create <a href="/map/-1">new map</a> or edit your own created maps.</p>
+                        <span class="help-block">Click on map title to open it.</span>
+                        <p></p>
+                        
+                        <input class="search-box animated-search-box_ form-control" id="tblItems_search" type="search" placeholder="Search..">
+                        
+                    </div>
+                </div>
+            </div>
+    <div class="col-sm-8">
+      <div class="panel">
+        <div class="panel-body">
+            <div class="row row-grid">
+                <div class=" col-md-2 " >
+                <a href="/map/-1" class="btn btn-primary  "><span class="glyphicon glyphicon-plus"></span> New Map</a>
+                </div>
+                @*
+                @if(model.items.length >10){
+                <div class="  col-md-10  ">
+                    <input class="animated-search-box" id="tblItems_search" type="search" placeholder="Search..">
+                </div>
+                }
+                *@
+          </div>
+           <div class="row row-grid" id="tblItems">
+   @{var i=0;}
+   @model.items.forEach(function(item) {
+                        
+    <div class="col-xs-18 col-sm-12 col-md-12 listItem">
+        <div class="item-container" >
+          <div class="thumbnail">
+           
+            <div class="caption">
+                <a href="/map/@item.id">
+                @if (item.thumbnail){<img class="avatar" src="/map/@item.id/thumbnail" />}
+                else {<i class="avatar fa fa-map"> </i>}
+                <h4>@item.name</h4>
+                </a>
+                <p style="white-space: pre;" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
+                <ul class="list-inline">
+                    <li>
+                        <i class="fa fa-user" title="Owner"></i>
+                         @if(model.identity.id==item.OwnerUser.id){
+                              <b> <span title="Owner" >@item.OwnerUser.userName</span></b>
+                          }else{
+                            <span title="Owner" >@item.OwnerUser.userName</span>
+                          }
+                        
+                    </li>
+                    <li>
+                        <i class="fa fa-calendar" title="Last modified at"></i><span title="Last modified at" class="convertTolocalDateTime" >@item.updatedAt.toUTCString()</span>
+                    </li>
+                   @* <li>
+                        <a title="Edit" href="/map/@item.id"><i class="glyphicon glyphicon-edit"></i></a> 
+                    </li>*@
+                    <li>
+                    @if(model.identity.id==item.OwnerUser.id){
+                        <form method="POST" action="/map/@item.id/delete?_method=DELETE">
+                            <button title="Delete" type="submit" style="color:red" class="btn-link  glyphicon glyphicon-remove"
+                                    onclick="return confirm('Confirm deletion?');">
+                            </button>
+                        </form>
+                    }
+                    </li>
+                </ul>
+            </div>
+          </div>
+          </div>
+     </div>
+
+
+   })
+ </div>
+
+        </div>
+    </div>
+
+
+            </div>
+         
+</div>
+
+    
+
+
+</div>
+
+
+
+ 
+  })
+ @html.block('scripts', function(model) {
+    <script>
+        $(document).ready(function () {
+            $("#tblItems_search").on("keyup change", function () {
+                var value = $(this).val().toLowerCase();
+                $("#tblItems .listItem").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+              //  app.test('11');
+            });
+        });
+    </script>
+    })
+})
+
+

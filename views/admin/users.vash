@@ -1,0 +1,103 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<style>
+    img.avatar {
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        margin: 0 4px 0 0;
+    }
+   
+</style>
+<div class="container">
+    <div class="panel">
+           
+        <div class="panel-body">
+          <legend>Users
+                        <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#usermanagement">?</a>
+                        </legend>
+            <div class="row row-grid" >
+            <div class=" col-sm-2  ">
+            <a href="/admin/user/-1" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> New User</a>
+            </div>
+            @if(model.items.length >5){
+            <div class=" col-sm-10">
+                <input class="animated-search-box" id="tblItems_search" type="search" placeholder="Search..">
+               
+            </div>
+            }
+            </div>
+            <div class="row" >&nbsp;</div>
+             <div class="row row-grid" >
+            <div class="table-responsive col-sm-12">
+                <table class="table table-condensed">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Firstname</th>
+                            <th>Lastname</th>
+                            @*<th class="hidden-xs hidden-sm">Phone</th>*@
+                            <th class="hidden-xs hidden-sm" >Location</th>
+                            <th>Status</th>
+
+                        </tr>
+                    </thead>
+                    <tbody id="tblItems">
+                        @{var i=0;}
+                        @model.items.forEach(function(item) {
+                        <tr>
+                            <td>@(++i)</td>
+                            <td>
+                                <a href="/admin/user/@item.id">
+                                    @if (item.avatar){<img class="avatar" src="/account/@item.id/avatar" />}
+                                    else if (item.picture){<img class="avatar" src="@item.picture" />}
+                                    else if (html.equals('female',item.gender)){<img class="avatar" src="/css/images/avatar-female.png" />}
+                                    else if (html.equals('other',item.gender)){<img class="avatar" src="/css/images/avatar-x.png" />}
+                                    else{<img class="avatar" src="/css/images/avatar-male.png" />}
+                                    
+                                    @item.userName
+                                </a>
+                            </td>
+                            <td>@item.firstName</td>
+                            <td>@item.lastName</td>
+                           @* <td class="hidden-xs hidden-sm">@item.phone</td>*@
+                            <td class="hidden-xs hidden-sm">@html.raw(item.location)</td>
+                            <td>
+                                @if(html.equals('inactive',item.status)){
+                                <span class="label label-default">Inactive</span>
+                                }else if(html.equals('active',item.status)){
+                                <span class="label label-success">Active</span>
+                                }else {
+                                <span class="label label-info">@item.status</span>
+                                }
+                            </td>
+                        </tr>
+                        })
+
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+  })
+ @html.block('scripts', function(model) {
+    <script>
+        $(document).ready(function () {
+            $("#tblItems_search").on("keyup change", function () {
+                var value = $(this).val().toLowerCase();
+                $("#tblItems tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+              //  app.test('11');
+            });
+        });
+    </script>
+    })
+})
+
+

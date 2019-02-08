@@ -1,0 +1,3 @@
+<footer id="footer">
+        <p>&copy;@process.env.COPY_RIGHTS</p>
+</footer>

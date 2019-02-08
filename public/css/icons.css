@@ -1,0 +1,128 @@
+﻿
+.drawLineIcon
+{
+    background-image: url(images/drawLine.png) !important;
+    background-repeat: no-repeat;
+}
+.drawPointIcon
+{
+    background-image: url(images/drawPoint.png) !important;
+    background-repeat: no-repeat;
+}
+.drawRectangleIcon
+{
+    background-image: url(images/drawRectangle.png) !important;
+    background-repeat: no-repeat;
+}
+.drawCircleIcon
+{
+    background-image: url(images/drawCircle.png) !important;
+    background-repeat: no-repeat;
+}
+.drawPolygonIcon
+{
+    background-image: url(images/drawPolygon.png) !important;
+    background-repeat: no-repeat;
+}
+.editVertexIcon
+{
+    background-image: url(images/editVertex.png) !important;
+    background-repeat: no-repeat;
+}
+
+.deleteIcon
+{
+    background-image: url(images/delete.png) !important;
+    background-repeat: no-repeat;
+}
+.delete_24_Icon
+{
+    background-image: url(images/delete_24.png) !important;
+    background-repeat: no-repeat;
+}
+.measureIcon
+{
+    background-image: url(images/measure.png) !important;
+    background-repeat: no-repeat;
+}
+.measure_24_Icon
+{
+    background-image: url(images/measure_24.png) !important;
+    background-repeat: no-repeat;
+}
+.measure_areaIcon
+{
+    background-image: url(images/measure_area.png) !important;
+    background-repeat: no-repeat;
+}
+
+.measure_area_24_Icon
+{
+    background-image: url(images/measure_area_24.png) !important;
+    background-repeat: no-repeat;
+}
+.measure_lengthIcon
+{
+    background-image: url(images/measure_length.png) !important;
+    background-repeat: no-repeat;
+}
+.measure_length_24_Icon
+{
+    background-image: url(images/measure_length_24.png) !important;
+    background-repeat: no-repeat;
+}
+.attributesWindowIcon
+{
+    background-image: url(images/AttributesWindow.png) !important;
+    background-repeat: no-repeat;
+}
+.attributesWindow_24_Icon
+{
+    background-image: url(images/AttributesWindow_24.png) !important;
+    background-repeat: no-repeat;
+}
+.attributesWindow_32_Icon
+{
+    background-image: url(images/AttributesWindow_32.png) !important;
+    background-repeat: no-repeat;
+}
+
+.selectArrow_32_Icon
+{
+    background-image: url(images/SelectArrow_32.png) !important;
+    background-repeat: no-repeat;
+}
+
+
+.selectArrow_32_Icon
+{
+    background-image: url(images/SelectArrow_32.png) !important;
+    background-repeat: no-repeat;
+}
+.selectArrow_24_Icon
+{
+    background-image: url(images/SelectArrow_24.png) !important;
+    background-repeat: no-repeat;
+}
+
+.selectArrow_Bold_32_Icon
+{
+    background-image: url(images/SelectArrow_Bold_32.png) !important;
+    background-repeat: no-repeat;
+}
+.selectArrow_Bold_24_Icon
+{
+    background-image: url(images/SelectArrow_Bold_24.png) !important;
+    background-repeat: no-repeat;
+}
+
+.identify_24_Icon
+{
+    background-image: url(images/identify_24.png) !important;
+    background-repeat: no-repeat;
+}
+.identify_raster_24_Icon
+{
+    background-image: url(images/identify_raster_24.png) !important;
+    background-repeat: no-repeat;
+}

@@ -1,0 +1,185 @@
+@html.extend('layout', function(model) {
+     @html.block('styles', function(model) {
+      
+        <style>
+           .dual-list .list-group {
+            margin-top: 8px;
+        }
+
+        .list-left li, .list-right li {
+            cursor: pointer;
+        }
+
+        .list-arrows {
+            padding-top: 100px;
+        }
+
+            .list-arrows button {
+                margin-bottom: 20px;
+            }
+
+        </style>
+        
+    })
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" class="form-horizontal" action="/admin/group/@(model.item.id)">
+                <legend>Group of users
+                <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#group">?</a>
+                </legend>
+                <div class="form-group">
+                    <label class="col-sm-3" for="name">Group name</label>
+                    @if(model.item.id && !html.equals(model.item.id, -1)){
+                    <div class="col-sm-7">
+                        <input type="text" name="name" id="name" value="@model.item.name" readonly class="form-control">
+                        <input type="hidden" name="updatedAt" id="updatedAt" value="@model.item.updatedAt.getTime()" readonly class="form-control">
+
+                    </div>
+                    }else{
+                    <div class="col-sm-7">
+                        <input type="text" name="name" id="name" value="@model.item.name" autofocus placeholder="Group Name" class="form-control" data-val="true" data-val-required="Group name is required"
+                               data-val-remote="Group name is not available"
+                               data-val-remote-url="/validate/group/groupname" />
+                        <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                    </div>
+                    }
+
+                </div>
+                 <div class="form-group">
+                            <label class="col-sm-12" for="description">Description</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="description" rows="5" id="description" autofocus placeholder="Description" class="form-control">@html.raw(model.item.description) </textarea>
+                               @* <span class="help-block">This is some help text that breaks onto a new line and may extend more than one line.</span>*@
+                            </div>
+                </div>
+                
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-4"><button type="submit" class="btn btn-primary btn-success">Save</button></div>
+                    </div>
+
+</form>
+
+        </div>
+    </div>
+    @if(model.item.id && !html.equals(model.item.id, -1)){
+    
+    <div class="panel panel-default">
+        
+            
+            <div class="panel-body">
+             <legend>Define members:</legend>
+                    <form id="membersForm" method="POST" action="/admin/group/@model.item.id/members" class="form-horizontal">
+                        <input type="hidden" name="addmembers" id="addmembers" value="">
+                        <input type="hidden" name="removemembers" id="removemembers" value="">
+                        <input type="hidden" name="updatedAt" id="updatedAt" value="@model.item.updatedAt.getTime()" readonly class="form-control">
+                        <div class="row">
+
+                            <div class="dual-list list-left col-md-5">
+                            <h4 class="text-left text-info">Available users</h4>
+                                <div class="well text-right">
+                                
+                                    <div class="row">
+                                        <div class="col-md-10">
+                                            <div class="input-group">
+                                                <span class="input-group-addon glyphicon glyphicon-search"></span>
+                                                <input type="text" name="SearchDualList" class="form-control" placeholder="search" />
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="btn-group">
+                                                <a class="btn btn-default selector" title="select all"><i class="glyphicon glyphicon-unchecked"></i></a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <ul id="listUsers"  class="list-group">
+                                        @model.availableUsers.forEach(function(user) {
+                                            <li class="list-group-item" data-id="@user.id" data-action="add" >@user.userName</li>
+                                        })
+                                    </ul>
+                                </div>
+                            </div>
+
+                            <div class="list-arrows col-md-1 text-center">
+                                <button type="button" class="btn btn-default btn-sm move-left">
+                                    <span class="glyphicon glyphicon-chevron-left"></span>
+                                </button>
+
+                                <button type="button" class="btn btn-default btn-sm move-right">
+                                    <span class="glyphicon glyphicon-chevron-right"></span>
+                                </button>
+                            </div>
+
+                            <div class="dual-list list-right col-md-5">
+                            <h4 class="text-success">Members</h4>
+                                <div class="well">
+                                    
+                                    <div class="row">
+                                        <div class="col-md-2">
+                                            <div class="btn-group">
+                                                <a class="btn btn-default selector" title="select all"><i class="glyphicon glyphicon-unchecked"></i></a>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-10">
+                                            <div class="input-group">
+                                                <input type="text" name="SearchDualList" class="form-control" placeholder="search" />
+                                                <span class="input-group-addon glyphicon glyphicon-search"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <ul id="listMembers" class="list-group">
+                                        @model.memberUsers.forEach(function(user) {
+                                             @if(!html.equals(user.userName, 'superadmin')){
+                                                <li class="list-group-item" data-id="@user.id" data-action="remove" >@user.userName</li>
+                                             }
+                                        })
+                                    </ul>
+                                </div>
+                            </div>
+
+	                    </div>
+                        
+                        <div class="form-group">
+                            <div class="col-sm-4 col-sm-offset-3"><button id ="submitMembers" type="button" class="btn btn-primary btn-primary ">Apply changes</button></div>
+                        </div>
+                    </form>
+                
+            </div>
+        
+    </div>
+
+     @if(model.item.type && html.equals(model.item.type, 'normal')){
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" action="/admin/group/@model.item.id/delete?_method=DELETE" class="form-horizontal">
+                <legend>Delete Group</legend>
+                <div class="form-group">
+                    <p class="col-sm-offset-3 col-sm-9">You can delete this group, but keep in mind this action is irreversible.</p>
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-danger glyphicon glyphicon-trash"
+                                onclick="return confirm('Confirm deletion?');">
+                            Delete this group
+                        </button>
+                        
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+     }
+    }
+
+</div>
+
+  })
+
+ @html.block('scripts', function(model) {
+   
+    <script src="/js/pages/admin/group_page.js"></script>
+    
+   })
+
+})
+
+

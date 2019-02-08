@@ -1,0 +1,122 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<div class="container">
+               
+    <div class="panel">
+        <div class="panel-body">
+            <form id="mainForm" method="POST" class="form-horizontal" action="/datalayer/@(model.dataLayer.id)?dataType=@(model.dataLayer.dataType)">
+                <legend>Raster Data Layer<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#rasterProperties">?</a></legend>
+                 <a title="View full image" href="/datalayer/@model.dataLayer.id/raster" >
+                @if (model.dataLayer.thumbnail){<img class="avatar" src="/datalayer/@model.dataLayer.id/thumbnail" />}
+                else {<i class="avatar fa fa-map"> </i>}
+                 
+                </a>
+                <hr/>
+                  <input type="hidden" name="details" id="details" value="@model.dataLayer.details" readonly class="form-control">
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="name">Name</label>
+                    <div class="col-sm-7">
+                       <input type="text" name="name" id="name" value="@model.dataLayer.name" autofocus placeholder="Name" class="form-control" data-val="true" data-val-required="Name is required"                               />
+                        <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                         <input type="hidden" name="updatedAt" id="updatedAt" value="@model.dataLayer.updatedAt.getTime()" readonly class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                            <label class="col-sm-12" for="description">Description</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="description" rows="5" id="description" autofocus placeholder="Description" class="form-control">@html.raw(model.dataLayer.description) </textarea>
+                               @* <span class="help-block">This is some help text that breaks onto a new line and may extend more than one line.</span>*@
+                            </div>
+                </div>
+                 
+               @if(model.userIsOwnerOfItem){
+                 <div class="panel">
+                    <div class="panel-body">
+                        <div class="form-horizontal">
+                            <legend>Share with others</legend>
+                             <div id="pnlViewPermissions" class="panel-group">
+                                        <div class="panel panel-default collapsible-panel"  >
+                                            <div class="panel-heading">
+                                                <button type="button" data-toggle="collapse" data-target="#pnlViewPermissionsContent"     aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                                        <i class="collapse-action glyphicon"></i>
+                                                        <h4 class="title"><i class="fas fa-share-alt"></i> Who can view this data? </h4>
+                                                </button>
+                                                
+                                            </div>
+                                            <div id="pnlViewPermissionsContent" class="panel-collapse collapse">
+                                                <div class="panel-body">
+                                                    
+                                                    <div class="form-group">
+                                                        <label class="col-sm-offset-1 col-sm-11 checkbox">
+                                                        <input type="checkbox" name="grantViewPermissionToAllUsers" @((model.grantViewPermissionToAllUsers) ? 'checked' : '' ) value="" /> Everyone
+                                                        </label>
+                                                    </div>
+                                                    <label class="col-sm-12" for="name">The following users:</label>      
+                                                    <div class="form-group col-sm-12"> 
+                                                                            
+                                                        <select id="usersWhoCanViewData" class="select2Multiple form-control"  style="width: 100%" name="usersWhoCanViewData[]" multiple="multiple">
+                                                        @if(model.usersWhoCanViewData){
+                                                            @model.usersWhoCanViewData.forEach(function(user) {
+                                                                <option value="@user.id" selected >@user.userName</option> 
+                                                            })  
+                                                        }
+                                                        </select>
+                                                    </div>
+                                                    <label class="col-sm-12" for="name">The following groups:</label>      
+                                                    <div class="form-group col-sm-12"> 
+                                                                            
+                                                        <select id="groupsWhoCanViewData" class="select2Multiple form-control"  style="width: 100%" name="groupsWhoCanViewData[]" multiple="multiple">
+                                                        @if(model.groupsWhoCanViewData){
+                                                            @model.groupsWhoCanViewData.forEach(function(group) {
+                                                                @if(group.type!=='hidden'){
+                                                                    <option value="@group.id" selected >@group.name</option> 
+                                                                }
+                                                            })  
+                                                        }
+                                                        </select>
+                                                    </div>
+
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                              </div>
+                        </div>
+                    </div>
+                </div>
+               }
+            </form>
+           <div class="panel">
+                <div class="panel-body">
+                    <form id="frmDetail" class="form-horizontal">
+                        <div class="form-group">
+
+                            <legend>Details</legend>
+                            <div id="detailsContainer" class="form-group">
+                            
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                        <div class=" col-sm-4"><button id="cmdSave" type="submit" class="btn btn-primary btn-success">Save</button></div>
+             </div>
+        </div>
+    </div>
+</div>
+
+
+
+  })
+@html.block('scripts', function(model) {
+  
+   <script src="/js/pages/dataLayer/dataLayer_raster_page.js"></script>
+
+   })
+})
+
+

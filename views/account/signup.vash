@@ -1,0 +1,61 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<script>
+        function getCaptcha() {
+            $("#captcha").attr('src', '/captcha?' + new Date().getTime());
+        }
+</script>
+<div class="login-container container">
+    <div class="panel">
+        <div class="panel-body">
+           
+            <form method="POST">
+                <legend>Create an account</legend>
+                <div class="form-group">
+                    <label for="userName" class="control-label">Username</label>
+                    <input type="text" name="userName" id="userName" value="@model.userName" placeholder="Username" autofocus class="form-control" data-val="true" data-val-required="Username is required" 
+                               data-val-remote="Username is not available"
+                               data-val-remote-url="/validate/user/username"
+                           />
+                    <span class="field-validation-valid" data-valmsg-for="userName" data-valmsg-replace="true"></span>
+                </div>
+                <div class="form-group">
+                    <label for="email" class="control-label">Email</label>
+                    <input type="email" name="email" id="email" value="@model.email" placeholder="Email" autofocus class="form-control" data-val="true" data-val-required="Email is required"
+                               data-val-remote="Email is linked to another account"
+                               data-val-remote-url="/validate/user/0/email"
+                           />
+                    <span class="field-validation-valid" data-valmsg-for="email" data-valmsg-replace="true"></span>
+
+                </div>
+                <div class="form-group">
+                    <label for="password" class="control-label">Password</label>
+                    <input type="password" name="password" id="password" value="" placeholder="Password" class="form-control" data-val="true" data-val-required="Password is required" data-val-length="Password must be at least 4 characters long" data-val-length-max="100" data-val-length-min="4" data-val-regex="Spaces are not allowed" data-val-regex-pattern="^\S*$" />
+                    <span class="field-validation-valid" data-valmsg-for="password" data-valmsg-replace="true"></span>
+                </div>
+                <div class="form-group">
+                    <label for="confrim" class="control-label">Confirm Password</label>
+                    <input type="password" name="confirm" id="confirm" value="" placeholder="Confrim Password" class="form-control" data-val="true" data-val-equalto="Passwords must match" data-val-equalto-other="*.password"/>
+                    <span class="field-validation-valid" data-valmsg-for="confirm" data-valmsg-replace="true"></span>
+                    
+                </div>
+                <div class="form-group">
+                    <img id="captcha" src="/captcha" />
+                    <button type="button" class="btn btn-default btn-sm" onclick="javascript:getCaptcha()">
+                        <span class="glyphicon glyphicon-refresh"></span> Refresh
+                    </button>
+                    <input autocomplete="off" type="text" name="captcha" placeholder="Enter Captcha" class="form-control" data-val="true" data-val-required="Captcha is required" />
+                    <span class="field-validation-valid" data-valmsg-for="captcha" data-valmsg-replace="true"></span>
+                </div>
+                <div class="form-group"><a href="/forgot"><strong>Forgot your password?</strong></a></div><button type="submit" class="btn btn-success">Create an account</button>
+            </form>
+            <div class="hr-title"><span>or</span></div>
+            <div class="btn-toolbar text-center"><a href="/auth/google" class="btn btn-google">Sign in with Google</a></div>
+        </div>
+    </div>
+    <p class="text-center">Already have an account?&nbsp;<a href="/login"><strong>Log in</strong></a></p>
+</div>
+	
+
+  })
+})

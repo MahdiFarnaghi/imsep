@@ -1,0 +1,285 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            <form id="mainForm" method="POST" class="form-horizontal" action="/datalayer/@(model.dataLayer.id)?dataType=@(model.dataLayer.dataType)">
+                <legend>Vector Data Layer<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#newVectorLayer">?</a>
+                        </legend>
+                  <input type="hidden" name="details" id="details" value="@model.dataLayer.details" readonly class="form-control">
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="name">Name</label>
+                    <div class="col-sm-7">
+                       <input type="text" name="name" id="name" value="@model.dataLayer.name" autofocus placeholder="Name" class="form-control" data-val="true" data-val-required="Name is required"                               />
+                        <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                         <input type="hidden" name="updatedAt" id="updatedAt" value="@model.dataLayer.updatedAt.getTime()" readonly class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                            <label class="col-sm-12" for="description">Description</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="description" rows="5" id="description" autofocus placeholder="Description" class="form-control">@html.raw(model.dataLayer.description) </textarea>
+                               @* <span class="help-block">This is some help text that breaks onto a new line and may extend more than one line.</span>*@
+                            </div>
+                </div>
+                 
+               @if(model.userIsOwnerOfItem){
+                 <div class="panel">
+                    <div class="panel-body">
+                        <div class="form-horizontal">
+                            <legend><i class="fas fa-share-alt"></i>Share with others</legend>
+
+                                    <div id="pnlViewPermissions" class="panel-group">
+                                        <div class="panel panel-default collapsible-panel"  >
+                                            <div class="panel-heading">
+                                                <button type="button" data-toggle="collapse" data-target="#pnlViewPermissionsContent"     aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                                        <i class="collapse-action glyphicon"></i>
+                                                        <h4 class="title"><i class="fas fa-share-alt"></i> Who can view this data? </h4>
+                                                </button>
+                                                
+                                            </div>
+                                            <div id="pnlViewPermissionsContent" class="panel-collapse collapse">
+                                                <div class="panel-body">
+                                                    
+                                                    <div class="form-group">
+                                                        <label class="col-sm-offset-1 col-sm-11 checkbox">
+                                                        <input type="checkbox" name="grantViewPermissionToAllUsers" @((model.grantViewPermissionToAllUsers) ? 'checked' : '' ) value="" /> Everyone
+                                                        </label>
+                                                    </div>
+                                                    <label class="col-sm-12" for="name">The following users:</label>      
+                                                    <div class="form-group col-sm-12"> 
+                                                                            
+                                                        <select id="usersWhoCanViewData" class="select2Multiple form-control"  style="width: 100%" name="usersWhoCanViewData[]" multiple="multiple">
+                                                        @if(model.usersWhoCanViewData){
+                                                            @model.usersWhoCanViewData.forEach(function(user) {
+                                                                <option value="@user.id" selected >@user.userName</option> 
+                                                            })  
+                                                        }
+                                                        </select>
+                                                    </div>
+                                                    <label class="col-sm-12" for="name">The following groups:</label>      
+                                                    <div class="form-group col-sm-12"> 
+                                                                            
+                                                        <select id="groupsWhoCanViewData" class="select2Multiple form-control"  style="width: 100%" name="groupsWhoCanViewData[]" multiple="multiple">
+                                                        @if(model.groupsWhoCanViewData){
+                                                            @model.groupsWhoCanViewData.forEach(function(group) {
+                                                                @if(group.type!=='hidden'){
+                                                                    <option value="@group.id" selected >@group.name</option> 
+                                                                }
+                                                            })  
+                                                        }
+                                                        </select>
+                                                    </div>
+
+
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+
+
+
+
+
+
+@*
+                             <div class="form-group">
+                                 <label class=" col-sm-12 checkbox">
+                                 <input type="checkbox" name="grantViewPermissionToAllUsers" @((model.grantViewPermissionToAllUsers) ? 'checked' : '' ) value="" /> Allow all users to view this data
+                                 </label>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class=" col-sm-12 checkbox">
+                                <input type="checkbox" name="grantEditPermissionToAllUsers" @((model.grantEditPermissionToAllUsers) ? 'checked' : '' ) value="" /><i class="fas fa-share-alt"></i> Allow all users to view and edit this data
+                                </label>
+                            </div>*@
+                            <div id="pnlEditPermissions" class="panel-group">
+                                        <div class="panel panel-default collapsible-panel"  >
+                                            <div class="panel-heading">
+                                                <button type="button" data-toggle="collapse" data-target="#pnlEditPermissionsContent"     aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                                        <i class="collapse-action glyphicon"></i>
+                                                        <h4 class="title"><i class="fas fa-share-alt"></i> Who can Edit this data? </h4>
+                                                </button>
+                                                
+                                            </div>
+                                            <div id="pnlEditPermissionsContent" class="panel-collapse collapse">
+                                                <div class="panel-body">
+                                                    
+                                                    <div class="form-group">
+                                                        <label class="col-sm-offset-1 col-sm-11 checkbox">
+                                                        <input type="checkbox" name="grantEditPermissionToAllUsers" @((model.grantEditPermissionToAllUsers) ? 'checked' : '' ) value="" /> Everyone
+                                                        </label>
+                                                    </div>
+                                                    <label class="col-sm-12" for="name">The following users:</label>      
+                                                    <div class="form-group col-sm-12"> 
+                                                                            
+                                                        <select id="usersWhoCanEditData" class="select2Multiple form-control"  style="width: 100%" name="usersWhoCanEditData[]" multiple="multiple">
+                                                        @if(model.usersWhoCanEditData){
+                                                            @model.usersWhoCanEditData.forEach(function(user) {
+                                                                <option value="@user.id" selected >@user.userName</option> 
+                                                            })  
+                                                        }
+                                                        </select>
+                                                    </div>
+                                                    <label class="col-sm-12" for="name">The following groups:</label>      
+                                                    <div class="form-group col-sm-12"> 
+                                                                            
+                                                        <select id="groupsWhoCanEditData" class="select2Multiple form-control"  style="width: 100%" name="groupsWhoCanEditData[]" multiple="multiple">
+                                                        @if(model.groupsWhoCanEditData){
+                                                            @model.groupsWhoCanEditData.forEach(function(group) {
+                                                                @if(group.type!=='hidden'){
+                                                                    <option value="@group.id" selected >@group.name</option> 
+                                                                }
+                                                            })  
+                                                        }
+                                                        </select>
+                                                    </div>
+
+
+                                                </div>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                        </div>
+                    </div>
+                </div>
+               }
+            </form>
+           <div class="panel">
+                <div class="panel-body">
+                    <form id="frmDetail" class="form-horizontal">
+                         <div class="form-group">
+                            <label class="col-sm-3" for="shapeType">Shape type:</label>
+                            
+                             <div class="col-sm-7">
+                                @if(model.isNew){
+                                    <select class="form-control "   name="shapeType" id="shapeType"  
+                                        data-val="true" data-val-required="Shape Type is required" >
+                                    <option value="Point" @(html.equals('Point',model.details.shapeType) ? 'selected="selected"' : '' ) >▪     Point</option>
+                                    <option value="MultiLineString" @(html.equals('MultiLineString',model.details.shapeType) ? 'selected="selected"' : '' ) >▬  Line</option>
+                                    <option value="MultiPolygon" @(html.equals('MultiPolygon',model.details.shapeType) ? 'selected="selected"' : '' )>◇  Polygon</option>
+                                    
+                                </select>
+                                 
+                                 <span class="field-validation-valid" data-valmsg-for="shapeType" data-valmsg-replace="true"></span>
+                                }else{
+                                    
+                                <select class="form-control " id="shapeType" disabled  >
+                                    <option value="Point" @(html.equals('Point',model.details.shapeType) ? 'selected="selected"' : '' ) >▪    Point</option>
+                                    <option value="MultiLineString" @(html.equals('MultiLineString',model.details.shapeType) ? 'selected="selected"' : '' )>▬ Line</option>
+                                    <option value="MultiPolygon" @(html.equals('MultiPolygon',model.details.shapeType) ? 'selected="selected"' : '' )>◇ Polygon</option>
+                                    
+                                </select>
+                                
+                                }
+                            </div>
+                        </div>
+                       <div class="form-group">
+
+                            <legend>Fields</legend>
+                            <div id="fieldsContainer" class="form-group">
+                            
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+            <div class="form-group">
+                        <div class=" col-sm-4"><button id="cmdSave" type="submit" class="btn btn-primary btn-success">Save</button></div>
+             </div>
+        </div>
+    </div>
+</div>
+
+<div style="display:none" >
+    <div id="fieldDlgTemplate">
+        <div id="errors" style="display:none;" role="alert" class="alert alert-danger fade in alert-dismissible">
+            <div>error</div>
+            
+        </div>
+        <form id="frmField" class="form-horizontal">
+            <div class="form-group">
+                    <label class="col-sm-3" for="name">Name</label>
+                    <div class="col-sm-4">
+                       <input type="text" name="name" id="name" value="" autofocus placeholder="Name" class="form-control" data-val="true" data-val-required="Name is required"/>
+                       <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                    </div>
+            </div>
+            <div class="form-group">
+                    <label class="col-sm-3" for="alias">Alias</label>
+                    <div class="col-sm-8">
+                       <input type="text" name="alias" id="alias" value=""  placeholder="Alias" class="form-control"/>
+                    </div>
+            </div>
+             <div class="form-group" style="    margin-bottom:0;">
+                <label class="col-sm-3" for="type">Data type:</label>
+                <div class="col-sm-4">
+                                    <select class="form-control " name="type" id="type"  value=""
+                                        data-val="true" data-val-required="Data type is required" >
+                                    <option value="varchar" >Text</option>
+                                    <option value="smallint">Small Integer</option>
+                                    <option value="integer">Integer</option>
+                                    <option value="bigint">Big Integer</option>
+                                    <option value="real">Real</option>
+                                    <option value="double precision">Double</option>
+                                    <option value="numeric">Numeric</option>
+                                    <option value="boolean">Boolean</option>
+                                   @* <option value="bytea">BLOB</option>*@
+                                    
+                                    <option value="date">Date</option>
+                                    <option value="timestamp with time zone">DateTime</option>
+                                    
+                                </select>
+                                
+                                 <span class="field-validation-valid" data-valmsg-for="type" data-valmsg-replace="true"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                <div  class="col-sm-offset-3 col-sm-8">
+                    <span id="typeTip" class="help-block text-info"></span>
+                </div>
+            </div>
+            <div class="form-group">
+                    <label class="col-sm-3" for="length">Length</label>
+                    <div class="col-sm-3">
+                       <input type="number" name="length" id="length" value=""  placeholder="Length" class="form-control" data-val="true" data-val-range-min="1"  data-val-range="Enter a positive number greater than 0"/>
+                    </div>
+            </div>
+             <span class="field-validation-valid col-sm-offset-3 col-sm-9" data-valmsg-for="length" data-valmsg-replace="true"></span>
+
+            <div class="form-group">
+                    <label class="col-sm-3" for="scale">Scale</label>
+                    <div class="col-sm-3">
+                       <input type="number" name="scale" id="scale" value=""  placeholder="Scale" class="form-control" data-val="true" data-val-range-min="0" data-val-range-max="10" data-val-range="The Scale must be between 0 to 10"
+                       data-val-lessthanorequal="Scale can not be greater than Length " data-val-lessthanorequal-other="length"
+                       />
+                      
+                    </div>
+            </div>
+            <span class="field-validation-valid col-sm-offset-3 col-sm-9" data-valmsg-for="scale" data-valmsg-replace="true"></span>
+
+             <div class="form-group">
+                    <label class="col-sm-3" for="default">Default value</label>
+                    <div class="col-sm-8">
+                       <input type="text" name="default" id="default" value=""  placeholder="Default value" class="form-control"/>
+                    </div>
+            </div>         
+        </form>
+    </div>
+</div>
+
+  })
+@html.block('scripts', function(model) {
+  
+   <script src="/js/pages/dataLayer/dataLayer_vector_page.js"></script>
+
+   })
+})
+
+

@@ -1,0 +1,461 @@
+@html.extend('layout', function(model) {
+   @html.block('styles', function(model) {
+        <link rel='stylesheet' href='/css/ol/Control-Bar.css' /> 
+        <link rel='stylesheet' href='/css/ol/ol.css' /> 
+        <link rel='stylesheet' href='/css/ol/LayerSwitcher.css' /> 
+        <link rel='stylesheet' href='/css/ol/Popup.css' /> 
+        <link rel='stylesheet' href='/css/ol/Search.css' /> 
+        <link rel='stylesheet' href='/css/ol/Legend.css' /> 
+
+        <link rel='stylesheet' href='/css/map-page.css' /> 
+        <link rel='stylesheet' href='/css/ol/customStyles/css/fontmaki.css' /> 
+        <link rel='stylesheet' href='/css/ol/customStyles/css/fontmaki2.css' /> 
+        <link rel='stylesheet' href='/bootstrap-popover-picker/css/bootstrap-picker.css' /> 
+        <link rel='stylesheet' href='/fontawesome-iconpicker/css/fontawesome-iconpicker.min.css' /> 
+        
+         
+        
+        <style>
+        .ol-search.nominatim {
+            position: absolute!important;
+            top: 45px!important;
+                right: 0.5em;
+            left: auto;
+        }
+        .ol-search ul {
+			color: #333;
+			font-size:0.85em;
+			max-width: 21em;
+		}
+		.ol-search ul i {
+			display: block;
+			color: #333;
+			font-size:0.85em;
+		}
+        .ol-search input{
+            height:28px;
+            width: calc(100% - 34px);
+        }
+        .ol-search button{
+            width: 28px!important;
+            height: 28px!important;
+        }
+        .ol-zoom{
+            left:3em;
+        }
+        .navbar{
+            margin-bottom:4px;
+        }
+        .autocomplete-custom-item {
+                border: 0px solid transparent!important;
+                border-bottom: solid 1px #ebebeb!important;
+                display: flow-root;
+                margin: 0;
+           
+        }
+        .autocomplete-custom-item.ui-state-active {
+            margin:unset;
+         
+           
+        }
+        .mySearch-searchinput{
+         
+        }
+        .ui-autocomplete {
+              max-height: 30em;
+                 overflow-y: auto;
+             /* prevent horizontal scrollbar */
+              overflow-x: hidden;
+             }
+          .autocomplete-custom-results {
+              padding:1em 0.5em;
+          }
+
+    img.avatar48 {
+        border-radius: 5%;
+    height: 48px!important;
+        min-height: 48px;
+    /* margin: 4px 4px 0 0; */
+    float: right;
+    /* margin-right: 1em !important; */
+    /* margin-right: 0!important; */
+    box-shadow: grey 2px 2px 5px;
+
+    }
+    i.avatar48 {
+        border-radius: 5%;
+        /*width: 48px;
+        height: 48px;*/
+        margin: 0 4px 0 0;
+        /*float: left;*/
+         margin-right: 1em !important;
+    }
+    .item-container{
+        padding-top:0.5em;
+        
+    }
+    .list-inline{
+            margin: 0 0 0 -15px;
+            padding: 0.5em;
+    }
+   .list-inline > li {
+        display: inline-block;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+</style>
+        
+    })
+  @html.block('content', function(model) {
+<div class="wrapper">
+  <!-- Sidebar Holder -->
+  <!-- preload fonts to use in map as font symbols-->
+  <div style="display:block;visibility: hidden;width:0px;height:0px;">
+  
+    <i class="fa fa-plane" title="plane"></i>
+    <i class="fas fa-broadcast-tower" title="broadcast-tower"></i>
+    <i class="fa maki-bus" title="maki-bus"></i>
+    <i class="fa maki2-bus" title="maki2-bus"></i>
+  </div>  
+  <nav id="sidebar">
+    
+      <div id="exTab1" class="container1">
+            <ul class="nav  nav-pills__ nav-tabs nav-tab-bar_">
+                <li class="active">
+                    <a href="#tabMap" data-toggle="tab">Map</a>
+                </li>
+                <li><a href="#tabLayers" data-toggle="tab">Layers</a>
+                </li>
+                @*
+                <li><a href="#tabSearch" data-toggle="tab">Search</a>
+                </li>
+                <li><a href="#tabOther" data-toggle="tab">Other</a>
+                </li>
+                *@
+            </ul>
+
+            <div class="tab-content clearfix_">
+                <div class="tab-pane active" id="tabMap">
+
+                    <form id="frmMap" method="POST" class="form-horizontal" action="/map/@(model.map.id)">
+
+                        <input type="hidden" name="ext_north" id="ext_north" value="@model.map.ext_north">
+                        <input type="hidden" name="ext_east" id="ext_east" value="@model.map.ext_east">
+                        <input type="hidden" name="ext_west" id="ext_west" value="@model.map.ext_west">
+                        <input type="hidden" name="ext_south" id="ext_south" value="@model.map.ext_south">
+                        <input type="hidden" name="details" id="details" value="@model.map.details">
+
+                        <div class="form-group">
+                            <label class="col-sm-12" for="name">Name
+                            <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#map">?</a>
+                            </label>
+                            @if(model.map.id && !html.equals(model.map.id, -1)){
+                            <div class="col-sm-12">
+                                <input type="text" name="name" id="name" value="@model.map.name" readonly__ placeholder="Map name" class="form-control" data-val="true" data-val-required="Map name is required" />
+                                <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                                <input type="hidden" name="updatedAt" id="updatedAt" value="@model.map.updatedAt.getTime()" readonly class="form-control">
+
+                            </div>
+                            }else{
+                            <div class="col-sm-12">
+                                <input type="text" name="name" id="name"  value="@model.map.name" autofocus placeholder="Map name" class="form-control" data-val="true" data-val-required="Map name is required" />
+                                <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                            </div>
+                            }
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-12" for="description">Description</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="description" rows="5" id="description" autofocus placeholder="Description" class="form-control">@html.raw(model.map.description) </textarea>
+                                @*<span class="help-block">This is some help text that breaks onto a new line and may extend more than one line.</span>*@
+                            </div>
+                        </div>
+                          @if(model.map.OwnerUser){
+                         <div class="form-group">
+                            <span class="col-sm-12">Created by: 
+                             <i class="fa fa-user"></i>
+                                    <span>@model.map.OwnerUser.userName</span>
+                            </span>
+                        </div>
+                          }
+                         @if(model.userIsOwnerOfMap){
+                        
+                         <div id="pnlPermissions" class="panel-group">
+                            <div class="panel panel-default collapsible-panel"  >
+                                <div class="panel-heading">
+                                    <button type="button" data-toggle="collapse" data-target="#pnlPermissionsContent"     aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                            <i class="collapse-action glyphicon"></i>
+                                            <h4 class="title"><i class="fas fa-share-alt"></i> Who can view this map? </h4>
+                                    </button>
+                                       
+                                </div>
+                                <div id="pnlPermissionsContent" class="panel-collapse collapse">
+                                    <div class="panel-body">
+                                        
+                                        <div class="form-group">
+                                            <label class="col-sm-offset-1 col-sm-11 checkbox">
+                                            <input type="checkbox" name="grantViewPermissionToAllUsers" @((model.grantViewPermissionToAllUsers) ? 'checked' : '' ) value="" /> Everyone
+                                            </label>
+                                        </div>
+                                        <label class="col-sm-12" for="name">The following users:</label>      
+                                        <div class="form-group col-sm-12"> 
+                                                                 
+                                            <select id="usersWhoCanViewMap" class="select2Multiple form-control"  style="width: 100%" name="usersWhoCanViewMap[]" multiple="multiple">
+                                            @if(model.usersWhoCanViewMap){
+                                                @model.usersWhoCanViewMap.forEach(function(user) {
+                                                    <option value="@user.id" selected >@user.userName</option> 
+                                                })  
+                                            }
+                                                </select>
+                                        </div>
+                                        <label class="col-sm-12" for="name">The following groups:</label>      
+                                        <div class="form-group col-sm-12"> 
+                                                                 
+                                            <select id="groupsWhoCanViewMap" class="select2Multiple form-control"  style="width: 100%" name="groupsWhoCanViewMap[]" multiple="multiple">
+                                            @if(model.groupsWhoCanViewMap){
+                                                @model.groupsWhoCanViewMap.forEach(function(group) {
+                                                    @if(group.type!=='hidden'){
+                                                        <option value="@group.id" selected >@group.name</option> 
+                                                    }
+                                                })  
+                                            }
+                                            </select>
+                                        </div>
+
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                          </div>
+                         
+                         }
+                         <div class="form-group">
+                        </div> 
+                         
+                        @if(model.userIsOwnerOfMap || model.userHasEditPermission ){
+                        <div class="form-group">
+                            <div class="col-sm-12"><button type="submit" class="btn btn-primary btn-success">Save</button></div>
+                        </div>
+                        }
+                    </form>
+
+                </div>
+                <div class="tab-pane" id="tabLayers">
+       
+                    <div id="pnlLayerSwitcher" class="panel-group">
+                            <div class="panel panel-default collapsible-panel"    >
+                                <div class="panel-heading">
+                                    <button data-toggle="collapse" data-target="#pnlLayerSwitcherContent"   aria-expanded="false" class="btn btn-link btn-block ">
+                                            <i class="collapse-action glyphicon"></i>
+                                            <h4 class="title"> Layers 
+                                            <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#layers">?</a>
+                                            </h4>
+                                    </button>
+                                </div>
+                                <div id="pnlLayerSwitcherContent" class="panel-collapse " >
+                                    <div class="panel-body" style="max-height: 50vh; overflow-y: auto;">
+                                        <div id="layerSwitcher" >
+                                            </div>
+                                    </div>
+                                </div>
+                            </div>
+                    </div>
+                    <div class="panel-group " id="tabLayers_accordion">
+                        <div id="pnlAddLayer" class="panel-group">
+                            <div class="panel panel-default collapsible-panel"  >
+                                <div class="panel-heading">
+                                    <button data-toggle="collapse" data-target="#pnlAddLayerContent"     aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                            <i class="collapse-action glyphicon"></i>
+                                            <h4 class="title"> Add data layer 
+                                            <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#add_datalayer">?</a>
+                                            </h4>
+                                    </button>
+                                </div>
+                                <div id="pnlAddLayerContent" class="panel-collapse collapse">
+                                    <div class="panel-body">
+                                        <p style="padding-left:1em;">Add from existing data layers</p>
+                                        <input id="autoSearchLayers" class="mySearch-searchinput form-control background-position-right" placeholder="Search..." type="search" />
+                                        <div id="autoSearchLayers_results" class="autocomplete-custom-results">
+
+                                        </div>
+                                          @if(model.identity.isAdministrator || model.identity.isDataManager){
+                                            <p  style="padding-left:1em;">Or</p>
+                                           <button id="cmdAddGeoJSON" title="Add GeoJSON layer" class="btn-primary form-control ">Add GeoJSON </button>
+                                          }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="pnlAddRemoteLayer" class="panel-group">
+                            <div class="panel panel-default collapsible-panel"    >
+                                <div class="panel-heading">
+                                    <button data-toggle="collapse" data-target="#pnlAddRemoteLayerContent"   aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                            <i class="collapse-action glyphicon"></i>
+                                            <h4 class="title"> Add Remote layer 
+                                            <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#add_remotelayer">?</a>
+                                            </h4>
+                                    </button>
+                                </div>
+                                <div id="pnlAddRemoteLayerContent" class="panel-collapse collapse" >
+                                    <div class="panel-body">
+                                        <button id="cmdAddNewWMS" title="Add new WMS layer" class="btn-primary form-control ">Add WMS layer</button>
+                                        <button id="cmdAddNewWFS" title="Add new WFS layer" class="btn-primary form-control ">Add WFS layer</button>
+                                         @if(model.identity.isAdministrator || model.identity.isDataManager){
+                                            <button id="cmdAddNewOSMXML" title="Add new OSM Vector layer" class="btn-primary form-control ">Add OSM Vector layer</button>
+                                         }
+                                         <button id="cmdWCS" title="Download from Web Coverage Service" class="btn-primary form-control ">Download from WCS</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                     
+                        <div id="pnlAddBaseLayer" class="panel-group">
+                            <div class="panel panel-default collapsible-panel"    >
+                                <div class="panel-heading">
+                                    <button data-toggle="collapse" data-target="#pnlAddBaseLayerContent"   aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                            <i class="collapse-action glyphicon"></i>
+                                            <h4 class="title"> Add base layer 
+                                            <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#baseLayers">?</a>
+                                            </h4>
+                                    </button>
+                                </div>
+                                <div id="pnlAddBaseLayerContent" class="panel-collapse collapse" >
+                                    <div class="panel-body">
+                                        
+                                        <input id="autoSearchBaseLayers" class="mySearch-searchinput form-control background-position-right" placeholder="Search base layers..." type="search" />
+                                        <div id="autoSearchBaseLayers_results" class="autocomplete-custom-results">
+
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                       
+                    </div>
+                </div>
+               @* <div class="tab-pane" id="tabSearch">
+                    searching ...
+                </div>
+                <div class="tab-pane" id="tabOther">
+                    others ..
+                </div>
+                *@
+            </div>
+       </div>
+
+   
+  </nav>
+
+  <!-- Page Content Holder -->
+  
+
+  
+      <div class="col-sm-12 col-xs-12  fill" style="padding:0;">
+<button type="button" id="sidebarCollapse" class="btn btn-info_ navbar-btn">
+                                <i class="glyphicon glyphicon-menu-hamburger"></i></button>
+         <div id="map" class="map" style="width: 100%;height:700px;/*height:calc(100% - 60px);*/
+    " >
+        
+      </div>
+      <div id="mousePosition" class="custom-mouse-position"> </div>
+    </div>
+   
+
+   
+  
+</div>
+
+  })
+   @html.block('scripts', function(model) {
+    <script>
+      app.pageData.mapData='@html.getBase64(model.map)';
+    </script>
+    <script src='/bootstrap-popover-picker/js/bootstrap-picker.js' ></script> 
+    <script src='/fontawesome-iconpicker/js/fontawesome-iconpicker.min.js' ></script> 
+    
+    @*<script src="/js/lib/shpwrite.js"></script>*@
+
+    <script src="/js/lib/proj4.js"></script>
+    <script src="/js/lib/ol.js"></script>
+    <script src="/js/map/custom/ol-ext/LayerSwitcher.js"></script>
+    <script src="/js/map/custom/ol-ext/Popup.js"></script>
+    <script src="/js/map/custom/ol-ext/Control-Bar.js"></script>
+    <script src="/js/map/custom/ol-ext/Search.js"></script>
+    <script src="/js/map/custom/ol-ext/CustomStyles.js"></script>
+    <script src="/js/map/custom/ol-ext/FontMakiDef.js"></script>
+    <script src="/js/map/custom/ol-ext/FontMaki2Def.js"></script>
+    <script src="/js/map/custom/ol-ext/FontAwesomeDef.js"></script>
+    <script src="/js/map/custom/ol-ext/GeoImage.js"></script>
+    <script src="/js/map/custom/ol-ext/Legend.js"></script>
+    
+    
+    <script src="/js/map/LayerHelper.js"></script>
+    
+    <script src="/js/map/StyleFactory.js"></script>
+    <script src="/js/map/renderers/simpleRenderer.js"></script>
+    <script src="/js/map/renderers/uniqueValueRenderer.js"></script>
+    <script src="/js/map/renderers/rangeValueRenderer.js"></script>
+    <script src="/js/map/renderers/RendererFactory.js"></script>
+
+    <script src="/js/map/renderers/featureLabeler.js"></script>
+    
+
+    <script src="/js/map/sourceFactory.js"></script>
+    <script src="/js/map/tasks/dlgTaskBase.js"></script>
+    <script src="/js/map/tasks/LayerTasks.js"></script>
+    <script src="/js/map/tasks/vectorLayerSelectTask.js"></script>
+    <script src="/js/map/tasks/vectorLayerEditTask.js"></script>
+    <script src="/js/map/tasks/vectorLayerAnalysisTask.js"></script>
+    <script src="/js/map/tasks/dlgBuffer.js"></script>
+    <script src="/js/map/tasks/dlgIdentity.js"></script>
+    <script src="/js/map/tasks/dlgIntersection.js"></script>
+    <script src="/js/map/tasks/dlgClip.js"></script>
+    <script src="/js/map/tasks/dlgDissolve.js"></script>
+    <script src="/js/map/tasks/dlgVectorSearch.js"></script>
+    <script src="/js/map/tasks/dlgVectorTableView.js"></script>
+        
+        <script src="/js/map/tasks/dlgOSMShapeTypeSelection.js"></script>
+        <script src="/js/map/tasks/dlgAddGeoJSON.js"></script>
+        <script src="/js/map/tasks/DlgWCS.js"></script>
+        
+
+
+    
+
+    <script src="/js/map/tasks/rasterLayerValueTask.js"></script>
+    <script src="/js/map/tasks/rasterLayerAnalysisTask.js"></script>
+    <script src="/js/map/tasks/dlgSlope.js"></script>
+    <script src="/js/map/tasks/dlgHillshade.js"></script>
+    <script src="/js/map/tasks/dlgRasterClassify.js"></script>
+    <script src="/js/map/tasks/dlgRasterPointBasedFloodArea.js"></script>
+    
+    
+    
+    <script src="/js/map/tasks/measureTasks.js"></script>
+    <script src="/js/map/tasks/geolocationTasks.js"></script>
+    
+
+    <script src="/js/map/mapContainer.js"></script>
+
+    <script src="/js/map/propertyTabs/layerGeneralTab.js"></script>
+    <script src="/js/map/propertyTabs/layerStyleTab.js"></script>
+    <script src="/js/map/propertyTabs/layerLabelTab.js"></script>
+    <script src="/js/map/propertyTabs/layerSourceTab.js"></script>
+    
+    <script src="/js/map/propertyTabs/featureAttributesTab.js"></script>
+    <script src="/js/map/propertyTabs/featureShapeTab.js"></script>
+
+    <script src="/js/map/propertyTabs/styleImageTab.js"></script>
+    <script src="/js/map/propertyTabs/styleFillTab.js"></script>
+    <script src="/js/map/propertyTabs/styleStrokeTab.js"></script>
+    <script src="/js/map/propertyTabs/rasterDisplayTab.js"></script>
+    <script src="/js/map/objectPropertiesDlg.js"></script>
+
+    
+    
+
+    <script src="/js/map/custom/controls/panel.js"></script>
+    <script src="/js/pages/map/map_page.js"></script>
+    
+   })
+})

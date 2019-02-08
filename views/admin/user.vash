@@ -1,0 +1,220 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" class="form-horizontal" action="/admin/user/@(model._user.id)">
+                <legend>User Information
+                <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#userInformation">?</a>
+                </legend>
+                 @if (model._user.avatar ){
+                <div class="form-group">
+                    <div class="col-sm-offset-3  col-sm-7"><img src="/account/@model._user.id/avatar" width="96" height="96" class="profile"></div>
+                </div>
+                 }else if ( model._user.picture){
+                <div class="form-group">
+                    <div class="col-sm-offset-3  col-sm-7"><img src="@(model._user.picture) " width="96" height="96" class="profile"></div>
+                </div>
+                 }
+                 
+                   <input type="hidden" name="picture" id="picture" value="@model._user.picture" readonly class="form-control">
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="userName">Username</label>
+                    @if(model._user.id && !html.equals(model._user.id, -1)){
+                    <div class="col-sm-7">
+                        <input type="text" name="userName" id="userName" value="@model._user.userName" readonly class="form-control">
+                        <input type="hidden" name="updatedAt" id="updatedAt" value="@model._user.updatedAt.getTime()" readonly class="form-control">
+
+                    </div>
+                    }else{
+                    <div class="col-sm-7">
+                        <input type="text" name="userName" id="userName" value="@model._user.userName" autofocus placeholder="Username" class="form-control" data-val="true" data-val-required="Username is required"
+                               data-val-remote="Username is not available"
+                               data-val-remote-url="/validate/user/username" />
+                        <span class="field-validation-valid" data-valmsg-for="userName" data-valmsg-replace="true"></span>
+                    </div>
+                    }
+
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-7 checkbox">
+                        <input type="checkbox" name="status" @(html.equals('inactive',model._user.status) ? '' : 'checked' ) value="" />Is Active
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3" for="email">Email</label>
+                    <div class="col-sm-7">
+                        <input type="email" name="email" id="email" value="@model._user.email" placeholder="Email" class="form-control" data-val="true" data-val-required="Email is required"
+                               data-val-remote="Email is linked to another account"
+                               data-val-remote-url="/validate/user/@model._user.id/email" />
+                        <span class="field-validation-valid" data-valmsg-for="email" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3" for="firstName">First Name</label>
+                    <div class="col-sm-7">
+                        <input type="text" name="firstName" id="firstName" value="@model._user.firstName" placeholder="First name" class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3" for="lastName">Last Name</label>
+                    <div class="col-sm-7">
+                        <input type="text" name="lastName" id="lastName" value="@model._user.lastName" placeholder="Last name" class="form-control">
+                    </div>
+                </div>
+
+                 <input type="hidden" name="gender" id="gender" value="@model.user.gender" readonly class="form-control">
+                 @*
+                <div class="form-group">
+                    <label class="col-sm-3">Gender</label>
+                    <div class="col-sm-4">
+                        <label class="radio-inline radio col-sm-3">
+                            <input type="radio" @(html.equals('other',model._user.gender) ? '' : (html.equals('female',model._user.gender) ?'': 'checked' ) ) name="gender" value="male" data-toggle="radio" />
+                            <span>Male</span>
+                        </label>
+                        <label class="radio-inline  col-sm-3">
+                            <input type="radio" @(html.equals('female',model._user.gender) ? 'checked' : '' ) name="gender" value="female" data-toggle="radio" />
+                            <span>Female</span>
+                        </label>
+                        <label class="radio-inline  col-sm-3">
+                            <input type="radio" @(html.equals('other',model._user.gender) ? 'checked' : '' ) name="gender" value="other" data-toggle="radio" />
+                            <span>Other</span>
+                        </label>
+
+                    </div>
+                </div>
+                *@
+                <div class="form-group">
+                    <label for="location" class="col-sm-3">Location</label>
+                    <div class="col-sm-7"><input type="text" name="location" id="location" value="@html.raw(model._user.location)" class="form-control"></div>
+                </div>
+                <div class="form-group">
+                    <label for="website" class="col-sm-3">Website</label>
+                    <div class="col-sm-7">
+                        <input type="url" name="website" id="website" value="@model._user.website" class="form-control" data-val="true" data-val-url="Invalid url">
+                        <span class="field-validation-valid" data-valmsg-for="website" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                @if(!(model._user.id && !html.equals(model._user.id, -1))){
+                <div class="form-group">
+                    <label for="password" class="col-sm-3">Password</label>
+                    <div class="col-sm-7">
+                        <input type="password" name="password" id="password" value="" placeholder="Password" class="form-control" data-val="true" data-val-required="Password is required" data-val-length="Password must be at least 4 characters long" data-val-length-max="100" data-val-length-min="4" data-val-regex="Spaces are not allowed" data-val-regex-pattern="^\S*$" />
+                        <span class="field-validation-valid" data-valmsg-for="password" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="confirm" class="col-sm-3">Confirm Password</label>
+                    <div class="col-sm-7">
+                        <input type="password" name="confirm" id="confirm" value="" placeholder="Confrim Password" class="form-control" data-val="true" data-val-equalto="Passwords must match" data-val-equalto-other="*.password" />
+                        <span class="field-validation-valid" data-valmsg-for="confirm" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                }
+                @if(model.identity.isAdministrator){
+                <div class="form-group">
+                    <label class="col-sm-7 checkbox">
+                        <input type="checkbox" name="isPowerUser" @((model._user.isPowerUser) ? 'checked' : '' ) value="" />Is Power-User
+                    </label>
+                    <div class="col-sm-10">
+                        <div class="well well-sm">
+                            This User can create new user accounts and manage them.<br />
+                            This user has permission to all data-related functionalities such as creating spatial tables, importing and exporting, adding spatial services, editing data, etc.<br />
+                            This user has permission to the functionalities such as querying and buffer generation.
+
+                        </div>
+                     </div>
+                  </div>
+                }
+                <div class="form-group">
+                    <label class="col-sm-7 checkbox">
+                        <input type="checkbox" name="isDataManager" @((model._user.isDataManager) ? 'checked' : '' ) value="" />Is Data-Manager
+                    </label>
+                    <div class="col-sm-10">
+                        <div class="well well-sm">
+                            This user has permission to all data-related functionalities such as creating spatial tables, importing and exporting, adding spatial services, editing data, etc.
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-7 checkbox">
+                        <input type="checkbox" name="isDataAnalyst" @((model._user.isDataAnalyst) ? 'checked' : '' ) value="" />Is Data-Analyst
+                    </label>
+                    <div class="col-sm-10">
+                        <div class="well well-sm">
+                            This user has permission to the functionalities such as querying and buffer generation.
+                        </div>
+                    </div>
+                </div>
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-4"><button type="submit" class="btn btn-primary btn-success">Save</button></div>
+                    </div>
+
+</form>
+
+        </div>
+    </div>
+    @if(model._user.id && !html.equals(model._user.id, -1)){
+    <div class="panel-group">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <button  data-toggle="collapse" data-target="#pnlPassword" aria-expanded="false" class="btn btn-link btn-block collapsed">
+                    <i class="collapse-action glyphicon"></i>
+                    <h4 class="title">Change Password </h4>
+                </button>
+            </div>
+            <div id="pnlPassword" class="panel-collapse collapse">
+                <div class="panel-body">
+                    <form method="POST" action="/admin/user/@model._user.id/setpassword?_method=PUT" class="form-horizontal">
+
+                        <div class="form-group">
+                            <label for="password" class="col-sm-3">New Password</label>
+                            <div class="col-sm-7">
+                                <input type="password" name="password" id="password" value="" placeholder="New Password" class="form-control" data-val="true" data-val-required="Password is required" data-val-length="Password must be at least 4 characters long" data-val-length-max="100" data-val-length-min="4" data-val-regex="Spaces are not allowed" data-val-regex-pattern="^\S*$" />
+                                <span class="field-validation-valid" data-valmsg-for="password" data-valmsg-replace="true"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="confirm" class="col-sm-3">Confirm Password</label>
+                            <div class="col-sm-7">
+                                <input type="password" name="confirm" id="confirm" value="" placeholder="Confrim New Password" class="form-control" data-val="true" data-val-equalto="Passwords must match" data-val-equalto-other="*.password" />
+                                <span class="field-validation-valid" data-valmsg-for="confirm" data-valmsg-replace="true"></span>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-4 col-sm-offset-3"><button type="submit" class="btn btn-primary btn-primary ">Change Password</button></div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" action="/admin/user/@model._user.id/delete?_method=DELETE" class="form-horizontal">
+                <legend>Delete Account</legend>
+                <div class="form-group">
+                    <p class="col-sm-offset-3 col-sm-9">You can delete this account, but keep in mind this action is irreversible.</p>
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-danger glyphicon glyphicon-trash"
+                                onclick="return confirm('Confirm deletion?');">
+                            Delete this account
+                        </button>
+                        
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    }
+
+</div>
+
+  })
+})
+
+

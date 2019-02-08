@@ -1,0 +1,146 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<style>
+   .thumbnail {
+    display: flow-root;
+    }
+    img.avatar {
+      border-radius: 5%;
+    margin: 0 4px .2em 0;
+    float: right;
+    margin-right: 0.2em !important;
+    box-shadow: grey 5px 5px 10px;
+
+    }
+    i.avatar {
+        display:none;
+        border-radius: 5%;
+        width: 96px;
+        height: 96px;
+        margin: 0 4px 0 0;
+        float: right;
+         margin-right: 1em !important;
+    }
+    .item-container{
+        padding-top:0.5em;
+        
+    }
+    .list-inline{
+            margin: 0 0 0 -15px;
+            padding: 0.5em;
+    }
+   .list-inline > li {
+        display: inline-block;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+</style>
+
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            <div class="row row-grid">
+            @if(model.identity.isAdministrator || model.identity.isDataManager){
+                <div class=" col-md-2 " >
+                <a href="/datalayer/-1?dataType=vector" class="btn btn-primary  "><span class="glyphicon glyphicon-plus"></span> New Vector layer</a>
+                </div>
+                <div class=" col-md-2 " >
+                <a href="/datalayer/uploadshapefile" class="btn btn-primary  "><span class="glyphicon glyphicon-plus"></span> Upload Shapefile</a>
+                </div>
+               <div class=" col-md-2 " >
+                <a href="/datalayer/uploadraster" class="btn btn-primary  "><span class="glyphicon glyphicon-plus"></span> Upload Raster</a>
+                </div>
+            }
+                 @if(model.items.length >10){
+                <div class="  col-md-6  ">
+                    <input class="animated-search-box" id="tblItems_search" type="search" placeholder="Search..">
+                </div>
+                }
+             
+          </div>
+           <div class="row row-grid" id="tblItems">
+   @{var i=0;}
+   @model.items.forEach(function(item) {
+                        
+ <div class="col-xs-18 col-sm-12 col-md-12 listItem">
+        <div class="item-container" >
+          <div class="thumbnail">
+           
+            <div class="caption">
+                @*<a href="/datalayer/@item.id@(html.equals('raster',item.dataType)?'/raster':'')" >*@
+                @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || (model.identity.isDataManager && item._userHasPermission_EditSchema)){
+                <a href="/datalayer/@item.id?dataType=@item.dataType" >
+                @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
+                else {<i class="avatar fa fa-map"> </i>}
+                <h4>@item.name</h4>
+                </a>
+                }else
+                {
+                   <a href="#" >
+                @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
+                else {<i class="avatar fa fa-map"> </i>}
+                <h4>@item.name</h4>
+                </a>
+                }
+               <p style="white-space: pre;" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
+               
+                <ul class="list-inline">
+                    <li>
+                        <i class="fa fa-user" title="Owner" ></i> 
+                          @if(model.identity.id==item.OwnerUser.id){
+                              <b> <span title="Owner" >@item.OwnerUser.userName</span></b>
+                          }else{
+                            <span title="Owner">@item.OwnerUser.userName</span>
+                          }
+                        
+                    </li>
+                    <li>
+                        <i class="fa fa-calendar"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
+                    </li>
+                    <li>
+                        <a href="/map/preview?layers=@item.id"><i class="glyphicon glyphicon-edit"></i></a> 
+                    </li>
+                     <li>
+                     
+                     @if(model.identity.id==item.OwnerUser.id){
+                        <form method="POST" action="/datalayer/@item.id/delete?_method=DELETE">
+                            <button title="Delete" type="submit" style="color:red" class="btn-link  glyphicon glyphicon-remove" onclick="return confirm('Confirm deletion?');"> </button>
+                        </form>
+                     }
+                    </li>
+                </ul>
+            </div>
+          </div>
+          </div>
+        </div>
+
+
+})
+ </div>
+
+        </div>
+    </div>
+
+
+</div>
+
+
+
+ 
+  })
+ @html.block('scripts', function(model) {
+    <script>
+        $(document).ready(function () {
+            $("#tblItems_search").on("keyup change", function () {
+                var value = $(this).val().toLowerCase();
+                $("#tblItems .listItem").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+              //  app.test('11');
+            });
+        });
+    </script>
+    })
+})
+
+

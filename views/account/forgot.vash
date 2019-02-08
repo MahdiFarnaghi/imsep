@@ -1,0 +1,39 @@
+﻿@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<script>
+        function getCaptcha() {
+            $("#captcha").attr('src', '/captcha?' + new Date().getTime());
+        }
+</script>
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            
+            <form method="POST">
+                <legend>Forgot Password</legend>
+                <div class="form-group">
+                    <p>Enter your email address below and we'll send you password reset instructions.</p>
+                    <label for="email" class="control-label">Email</label>
+                    <input type="email" name="email" id="email" value="@model.email" placeholder="Email" autofocus class="form-control" data-val="true" data-val-required="Email is required" />
+                    <span class="field-validation-valid" data-valmsg-for="email" data-valmsg-replace="true"></span>
+                </div>
+                <div class="form-group">
+                    <img id="captcha" src="/captcha" />
+                    <button type="button" class="btn btn-default btn-sm" onclick="javascript:getCaptcha()">
+                        <span class="glyphicon glyphicon-refresh"></span> Refresh
+                    </button>
+                    
+                    <input autocomplete="off" type="text" name="captcha" placeholder="Enter Captcha" class="form-control" data-val="true" data-val-required="Captcha is required" />
+                    <span class="field-validation-valid" data-valmsg-for="captcha" data-valmsg-replace="true"></span>
+                </div>
+
+                <button type="submit" class="btn btn-success">Reset Password</button>
+            </form>
+           
+        </div>
+    </div>
+    
+</div>
+
+  })
+})

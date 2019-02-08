@@ -1,0 +1,29 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+           
+            <form method="POST">
+                <legend>Reset Password</legend>
+
+                <div class="form-group">
+                    <label for="password" class="control-label">New Password</label>
+                    <input type="password" name="password" id="password"  placeholder="New Password" autofocus class="form-control" data-val="true" data-val-required="Password is required" data-val-length="Password must be at least 4 characters long" data-val-length-max="100" data-val-length-min="4" data-val-regex="Spaces are not allowed" data-val-regex-pattern="^\S*$" />
+                    <span class="field-validation-valid" data-valmsg-for="password" data-valmsg-replace="true"></span>
+                </div>
+                <div class="form-group">
+                    <label for="confirm" class="control-label">Confirm Password</label>
+                    <input type="password" name="confirm" id="confirm" value="" placeholder="Confrim New Password" class="form-control" data-val="true" data-val-equalto="Passwords must match" data-val-equalto-other="*.password" />
+                    <span class="field-validation-valid" data-valmsg-for="confirm" data-valmsg-replace="true"></span>
+                </div>
+                <button type="submit" class="btn btn-success">Change Password</button>
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+  })
+})
