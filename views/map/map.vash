@@ -303,7 +303,7 @@
                                          @if(model.identity.isAdministrator || model.identity.isDataManager){
                                             <button id="cmdAddNewOSMXML" title="Add new OSM Vector layer" class="btn-primary form-control ">Add OSM Vector layer</button>
                                          }
-                                        @* <button id="cmdWCS" title="Download from Web Coverage Service" class="btn-primary form-control ">Download from WCS</button>*@
+                                         <button id="cmdWCS" title="Download from Web Coverage Service" class="btn-primary form-control ">Download from WCS</button>
                                     </div>
                                 </div>
                             </div>
@@ -402,7 +402,7 @@
 
     <script src="/js/map/sourceFactory.js"></script>
     <script src="/js/map/tasks/dlgTaskBase.js"></script>
-    <script src="/js/map/tasks/LayerTasks.js"></script>
+    <script src="/js/map/tasks/layerTasks.js"></script>
     <script src="/js/map/tasks/vectorLayerSelectTask.js"></script>
     <script src="/js/map/tasks/vectorLayerEditTask.js"></script>
     <script src="/js/map/tasks/vectorLayerAnalysisTask.js"></script>
@@ -416,7 +416,7 @@
         
         <script src="/js/map/tasks/dlgOSMShapeTypeSelection.js"></script>
         <script src="/js/map/tasks/dlgAddGeoJSON.js"></script>
-        <script src="/js/map/tasks/DlgWCS.js"></script>
+        <script src="/js/map/tasks/dlgWCS.js"></script>
         
 
 

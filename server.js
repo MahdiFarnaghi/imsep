@@ -1,6 +1,6 @@
 ﻿'use strict';
-var forceRebuildDatabase = false;
-var forceRebuildDatabase_seedTestData = false;
+//var forceRebuildDatabase = false; // replaced with process.env.DB_REBUILD
+//var forceRebuildDatabase_seedTestData = false;// replaced with process.env.DB_SEED
 
 //#region require  
 var dotenv = require('dotenv');
@@ -74,10 +74,11 @@ var passportConfig= require('./config/passport')(passport);
 
 var postgresWorkspace= require('./scripts/workspaces/postgresWorkspace')({
     psqlBinPath:process.env.PSQL_BIN_PATH,
-    'host': '127.0.0.1',
-     'database':'iMSEP_gdb',// 'postgis_24_sample',
-     'user': 'postgres',
-     'password': 'postgres'
+     "host": process.env.GDB_HOSTNAME?process.env.GDB_HOSTNAME:"127.0.0.1",
+     "port":process.env.GDB_PORT?process.env.GDB_PORT:"5432",
+     "database": process.env.GDB_DATABASE?process.env.GDB_DATABASE:"iMSEP_gdb",
+     "user": process.env.GDB_USERNAME?process.env.GDB_USERNAME:"postgres",
+     "password": process.env.GDB_PASSWORD?process.env.GDB_PASSWORD: "postgres"
 });
 // var postgresWorkspace= new PostgresWorkspace({
 //       'host': '127.0.0.1',
@@ -597,6 +598,8 @@ app.set('port', process.env.PORT || 3000);
         message: 'Application started',
         date: new Date()
     });
+    var forceRebuildDatabase=process.env.DB_REBUILD? (process.env.DB_REBUILD=='true'):flase;
+    var forceRebuildDatabase_seedTestData=process.env.DB_SEED? (process.env.DB_SEED=='true'):flase;
     await models.sequelize.sync({ force: forceRebuildDatabase });
     if (forceRebuildDatabase) {
         try {

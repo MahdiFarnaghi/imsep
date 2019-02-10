@@ -275,6 +275,118 @@ DlgWCS.prototype.GetCapabilities_process_2_0_1=function(wcsUrl,doc){
   }
   return info;
 }
+DlgWCS.prototype.DescribeCoverage_process_2_0_1=function(wcsUrl,coverageId,containerElement,doc){
+  containerElement.html('');
+  var info={
+    wcsUrl:wcsUrl,
+    version:'2.0.1',
+    coverageId:coverageId
+  }
+  var prefix='';
+  prefix= doc.documentElement.prefix;
+  if(!prefix){
+      prefix='';
+  }
+  
+  var ServiceParameters= $( prefix+ '\\:CoverageDescription',doc).find(prefix +'\\:ServiceParameters');
+  info.CoverageSubtype= ServiceParameters.find(prefix+'\\:CoverageSubtype').text();
+  info.nativeFormat= ServiceParameters.find(prefix+'\\:nativeFormat').first().text();
+
+  var Envelopes=$( prefix+ '\\:CoverageDescription',doc).find('gml\\:boundedBy gml\\:Envelope');
+  for(j=0;j<Envelopes.length;j++){
+    var boundingBox=undefined;
+    var Envelope =Envelopes[j];
+    var srsName=Envelope.attr('srsName');
+
+    var north,south,east,west;
+        
+        var LowerCorner= Envelope.find('gml\\:lowerCorner');
+        var UpperCorner= Envelope.find('gml\\:upperCorner');
+        try{
+          if(LowerCorner.length){
+            var vLowerCorner= LowerCorner.text();
+            vLowerCorner=vLowerCorner.split(' ');
+            west= parseFloat(vLowerCorner[0]);
+            south= parseFloat(vLowerCorner[1]);
+          }
+          if(UpperCorner.length){
+            var vUpperCorner= UpperCorner.text();
+            vUpperCorner= vUpperCorner.split(' ');
+            east= parseFloat(vUpperCorner[0]);
+            north= parseFloat(vUpperCorner[1]);
+          }
+          if(typeof north !=='undefined' &&
+            typeof west !=='undefined' &&
+            typeof east !=='undefined' &&
+            typeof south !=='undefined'  ){
+              boundingBox={
+                north:north,
+                west:west,
+                east:east,
+                south:south
+              };
+          }
+        }catch(ex){}
+      if(boundingBox){
+        boundingBox.srsName=srsName;
+      }
+  }
+  
+  if(false){
+
+  
+    for(var j=0;j< coverageSummaries.length;j++)
+    {
+       
+      var elemnt_Name= $(coverageSummaries[j]).text();
+      var CoverageId =$(coverageSummaries[j]).find(prefix+'\\:CoverageId').text();
+      var CoverageSubtype =$(coverageSummaries[j]).find(prefix+ '\\:CoverageSubtype').text();
+      var WGS84BoundingBox= $(coverageSummaries[j]).find('ows\\:WGS84BoundingBox');
+      var wGS84BoundingBox=undefined;
+      if(WGS84BoundingBox.length){
+        var north,south,east,west;
+        
+        var LowerCorner= WGS84BoundingBox.first().find('ows\\:LowerCorner');
+        var UpperCorner= WGS84BoundingBox.first().find('ows\\:UpperCorner');
+      
+        try{
+          if(LowerCorner.length){
+            var vLowerCorner= LowerCorner.text();
+            vLowerCorner=vLowerCorner.split(' ');
+            west= parseFloat(vLowerCorner[0]);
+            south= parseFloat(vLowerCorner[1]);
+          }
+          if(UpperCorner.length){
+            var vUpperCorner= UpperCorner.text();
+            vUpperCorner= vUpperCorner.split(' ');
+            east= parseFloat(vUpperCorner[0]);
+            north= parseFloat(vUpperCorner[1]);
+          }
+          if(typeof north !=='undefined' &&
+            typeof west !=='undefined' &&
+            typeof east !=='undefined' &&
+            typeof south !=='undefined'  ){
+              wGS84BoundingBox={
+                north:north,
+                west:west,
+                east:east,
+                south:south
+              };
+          }
+        }catch(ex){}
+      }
+      if(CoverageId && CoverageSubtype){
+        info.coverageSummaries.push({
+          coverageId:CoverageId,
+          coverageSubtype:CoverageSubtype,
+          wGS84BoundingBox:wGS84BoundingBox
+        })
+      }
+      
+    }
+  }
+  return info;
+}
 DlgWCS.prototype.displayCapabilities=function(info){
 var self=this;
 var panel=self.content.find('#capabilities_Content');
@@ -322,25 +434,49 @@ for(var i=0;i< info.coverageSummaries.length;i++){
       
     }
     if(coverageSummary.wGS84BoundingBox && coverageSummary.supportedFormat && coverageSummary.supportedFormat==='image/tiff'){
-      // var bbox=coverageSummary.wGS84BoundingBox.west+','+coverageSummary.wGS84BoundingBox.south+','+coverageSummary.wGS84BoundingBox.east+','+coverageSummary.wGS84BoundingBox.north;
-      // bbox+=',urn:ogc:def:crs:EPSG::4326';
-
-      // var url=info.wcsUrl + '?SERVICE=WCS&VERSION='+info.version+ '&REQUEST=GetCoverage';
-      // url+='&FORMAT=' + coverageSummary.supportedFormat;
-
-      // if(info.version=='1.1.1'){
-      //   url+='&COVERAGE='+coverageSummary.coverageId ;
-      //   url+='&BoundingBox='+ bbox;
-      // }else{
-      //   url+='&COVERAGEID='+coverageSummary.coverageId ;
-      // }
+      var bbox=coverageSummary.wGS84BoundingBox.west+','+coverageSummary.wGS84BoundingBox.south+','+coverageSummary.wGS84BoundingBox.east+','+coverageSummary.wGS84BoundingBox.north;
+      bbox+=',urn:ogc:def:crs:EPSG::4326';
+      var SUBSET1='x,http://www.opengis.net/def/crs/EPSG/0/4326('+coverageSummary.wGS84BoundingBox.west+','+coverageSummary.wGS84BoundingBox.east+')';
+      var SUBSET2='y,http://www.opengis.net/def/crs/EPSG/0/4326('+coverageSummary.wGS84BoundingBox.south+','+coverageSummary.wGS84BoundingBox.north+')';
+      
+      var mapExt=this.mapContainer.getCurrentGeoExtent();
+      var bbox_map=mapExt.minx+','+mapExt.miny+','+mapExt.maxx+','+mapExt.maxy;
+      bbox_map+=',urn:ogc:def:crs:EPSG::4326';
+      var SUBSET1_map='x,http://www.opengis.net/def/crs/EPSG/0/4326('+mapExt.minx+','+mapExt.maxx+')';
+      var SUBSET2_map='y,http://www.opengis.net/def/crs/EPSG/0/4326('+mapExt.miny+','+mapExt.maxy+')';
       
       
-      // htm+=' <a href="'+ url+'" target="_blank" >Download</a>';
+      var v= info.version;
+      v='2.0.1';
+      var url=info.wcsUrl + '?SERVICE=WCS&VERSION='+v+ '&REQUEST=GetCoverage';
+      url+='&FORMAT=' + coverageSummary.supportedFormat;
+      var url_map= url;
+      if(v=='1.1.1'){
+        url+='&COVERAGE='+coverageSummary.coverageId ;
+        url_map=url;
+        url+='&BoundingBox='+ bbox;
+        url_map+='&BoundingBox='+ bbox_map;
+
+      }else{
+        url+='&COVERAGEID='+coverageSummary.coverageId ;
+        url_map=url;
+        url+='&SUBSET='+ SUBSET1;
+        url_map+='&SUBSET='+ SUBSET1_map;
+        url+='&SUBSET='+ SUBSET2;
+        url_map+='&SUBSET='+ SUBSET2_map;
+        var map_size=this.mapContainer.map.getSize();
+        url_map+='&SCALESIZE=x('+map_size[0]+'),y('+map_size[1]+')';
+      }
+      htm+=' <a href="'+ url+'" target="_blank" >Download</a>';
+      htm+=' <a href="'+ url_map+'" target="_blank" >Download (current map view)</a>';
+
+    }else{
+      htm+='<div  class="form-group row">';
+      htm+=' <button type="button" class="DescribeCoverage " style="margin-left:15px" data-version="'+info.version+'" data-cid="'+coverageSummary.coverageId+'" >Details</button>';
+      htm+='</div>';
+      htm+='<div id="descripe_Content" style="display:none" class="form-group row">';
+      htm+='</div>';
     }
-    htm+='<div class="form-group row">';
-    htm+=' <button type="button" class="DescribeCoverage " style="margin-left:15px" data-version="'+info.version+'" data-cid="'+coverageSummary.coverageId+'" >Details</button>';
-    htm+='</div>';
     htm+=' </div>';
   }
   htm+='<hr />';
@@ -350,9 +486,51 @@ htm+='  </div>';
 htm+=' </div>';
 panel.html(htm);
 panel.find('.DescribeCoverage').click(function(){
+  var wcsUrl= info.wcsUrl;
   var coverageId= $(this).data('cid');
   var version=$(this).data('version');
-  var parent= $(this).parent().parent();
-
+  var containerElement= $(this).parent().parent().find('#descripe_Content');
+  self.DescribeCoverage(wcsUrl,version,coverageId,containerElement);
 })
 };
+
+DlgWCS.prototype.DescribeCoverage=function(wcsUrl,version,coverageId,containerElement){
+  var self=this;
+  
+  containerElement.html('<div class="wait-icon alert alert-info">Loading details ...</div>');
+  containerElement.show();
+  var url= '/proxy/?url=';
+  if(version==='1.1.1'){
+    url+= encodeURIComponent(wcsUrl +'?SERVICE=WCS&REQUEST=DescribeCoverage&VERSION='+version+'&COVERAGE=' +coverageId);
+  }else{
+    url+= encodeURIComponent(wcsUrl +'?SERVICE=WCS&REQUEST=DescribeCoverage&VERSION='+version+'&COVERAGEID=' +coverageId);
+  }
+  $.ajax(url, {
+    type: 'GET',
+     dataType: 'xml',
+    success: function (data) {
+      var info;
+        if (data) {
+          var prefix='';
+          if(data.documentElement){
+            if(version==='2.0.1'){
+              info=self.DescribeCoverage_process_2_0_1(wcsUrl,coverageId,containerElement,data);
+            }else if(version==='1.1.1'){
+            //  info=self.DescribeCoverage_process_1_1_1(wcsUrl,coverageId,containerElement,data);
+            }
+            
+          }
+        }
+        if(!info){
+          containerElement.html( '<div class="alert alert-danger">Loading failed.</div>');
+        }else
+        {
+         // self.displayCapabilities(info);
+        }
+
+    },
+    error: function (xhr, textStatus, errorThrown) {
+      containerElement.html('<div class="alert alert-danger">Loading failed. </div>');
+    }
+  });
+}

@@ -4,10 +4,11 @@ module.exports = {
         logging: false,
 
         "dialect": "postgres",
-        "host": "127.0.0.1",
-        "database": "iMSEP",
-        "username": "postgres",
-        "password": "postgres"
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        "database": process.env.DB_DATABASE?process.env.DB_DATABASE:"iMSEP",
+        "username": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
 
         //"username": "root",
         //"password": null,
@@ -39,10 +40,12 @@ module.exports = {
         operatorsAliases: false,
         logging: false,
         "dialect": "postgres",
-        "host": "127.0.0.1",
-        "database": "iMSEP",
-        "username": "postgres",
-        "password": "postgres"
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        "database": process.env.DB_DATABASE?process.env.DB_DATABASE:"iMSEP",
+        "username": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
+
 
         //"username": "root",
         //"password": null,

@@ -1,0 +1,10 @@
+version: '2.1'
+
+services:
+  imsep:
+    image: imsep
+    build: .
+    environment:
+      NODE_ENV: production
+    ports:
+      - 1337:1337

@@ -7,6 +7,7 @@ function LayerTasks(app, mapContainer, layer, options) {
         edit:false,
         view:true
     };
+    
     this.options = options || {};
     this._initialized = false;
     this._activated = false;
