@@ -1536,6 +1536,7 @@ class PostgresWorkspace {
         var sharp = require('sharp');
         const util = require('util');
         const execFile = util.promisify(require('child_process').execFile);
+        const exec = util.promisify(require('child_process').exec);
         const fs= require('fs');
         const fs_writeFile = util.promisify(fs.writeFile)
 
@@ -1550,7 +1551,7 @@ class PostgresWorkspace {
 
         var filePathFolder = path.dirname(filePath);
 
-        var importBatchFile = path.join(filePathFolder, filebaseName + '_import.bat');
+        
         var thumbnailFile_png = path.join(filePathFolder, filebaseName + '.png');
         if (thumbnailFile_png.toLowerCase() == filePath.toLowerCase()) {
             thumbnailFile_png = '';
@@ -1644,13 +1645,13 @@ class PostgresWorkspace {
         var port = this.connectionSettings.port || 5432;
         var psqlBinPath = this.connectionSettings.psqlBinPath;
 
+        if(process.platform=='win32'){
+        var importBatchFile = path.join(filePathFolder, filebaseName + '_import.bat');
         var batchScript = `set PGPASSWORD=${password}
 "${psqlBinPath}/raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} | "${psqlBinPath}/psql" -p ${port} -U ${user} -d ${database}`;
         try {
             //await fs_writeFile(importBatchFile, batchScript);
-
             await util.promisify(fs.writeFile)(importBatchFile, batchScript);
-            
             //require('fs').writeFileSync(importBatchFile, batchScript);
             //require('fs-extra').outputFileSync(importBatchFile, batchScript);
         } catch (exx) {
@@ -1658,8 +1659,6 @@ class PostgresWorkspace {
             status = false;
             errors += '<br/>' + exx.message;
         }
-
-
         if (status) {
             try {
                 const {
@@ -1671,8 +1670,56 @@ class PostgresWorkspace {
                 errors += '<br/>' + ex.message;
             }
         }
+    }else if(process.platform=='linux'){
+      var copyFile= async function (source, target) {
+            var rd = fs.createReadStream(source);
+            var wr = fs.createWriteStream(target);
+            try {
+              return await new Promise(function(resolve, reject) {
+                rd.on('error', reject);
+                wr.on('error', reject);
+                wr.on('finish', resolve);
+                rd.pipe(wr);
+              });
+            } catch (error) {
+              rd.destroy();
+              wr.end();
+              throw error;
+            }
+          }
+        var shareVolume= process.env.SHARED_VOLUME?process.env.SHARED_VOLUME:'/sharedvolume';
+        var importBatchFile = path.join(shareVolume, filebaseName + '_import.sh');
 
+        //todo: copy all related files
+        await copyFile(filePath, path.join(shareVolume, filename));
+        
+        var batchScript = `export PGPASSWORD=${password}
+        "raster2pgsql" -s ${srid} -I -d -C -M "${filename}" -t 100x100 public.${tbl} | "${psqlBinPath}/psql" -p ${port} -U ${user} -d ${database}`;
 
+        try {
+            //await fs_writeFile(importBatchFile, batchScript);
+            await util.promisify(fs.writeFile)(importBatchFile, batchScript);
+            //require('fs').writeFileSync(importBatchFile, batchScript);
+            //require('fs-extra').outputFileSync(importBatchFile, batchScript);
+        } catch (exx) {
+            console.log(exx);
+            status = false;
+            errors += '<br/>' + exx.message;
+        }
+        //
+        if (status) {
+            try {
+                const {
+                    stdout,
+                    stderr
+                //} = await exec( '/var/run/docker.sock/docker exec postgis '+ importBatchFile);
+            } = await exec( 'docker exec postgis '+ importBatchFile);
+            } catch (ex) {
+                status = false;
+                errors += '<br/>' + ex.message;
+            }
+        }
+      }
         errors = (errors ? ('<br /> <span style="color:red;">' + errors + '</span>') : '');
         if (status) {
             var thumbnailFile;
