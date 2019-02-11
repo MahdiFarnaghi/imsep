@@ -76,7 +76,7 @@ var postgresWorkspace= require('./scripts/workspaces/postgresWorkspace')({
     psqlBinPath:process.env.PSQL_BIN_PATH,
      "host": process.env.GDB_HOSTNAME?process.env.GDB_HOSTNAME:"127.0.0.1",
      "port":process.env.GDB_PORT?process.env.GDB_PORT:"5432",
-     "database": process.env.GDB_DATABASE?process.env.GDB_DATABASE:"iMSEP_gdb",
+     "database": process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb",
      "user": process.env.GDB_USERNAME?process.env.GDB_USERNAME:"postgres",
      "password": process.env.GDB_PASSWORD?process.env.GDB_PASSWORD: "postgres"
 });
@@ -600,6 +600,27 @@ app.set('port', process.env.PORT || 3000);
     });
     var forceRebuildDatabase=process.env.DB_REBUILD? (process.env.DB_REBUILD=='true'):flase;
     var forceRebuildDatabase_seedTestData=process.env.DB_SEED? (process.env.DB_SEED=='true'):flase;
+    
+    if (true) {
+        try {
+            forceRebuildDatabase= await createDb();
+            console.log((process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep") +' is created' );
+        } catch (ex) {
+            var a = 1;
+        }
+        if(forceRebuildDatabase){
+            try {
+                
+                await createGDB();
+                console.log((process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb") +' is created' );
+            } catch (ex) {
+                var a = 1;
+            }
+        }
+    }
+  
+    
+    
     await models.sequelize.sync({ force: forceRebuildDatabase });
     if (forceRebuildDatabase) {
         try {
@@ -634,9 +655,72 @@ app.set('port', process.env.PORT || 3000);
 
 })();
 //#endregion SERVER 
+async function createDb(){
+    const { Client } = require('pg')
+    const dbName=process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep";
+    var params={
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        //"database":dbName,
+        "database":"postgres",
+        "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
+      };
+    const client = new Client(params)
+      
+    try{
+    await client.connect()
+    }catch(ex){
+        var a=1;
+        return false
+    }
+
+    const res = await client.query('CREATE DATABASE ' + dbName)
+    await client.end()
+    return true;
+}
+async function createGDB(){
+    const { Client } = require('pg')
+    const dbName=process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb";
+    var params={
+        "host": process.env.GDB_HOSTNAME?process.env.GDB_HOSTNAME:"127.0.0.1",
+        "port":process.env.GDB_PORT?process.env.GDB_PORT:"5432",
+        //"database": process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb",
+        "database":"postgres",
+        "user": process.env.GDB_USERNAME?process.env.GDB_USERNAME:"postgres",
+        "password": process.env.GDB_PASSWORD?process.env.GDB_PASSWORD: "postgres"
+      }
+    const client = new Client(params)
+    
+    try{
+    await client.connect()
+    }catch(ex){
+        var a=1;
+        return false;
+    }
+    
+    const res = await client.query('CREATE DATABASE ' + dbName)
+    await client.end()
+
+  //const sleep = m => new Promise(r => setTimeout(r, m));
+ //   await sleep (2000);
+
+    params.database=dbName;
+    const client2 = new Client(params)
+    
+    await client2.connect()
+    
+    const res2 = await client2.query('CREATE EXTENSION postgis')
+    await client2.end()
+   
+
+
+
+    return true;
+}
 async function initDataAsync() {
     var superAdmin = await models.User.create({ userName: 'superadmin', password: 'superadmin', parent: null });
-    var admin = await models.User.create({ userName: 'admin', password: 'admin', email:'niranshahi@gmail.com', google:'117861895257233347860', parent: superAdmin.id });
+    var admin = await models.User.create({ userName: 'admin', password: 'admin',  parent: superAdmin.id });
     
     var administrators = await models.Group.create({ name: 'administrators',type:'system', ownerUser: admin.id });
     await administrators.setUsers([superAdmin, admin]);
