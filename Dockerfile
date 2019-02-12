@@ -1,4 +1,5 @@
-FROM node:9
+FROM postgisnode
+
 ENV NODE_ENV production
 WORKDIR /usr/src/app
 # COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
@@ -12,4 +13,9 @@ RUN npm cache clean --force && npm install
 COPY . /usr/src/app
 ENV PORT 1337
 EXPOSE 1337
+ENV PATH $PATH:/usr/lib/postgresql/11/bin
 CMD npm start
+#CMD ["npm start"]
+#CMD ["/usr/lib/postgresql/11/bin/postgres","npm start"]
+#CMD ["postgres","npm start"]
+#CMD ["postgres"]

@@ -617,6 +617,12 @@ app.set('port', process.env.PORT || 3000);
                 var a = 1;
             }
         }
+        try {
+                
+            await initGDB();
+        } catch (ex) {
+            var a = 1;
+        }
     }
   
     
@@ -718,6 +724,32 @@ async function createGDB(){
 
     return true;
 }
+async function initGDB(){
+    const { Client } = require('pg')
+    const dbName=process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb";
+    var params={
+        "host": process.env.GDB_HOSTNAME?process.env.GDB_HOSTNAME:"127.0.0.1",
+        "port":process.env.GDB_PORT?process.env.GDB_PORT:"5432",
+        "database": dbName,
+        "database":"postgres",
+        "user": process.env.GDB_USERNAME?process.env.GDB_USERNAME:"postgres",
+        "password": process.env.GDB_PASSWORD?process.env.GDB_PASSWORD: "postgres"
+      }
+   
+     const client2 = new Client(params)
+    
+    await client2.connect()
+    
+    const res2 = await client2.query(`ALTER DATABASE "${dbName}" SET postgis.gdal_enabled_drivers= 'ENABLE_ALL';`)
+    await client2.end()
+   
+
+
+
+    return true;
+}
+
+
 async function initDataAsync() {
     var superAdmin = await models.User.create({ userName: 'superadmin', password: 'superadmin', parent: null });
     var admin = await models.User.create({ userName: 'admin', password: 'admin',  parent: superAdmin.id });

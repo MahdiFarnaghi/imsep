@@ -1648,7 +1648,7 @@ class PostgresWorkspace {
         if(process.platform=='win32'){
         var importBatchFile = path.join(filePathFolder, filebaseName + '_import.bat');
         var batchScript = `set PGPASSWORD=${password}
-"${psqlBinPath}/raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} | "${psqlBinPath}/psql" -p ${port} -U ${user} -d ${database}`;
+"${psqlBinPath}/raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} | "${psqlBinPath}/psql" -h ${host} -p ${port} -U ${user} -d ${database}`;
         try {
             //await fs_writeFile(importBatchFile, batchScript);
             await util.promisify(fs.writeFile)(importBatchFile, batchScript);
@@ -1671,6 +1671,50 @@ class PostgresWorkspace {
             }
         }
     }else if(process.platform=='linux'){
+       
+          var importBatchFile = path.join(filePathFolder, filebaseName + '_import.sh');
+  
+          //todo: copy all related files
+          
+        //   var batchScript = `export PGPASSWORD=${password}
+        //   "/usr/binraster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} | "psql" -h ${host} -p ${port} -U ${user} -d ${database}`;
+  
+        //   var batchScript = `export PGPASSWORD=${password}
+        //   "raster2pgsql" -s ${srid} -I -d -C -M "${filename}" -t 100x100 public.${tbl} > im.sql`;
+  
+        // var batchScript = `export PGPASSWORD=${password}
+        // "/usr/bin/raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} > import.sql
+        // "psql" -h ${host} -p ${port} -U ${user} -d ${database} -f import.sql`;
+
+        var batchScript = `export PGPASSWORD=${password}
+        "raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} > import.sql
+        "psql" -h ${host} -p ${port} -U ${user} -d ${database} -f import.sql`;
+
+          try {
+              //await fs_writeFile(importBatchFile, batchScript);
+              await util.promisify(fs.writeFile)(importBatchFile, batchScript);
+              //require('fs').writeFileSync(importBatchFile, batchScript);
+              //require('fs-extra').outputFileSync(importBatchFile, batchScript);
+          } catch (exx) {
+              console.log(exx);
+              status = false;
+              errors += '<br/>' + exx.message;
+          }
+          //
+          if (status) {
+              try {
+                  const {
+                      stdout,
+                      stderr
+                  //} = await exec( '/var/run/docker.sock/docker exec postgis '+ importBatchFile);
+              } = await exec( 'sh '+ importBatchFile);
+              } catch (ex) {
+                  status = false;
+                  errors += '<br/>' + ex.message;
+              }
+          }
+            
+    }else if(process.platform=='linux__'){
       var copyFile= async function (source, target) {
             var rd = fs.createReadStream(source);
             var wr = fs.createWriteStream(target);
