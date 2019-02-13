@@ -5,6 +5,7 @@ function DlgTaskBase(id,title,mapContainer,obj,options) {
       this.obj=obj;
       this.options = options || {};
       this.title=title|| options.title;
+      var _closable=(typeof options.closable !=='undefined')?options.closable:true;
       var showOKButton=(typeof options.showOKButton!=='undefined')?options.showOKButton: true;
       var showApplyButton= options.showApplyButton || false;
       var okButtonTitle=options.okButtonTitle || 'OK';
@@ -26,7 +27,7 @@ function DlgTaskBase(id,title,mapContainer,obj,options) {
         title: this.title,
         message: this.body,
         draggable:true,
-        closable: true,
+        closable: _closable,
             closeByBackdrop: true,
             closeByKeyboard: true,
         buttons: [{

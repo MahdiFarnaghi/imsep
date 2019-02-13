@@ -89,7 +89,10 @@ DlgOSMShapeTypeSelection.prototype.createUI=function(){
   var content=$(htm).appendTo( this.mainPanel); 
   
   var $form = $(content.find('#'+self.id +'_form'));
-  
+  $form.on('submit', function(event){
+    // prevents refreshing page while pressing enter key in input box
+    event.preventDefault();
+  });
   this.beforeApplyHandlers.push(function(evt){
     var origIgone= $.validator.defaults.ignore;
     $.validator.setDefaults({ ignore:'' });

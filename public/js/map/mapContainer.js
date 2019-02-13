@@ -1437,16 +1437,51 @@ MapContainer.prototype.addNewOSMXML_withOptions=function(options,features){
         
 }
 MapContainer.prototype.addNewOSMXML=function(){
+    var self=this;
+      var dlg = new DlgOSMFilter(this, {filterArray:app.osmFilterArray}, {
+          title:'Filter OSM data',
+          onapply:function(dlg,data){
+                var filterArray= data.filterArray;
+                app.osmFilterArray=filterArray;
+                var filterExpression='';
+                for(var i=0;filterArray && i<filterArray.length;i++){
+                    var filter= filterArray[i];
+                    if(!filter.tag){
+                        filterExpression+='["'+filter.key+'"]';
+                    }else{
+                       if(!filter.operator || filter.operator==='eq') {
+                        filterExpression+='["'+filter.key+'"="'+filter.tag+'"]';
+                       }
+                    }
+                }
+              self.addNewOSMXML_filter(filterExpression);
+          }   
+        }).show();
   
+             
+  }
+MapContainer.prototype.addNewOSMXML_filter=function(filterExpression){
+    if(!filterExpression)
+    {
+        filterExpression='';
+    }
     var self=this;
     var map = this.map;
     var view = map.getView();
     var epsg4326Extent= this.getCurrentGeoExtentArray();
-    var query_count = '[out:json];(node(' +
-    epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
-    epsg4326Extent[3] + ',' + epsg4326Extent[2] +
-    ');rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw););out count;';
+    var bbox='('+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+    epsg4326Extent[3] + ',' + epsg4326Extent[2]+')' ;
+    //var query_count = '[out:json];(node(' +
 
+    // var query_count = '[out:json];(node'+ filterExpression+ bbox +';rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw);';
+    // query_count += 'way'+ filterExpression+ bbox +';rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw);';
+    // query_count += 'rel'+ filterExpression+ bbox +';rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw);';
+    // query_count+=');out count;';
+
+    var query_count = '[out:json];(node'+ filterExpression+ bbox +';';
+    query_count += 'way'+ filterExpression+ bbox +';';
+    query_count += 'rel'+ filterExpression+ bbox +';';
+    query_count+=');(._; >;);out count;';
     
     //   var formdata = new FormData();
     //   formdata.append("file", blob,'geojson.json');
@@ -1478,7 +1513,7 @@ MapContainer.prototype.addNewOSMXML=function(){
            var accept=true;
             var do_Download=function(){
                 processNotify.close();
-                self.addNewOSMXML_downloadData(epsg4326Extent);
+                self.addNewOSMXML_downloadData(filterExpression,epsg4326Extent);
             }
            if(tags.total){
                 var total= parseInt(tags.total);
@@ -1501,11 +1536,11 @@ MapContainer.prototype.addNewOSMXML=function(){
                 }else{
                     accept=false;
                     $.notify({
-                        message: 'There are too many features ('+ total+') to be downloaded.</br><b><span class="text-info"> Please try for a smaller map extent!</span></b>'
+                        message: 'There are too many features ('+ total+') to be downloaded.</br><b><span class="text-info"> Please try for a smaller map extent or define more restricted filter!</span></b>'
                     },{
                       z_index:50000,
                         type:'danger',
-                        delay:5000,
+                        delay:10000,
                         animate: {
                             enter: 'animated fadeInDown',
                             exit: 'animated fadeOutUp'
@@ -1555,18 +1590,28 @@ MapContainer.prototype.addNewOSMXML=function(){
       
         
 }
-MapContainer.prototype.addNewOSMXML_downloadData=function(epsg4326Extent){
+MapContainer.prototype.addNewOSMXML_downloadData=function(filterExpression,epsg4326Extent){
   
     var self=this;
     var map = this.map;
     var view = map.getView();
-    
-    var query = '(node(' +
+    if(!filterExpression)
+    {
+        filterExpression='';
+    }
+    var query = '(node'+filterExpression+'(' +
     epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
     epsg4326Extent[3] + ',' + epsg4326Extent[2] +
     ');rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw););out body;';
 
+    var bbox='('+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+    epsg4326Extent[3] + ',' + epsg4326Extent[2]+')' ;
     
+
+    var query = '(node'+ filterExpression+ bbox +';';
+    query += 'way'+ filterExpression+ bbox +';';
+    query += 'rel'+ filterExpression+ bbox +';';
+    query+=');(._; >;);out body;';
     //   var formdata = new FormData();
     //   formdata.append("file", blob,'geojson.json');
     //   formdata.append('layerInfo',JSON.stringify(layerInfo));
@@ -1598,6 +1643,7 @@ MapContainer.prototype.addNewOSMXML_downloadData=function(epsg4326Extent){
                 featureProjection: view.getProjection()
               });
               var info={
+                    filterExpression:filterExpression,
                   epsg4326Extent:epsg4326Extent,
                   'Point':{count:0,tags:{},fields:[]},
                   'MultiLineString':{count:0,tags:{},fields:[]},

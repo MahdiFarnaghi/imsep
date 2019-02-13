@@ -37,11 +37,6 @@ function RasterDisplayTab() {
    this.tab=$('<div class="tab-pane '+ active +'" id="' +self.tabId+'"></div>').appendTo(this.parentDialog.tabPanelContent);
     var htm='<div><form id="'+self.tabId+'_form" class="modal-body form-horizontal">';  
     
-    // htm+='  <div class="form-group">';
-    // htm+='    <label class="" for="name">Name</label>';
-    // htm+='    <input type="text" name="name" id="name" value="" placeholder="Name" class="form-control" data-val="true" data-val-required="Layer name is required" />'
-    // htm+='    <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>';
-    // htm+='  </div>';
     htm+='';
     htm+='';
     htm+='';

@@ -55,7 +55,7 @@ function LayerSourceTab() {
       if(details){
         
         htm+='  <div class="form-group">';
-        htm+='    <label class="" for="name">OSM Vector Data</label>';
+        htm+='    <label class="" for="">OSM Vector Data</label>';
         htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#source_osm">?</a>'  ;
         htm+='  </div>';
         
@@ -66,7 +66,7 @@ function LayerSourceTab() {
     if(layerCustom.dataObj && layerCustom.format=='ol.format.GeoJSON')  {
       sourceType='GeoJSON';
       htm+='  <div class="form-group">';
-      htm+='    <label class="" for="name">Vector data layer</label>';
+      htm+='    <label class="" for="">Vector data layer</label>';
       htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#source_vectorLayer">?</a>'  ;
         var label = layerCustom.dataObj.name;
         var description = layerCustom.dataObj.description || '';
@@ -173,7 +173,7 @@ function LayerSourceTab() {
     if(layerCustom.dataObj && layerCustom.source=='ol.source.GeoImage')  {
       sourceType='GeoImage';
       htm+='  <div class="form-group">';
-      htm+='    <label class="" for="name">Raster data layer</label>';
+      htm+='    <label class="" for="">Raster data layer</label>';
       htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#source_raster">?</a>'  ;
         var label = layerCustom.dataObj.name;
         var description = layerCustom.dataObj.description || '';
@@ -351,7 +351,7 @@ function LayerSourceTab() {
       if(details){
         
         htm+='  <div class="form-group">';
-        htm+='    <label class="" for="name">WFS (Web Feature Service)</label>';
+        htm+='    <label class="" for="">WFS (Web Feature Service)</label>';
         htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#source_wfsLayer">?</a>'  ;
         htm+='  </div>';
         
@@ -366,7 +366,7 @@ function LayerSourceTab() {
           details.params={LAYERS:''};
         
         htm+='  <div class="form-group">';
-        htm+='    <label class="" for="name">Feature type:</label>';
+        htm+='    <label class="" for="typename">Feature type:</label>';
         htm+='    <input type="text" name="typename" id="typename" value="'+details.params.typename+'" data-namespace="'+ (details.params.typenameNamespace?details.params.typenameNamespace:'')+ '" placeholder="WFS feature type" class="form-control" data-val="true" data-val-required="Feature type is required" />'
         htm+='    <span class="field-validation-valid" data-valmsg-for="typename" data-valmsg-replace="true"></span>';
         htm+='    <span class="help-block">Define WFS feature type. Example: ADMIN-AREA</span>';
@@ -407,7 +407,7 @@ function LayerSourceTab() {
           }
         } catch (ex) {}
         htm+='  <div class="form-group">';
-        htm+='    <label class="" for="name">WMS (Web Map Service)</label>';
+        htm+='    <label class="" for="">WMS (Web Map Service)</label>';
         htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#source_wmsLayer">?</a>'  ;
         htm+='  </div>';
         
@@ -423,7 +423,7 @@ function LayerSourceTab() {
         
          
         htm+='  <div class="form-group">';
-        htm+='    <label class="" for="name">Layers:</label>';
+        htm+='    <label class="" for="layers">Layers:</label>';
         htm+='    <input type="text" name="layers" id="layers" value="'+details.params.LAYERS+'" placeholder="WMS Layers" class="form-control" data-val="true" data-val-required="Layers is required" />'
         htm+='    <span class="field-validation-valid" data-valmsg-for="layers" data-valmsg-replace="true"></span>';
         htm+='    <span class="help-block">Define WMS layers with a comma delimited text. Example: ROAD,RIVER,ADMIN-AREA</span>';

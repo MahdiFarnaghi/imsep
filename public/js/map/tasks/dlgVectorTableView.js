@@ -95,7 +95,10 @@ DlgVectorTableView.prototype.createUI_0=function(){
 // } );
 
   var $form = $(content.find('#'+self.id +'_form'));
-  
+  $form.on('submit', function(event){
+    // prevents refreshing page while pressing enter key in input box
+    event.preventDefault();
+  });
   this.beforeApplyHandlers.push(function(evt){
     var origIgone= $.validator.defaults.ignore;
     $.validator.setDefaults({ ignore:'' });
@@ -199,7 +202,10 @@ tableEl.on( 'click', 'tbody tr', function () {
 } );
 
   var $form = $(content.find('#'+self.id +'_form'));
-  
+  $form.on('submit', function(event){
+    // prevents refreshing page while pressing enter key in input box
+    event.preventDefault();
+  });
   this.beforeApplyHandlers.push(function(evt){
     var origIgone= $.validator.defaults.ignore;
     $.validator.setDefaults({ ignore:'' });
@@ -421,7 +427,10 @@ DlgVectorTableView.prototype.createUI=function(){
     	//alert('check index: ' + $el.closest('tr').data('index'));
     });
   var $form = $(content.find('#'+self.id +'_form'));
-  
+  $form.on('submit', function(event){
+    // prevents refreshing page while pressing enter key in input box
+    event.preventDefault();
+  });
   this.beforeApplyHandlers.push(function(evt){
     var origIgone= $.validator.defaults.ignore;
     $.validator.setDefaults({ ignore:'' });

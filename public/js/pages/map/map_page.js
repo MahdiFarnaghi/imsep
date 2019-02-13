@@ -151,7 +151,12 @@ var pageTask={
         this.create_Layer_AutoSearch();
         this.create_BaseLayer_AutoSearch();
         var frmMap = $('#frmMap');
-
+      
+        frmMap.find('#name').keypress(function(event) {
+            if(event.which == 13) { // 13 is the 'Enter' key
+                 event.preventDefault();
+           }
+        });
         frmMap.submit(function (e) {
 
                 e.preventDefault();

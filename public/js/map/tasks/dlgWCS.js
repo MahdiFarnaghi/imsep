@@ -43,6 +43,10 @@ DlgWCS.prototype.createUI=function(){
   self.content=content;
   content.find('#GetCapabilities').click(function(){
     var $form = $(content.find('#'+self.id +'_form'));
+    $form.on('submit', function(event){
+      // prevents refreshing page while pressing enter key in input box
+      event.preventDefault();
+    });
     var origIgone= $.validator.defaults.ignore;
     $.validator.setDefaults({ ignore:'' });
     $.validator.unobtrusive.parse($form);

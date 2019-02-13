@@ -148,8 +148,6 @@ var Base64 = {
 //#endregion Base64
 
 $(function () {
-  // Your custom JavaScript goes here
-  
   $.fn.select2.defaults.set( "theme", "bootstrap" );
 
     app.name = 'iMSEP';
@@ -158,18 +156,15 @@ $(function () {
 		var val=$(this).text();
 		var date = new Date(val);
 		var str=date.toString();
-str=date.toLocaleString('en', { timeZone: 'UTC' });
-//str=date.toLocaleString('en', { timeZone: 'Asia/Tehran' });
-//str=date.toLocaleString('en', { timeZone: 'Europe/Stockholm' });
-//str=date.toLocaleString('en', { timeZone: 'Asia/Bishkek' });
+		str=date.toLocaleString('en', { timeZone: 'UTC' });
+		//str=date.toLocaleString('en', { timeZone: 'Asia/Tehran' });
+		//str=date.toLocaleString('en', { timeZone: 'Europe/Stockholm' });
+		//str=date.toLocaleString('en', { timeZone: 'Asia/Bishkek' });
 
 		$(this).text(str);
 	});
 
 	 $('div[data-notify="true"]').each(function( index ) {
-		///console.log( index + ": " + $( this ).text() );
-		//alert($(this).data('notify-delay'));
-		//alert($(this).text());
 		$.notify({
 			message: $(this).html()
 		},{
@@ -182,7 +177,6 @@ str=date.toLocaleString('en', { timeZone: 'UTC' });
 		});
 	  });
  
-
 });
 
 
@@ -197,47 +191,47 @@ str=date.toLocaleString('en', { timeZone: 'UTC' });
         return Number(value) > 0;
     }, '');
 
-	
-$.validator.unobtrusive.adapters.add('positivenumber', [], function (options) {
-	options.rules['positivenumber'] = options.params;
-	if (options.message) {
-		options.messages['positivenumber'] = options.message;
-	}
-});
-$.validator.addMethod( "integer", function( value, element ) {
-	return this.optional( element ) || /^-?\d+$/.test( value );
-}, "A positive or negative non-decimal number please" );
-$.validator.unobtrusive.adapters.add('integer', [], function (options) {
-	options.rules['integer'] = options.params;
-	if (options.message) {
-		options.messages['integer'] = options.message;
-	}
-});
+		
+	$.validator.unobtrusive.adapters.add('positivenumber', [], function (options) {
+		options.rules['positivenumber'] = options.params;
+		if (options.message) {
+			options.messages['positivenumber'] = options.message;
+		}
+	});
+	$.validator.addMethod( "integer", function( value, element ) {
+		return this.optional( element ) || /^-?\d+$/.test( value );
+	}, "A positive or negative non-decimal number please" );
+	$.validator.unobtrusive.adapters.add('integer', [], function (options) {
+		options.rules['integer'] = options.params;
+		if (options.message) {
+			options.messages['integer'] = options.message;
+		}
+	});
 
-// used in dataLayer_vector.vash
-$.validator.addMethod('lessthanorequal', function (value, element, params) {
-	if(value==="")
-		return true;
-	try{
-		value=parseFloat(value);
-	}catch(e){}
-	var other = params.other;
-	var otherValue=value;
-	var $element = $(element);
-	var otherElem = $element.closest('form').find('[name=' + other + ']');
-	try{
-		otherValue=parseFloat(otherElem.val());
-	}catch(ex){}
-	
-	return value <= otherValue;
-}, '');
+	// used in dataLayer_vector.vash
+	$.validator.addMethod('lessthanorequal', function (value, element, params) {
+		if(value==="")
+			return true;
+		try{
+			value=parseFloat(value);
+		}catch(e){}
+		var other = params.other;
+		var otherValue=value;
+		var $element = $(element);
+		var otherElem = $element.closest('form').find('[name=' + other + ']');
+		try{
+			otherValue=parseFloat(otherElem.val());
+		}catch(ex){}
+		
+		return value <= otherValue;
+	}, '');
 
-$.validator.unobtrusive.adapters.add('lessthanorequal', ['other'], function (options) {
-	options.rules['lessthanorequal'] = options.params;
-	if (options.message) {
-		options.messages['lessthanorequal'] = options.message;
-	}
-});
+	$.validator.unobtrusive.adapters.add('lessthanorequal', ['other'], function (options) {
+		options.rules['lessthanorequal'] = options.params;
+		if (options.message) {
+			options.messages['lessthanorequal'] = options.message;
+		}
+	});
 
     $.validator.addMethod('filesize', function (value, element, params) {
         var maxSize = params.maxsize;

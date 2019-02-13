@@ -2,6 +2,7 @@
 function DlgVectorSearch(mapContainer,obj,options) {
   options.showApplyButton=true;
   options.applyButtonTitle='Validate';
+  options.closable=false;
   if(!options.title){
     if(obj.get && obj.get('title')){
       options.title='Search: '+ obj.get('title') ;
@@ -22,7 +23,7 @@ DlgVectorSearch.prototype.createUI=function(){
   var view = map.getView();
   var mapProjectionCode = view.getProjection().getCode();
 
-  this.dlg.setClosable(false);
+  //this.dlg.setClosable(false);
   var self=this;
   var layer= this.obj;
   var layerCustom= layer.get('custom');
@@ -212,7 +213,10 @@ DlgVectorSearch.prototype.createAttributesPanelUI=function(isActive){
 
 
   var $form = $(content.find('#'+tabId +'_form'));
-  
+  $form.on('submit', function(event){
+    // prevents refreshing page while pressing enter key in input box
+    event.preventDefault();
+  });
   this.beforeApplyHandlers.push(function(evt){
     var origIgone= $.validator.defaults.ignore;
     $.validator.setDefaults({ ignore:'' });
@@ -521,7 +525,10 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
 
 
   var $form = $(content.find('#'+tabId +'_form'));
-  
+  $form.on('submit', function(event){
+    // prevents refreshing page while pressing enter key in input box
+    event.preventDefault();
+  });
   this.beforeApplyHandlers.push(function(evt){
     var origIgone= $.validator.defaults.ignore;
     $.validator.setDefaults({ ignore:'' });

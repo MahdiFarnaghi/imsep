@@ -31,10 +31,10 @@ function LayerGeneralTab() {
     htm+='<div>';  
     htm+='<form id="'+self.tabId+'_form" class="modal-body form-horizontal">';
     htm+='  <div class="form-group">';
-    htm+='    <label class="" for="name">Name</label>';
+    htm+='    <label class="" for="name1">Name</label>';
     htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#layerProperties_general">?</a>'  ;
-    htm+='    <input type="text" name="name" id="name" value="" placeholder="Name" class="form-control" data-val="true" data-val-required="Layer name is required" />'
-    htm+='    <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>';
+    htm+='    <input type="text" name="name1" id="name1" value="" placeholder="Name" class="form-control" data-val="true" data-val-required="Layer name is required" />'
+    htm+='    <span class="field-validation-valid" data-valmsg-for="name1" data-valmsg-replace="true"></span>';
     htm+='  </div>';
     htm+='  <div class="form-group">';
     htm+='    <label class="" for="opacity">Opacity</label>';
@@ -50,7 +50,7 @@ function LayerGeneralTab() {
     
     var origOpacity=this.layer.getOpacity();
     var content=$(htm).appendTo( this.tab); 
-    content.find('#name').val(this.layer.get('title'));
+    content.find('#name1').val(this.layer.get('title'));
     content.find('input[type=range]').on('input', function () {
       $(this).trigger('change');
       
@@ -64,7 +64,10 @@ function LayerGeneralTab() {
   
 
     var $form = $(content.find('#'+self.tabId+'_form'));
-    
+    $form.on('submit', function(event){
+      // prevents refreshing page while pressing enter key in input box
+      event.preventDefault();
+    });
      
     this.parentDialog.beforeApplyHandlers.push(function(evt){
           //self.layer.set('title',content.find('#name').val());
@@ -98,7 +101,7 @@ function LayerGeneralTab() {
       self.layer.setOpacity(origOpacity);
     });
     this.parentDialog.applyHandlers.push(function(evt){
-      self.layer.set('title',content.find('#name').val());
+      self.layer.set('title',content.find('#name1').val());
       self.layer.setOpacity(content.find('#opacity').val()/100.0);
     });
   }

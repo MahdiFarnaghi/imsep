@@ -361,7 +361,7 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
         html: '<span style="display:block;line-height:28px;background-position:center center;" class="" ><i class="glyphicon glyphicon-duplicate"></i></span>',
      
         className:'myOlbutton24',
-        title: "Duplicate data layer",
+        title: "Duplicate as a new vector data layer",
         handleClick: function () {
            mapContainer.duplicateLayer(self.layer,{
                newName:undefined,

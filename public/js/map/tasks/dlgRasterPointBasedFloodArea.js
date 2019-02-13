@@ -1,5 +1,7 @@
 
 function DlgRasterPointBasedFloodArea(mapContainer,obj,options) {
+  options=options||{};
+  options.closable=false;
     DlgTaskBase.call(this, 'DlgRasterPointBasedFloodArea'
         ,(options.title || 'Point-based flood area')
         ,  mapContainer,obj,options);   
@@ -15,7 +17,7 @@ function DlgRasterPointBasedFloodArea(mapContainer,obj,options) {
     if(mapProjectionCode && mapProjectionCode.indexOf(':')){
        mapProjectionCode= mapProjectionCode.split(':')[1];
    }
-    this.dlg.setClosable(false);
+    //this.dlg.setClosable(false);
     var self=this;
     var layer= this.obj;
     var layerCustom= layer.get('custom');
@@ -25,7 +27,7 @@ function DlgRasterPointBasedFloodArea(mapContainer,obj,options) {
     self.seedPointElevation=undefined;
     var htm='<div class="scrollable-content" ><form id="'+self.id+'_form" class="modal-body form-horizontal">';  
     htm +='  <div class="form-group">';
-    htm +='    <label class="" for="name">Raster data layer</label>';
+    htm +='    <label class="" for="">Raster data layer</label>';
     htm +='    <div>'+layerCustom.dataObj.name+'</div>' ;
     htm +=' </div>';
 
@@ -40,7 +42,10 @@ function DlgRasterPointBasedFloodArea(mapContainer,obj,options) {
   
     self.populateChildPanel();
     var $form = $(content.find('#'+self.id +'_form'));
-    
+    $form.on('submit', function(event){
+      // prevents refreshing page while pressing enter key in input box
+      event.preventDefault();
+    });
     this.beforeApplyHandlers.push(function(evt){
       var origIgone= $.validator.defaults.ignore;
       $.validator.setDefaults({ ignore:'' });

@@ -122,6 +122,10 @@ SourceFactory.prototype.createOsmVectorSource = function(dataObj,mapContainer) {
     if(options.info){
         epsg4326Extent_fixed= options.info.epsg4326Extent;
     }
+    var filterExpression='';
+    if(options.info){
+        filterExpression=options.info.filterExpression;
+    }
     try {
         if (typeof details === 'string' || details instanceof String){
             details = JSON.parse(details);
@@ -180,15 +184,23 @@ SourceFactory.prototype.createOsmVectorSource = function(dataObj,mapContainer) {
             doAddFeatures(features);
             OSMvectorSource.set('loading_status', 'compelete');
           });
-          //var query = '(node["highway"](' +
-          var query = '(node(' +
-              epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
-              epsg4326Extent[3] + ',' + epsg4326Extent[2] +
-              ');rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw););out meta;';
+        //   //var query = '(node["highway"](' +
+        //   var query = '(node(' +
+        //       epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+        //       epsg4326Extent[3] + ',' + epsg4326Extent[2] +
+        //       ');rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw););out meta;';
 
-              //'););out meta;';
-              // out qt for more speed in loading
-              // out 10 to limit results count
+        //       //'););out meta;';
+        //       // out qt for more speed in loading
+        //       // out 10 to limit results count
+              var bbox='('+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+              epsg4326Extent[3] + ',' + epsg4326Extent[2]+')' ;
+              
+          
+              var query = '(node'+ filterExpression+ bbox +';';
+              query += 'way'+ filterExpression+ bbox +';';
+              query += 'rel'+ filterExpression+ bbox +';';
+              query+=');(._; >;);out meta;';
 
 /*
 [out:json];

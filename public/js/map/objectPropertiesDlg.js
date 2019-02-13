@@ -7,6 +7,7 @@ function ObjectPropertiesDlg(mapContainer,obj,options) {
       this.options = options || {};
       this.isNew= options.isNew;
       this.title=options.title;
+      var _closable=(typeof options.closable !=='undefined')?options.closable:true;
       this.activeTabIndex=options.activeTabIndex;
       if(!this.title){
         if(obj.get && obj.get('title')){
@@ -46,7 +47,7 @@ function ObjectPropertiesDlg(mapContainer,obj,options) {
         title: this.title,
         message: this.body,
         draggable:true,
-        closable: true,
+        closable: _closable,
             closeByBackdrop: true,
             closeByKeyboard: true,
         buttons: [
