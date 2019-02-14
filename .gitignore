@@ -263,7 +263,7 @@ __pycache__/
 # Ignore uploaded files
 uploads/
 uploads/*
-public/Help_files/
+#public/Help_files/
 # Ignore Log files
 log/
 log/*
