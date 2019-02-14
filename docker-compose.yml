@@ -16,6 +16,11 @@ services:
     build: .
     environment:
       NODE_ENV: production
+      DB_HOSTNAME: postgis 
+      DB_PORT: 5432
+      GDB_HOSTNAME: postgis
+      DB_REBUILD: false
+      DB_SEED: false
     ports:
       - "1337:1337"      
 volumes:
