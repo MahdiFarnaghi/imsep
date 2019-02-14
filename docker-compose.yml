@@ -31,7 +31,10 @@ services:
       DB_REBUILD: 'false'
       DB_SEED: 'false'
     ports:
-      - "1336:1337"    
+      - "1336:1337"   
+    volumes:
+      - ./log:/usr/src/app/log
+      - ./uploads:/usr/src/app/uploads   
       
 volumes:
   db-data:

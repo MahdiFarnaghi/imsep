@@ -1682,6 +1682,7 @@ class PostgresWorkspace {
     }else if(process.platform=='linux'){
        
           var importBatchFile = path.join(filePathFolder, filebaseName + '_import.sh');
+          var outSqlFile = path.join(filePathFolder, filebaseName + '_import.sql');
   
           //todo: copy all related files
           
@@ -1696,8 +1697,11 @@ class PostgresWorkspace {
         // "psql" -h ${host} -p ${port} -U ${user} -d ${database} -f import.sql`;
 
         var batchScript = `export PGPASSWORD=${password}
-        "raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} > import.sql
-        "psql" -h ${host} -p ${port} -U ${user} -d ${database} -f import.sql`;
+        "raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} > ${outSqlFile}
+        "psql" -h ${host} -p ${port} -U ${user} -d ${database} -f ${outSqlFile}`;
+
+        //var batchScript = `export PGPASSWORD=${password}
+        //"raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} | "psql" -h ${host} -p ${port} -U ${user} -d ${database} -f import.sql`;
 
           try {
               //await fs_writeFile(importBatchFile, batchScript);
