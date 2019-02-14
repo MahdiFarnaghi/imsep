@@ -3,18 +3,24 @@ version: '2.1'
 services:
   postgis:
     restart: unless-stopped
-    image: mdillon/postgis:latest 
+    image: kartoza/postgis:latest 
     ports: 
-      - "25431:5432"
+      - "25432:5432"
     volumes:  
       - db-data:/var/lib/postgresql/data  
     environment: 
       POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASS: postgres
+      POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL
+
   imsep:
     restart: unless-stopped
     image: imsep
     build: .
     depends_on:
+      - postgis
+    links:
       - postgis
     environment:
       NODE_ENV: production
