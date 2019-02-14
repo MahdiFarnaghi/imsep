@@ -5,24 +5,28 @@ services:
     restart: unless-stopped
     image: mdillon/postgis:latest 
     ports: 
-      - "25431:5432/tcp"
+      - "25431:5432"
+    volumes:  
+      - db-data:/var/lib/postgresql/data  
     environment: 
-      POSTGRES_PASSWORD=postgres
-    volumes: 
-      - db-data:/data
+      POSTGRES_PASSWORD: postgres
   imsep:
     restart: unless-stopped
     image: imsep
     build: .
+    depends_on:
+      - postgis
     environment:
       NODE_ENV: production
       DB_HOSTNAME: postgis 
       DB_PORT: 5432
       GDB_HOSTNAME: postgis
-      DB_REBUILD: false
-      DB_SEED: false
+      GDB_PORT: 5432
+      DB_REBUILD: 'false'
+      DB_SEED: 'false'
     ports:
-      - "1337:1337"      
+      - "1336:1337"    
+      
 volumes:
   db-data:
     
