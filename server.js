@@ -73,7 +73,8 @@ var passportConfig= require('./config/passport')(passport);
 //#region Controllers 
 
 var postgresWorkspace= require('./scripts/workspaces/postgresWorkspace')({
-    psqlBinPath:process.env.PSQL_BIN_PATH,
+    psqlBinPath_win:process.env.PSQL_BIN_PATH_WIN,
+    psqlBinPath_linux:process.env.PSQL_BIN_PATH_LINUX,
      "host": process.env.GDB_HOSTNAME?process.env.GDB_HOSTNAME:"127.0.0.1",
      "port":process.env.GDB_PORT?process.env.GDB_PORT:"5432",
      "database": process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb",

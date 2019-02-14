@@ -12,6 +12,7 @@ RUN npm cache clean --force && npm install
 #COPY . .
 COPY . /usr/src/app
 ENV PORT 1337
+ENV POSTGIS_GDAL_ENABLED_DRIVERS ENABLE_ALL
 EXPOSE 1337
 ENV PATH $PATH:/usr/lib/postgresql/11/bin
 CMD npm start

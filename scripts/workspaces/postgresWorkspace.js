@@ -1072,14 +1072,22 @@ class PostgresWorkspace {
             try {
                 var ext = path.extname(file).toLowerCase();
                 if (ext === '.shp') {
-                    var importResult = await this.importShapefile(file, DataLayer, ownerUserId, options);
-                    if (importResult && importResult.status) {
-                        results.push(importResult);
+                    try{
+                        var importResult = await this.importShapefile(file, DataLayer, ownerUserId, options);
+                        if (importResult && importResult.status) {
+                            results.push(importResult);
+                        }
+                    }catch(ex){
+                        console.log(ex);
                     }
                 } else if (ext === '.tif' || ext === '.tiff' || ext === '.geotif' || ext === '.geotiff' || ext === '.jpg' || ext === '.jpeg' || ext === '.png') {
-                    var importResult = await this.importRaster(file, DataLayer, ownerUserId, options);
-                    if (importResult && importResult.status) {
-                        results.push(importResult);
+                    try{
+                        var importResult = await this.importRaster(file, DataLayer, ownerUserId, options);
+                        if (importResult && importResult.status) {
+                            results.push(importResult);
+                        }
+                    }catch(ex){
+                        console.log(ex);
                     }
                 }
 
@@ -1643,12 +1651,13 @@ class PostgresWorkspace {
         var password = this.connectionSettings.password;
         var user = this.connectionSettings.user;
         var port = this.connectionSettings.port || 5432;
-        var psqlBinPath = this.connectionSettings.psqlBinPath;
+        var psqlBinPath_win = this.connectionSettings.psqlBinPath_win;
+        var psqlBinPath_linux = this.connectionSettings.psqlBinPath_linux;
 
         if(process.platform=='win32'){
         var importBatchFile = path.join(filePathFolder, filebaseName + '_import.bat');
         var batchScript = `set PGPASSWORD=${password}
-"${psqlBinPath}/raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} | "${psqlBinPath}/psql" -h ${host} -p ${port} -U ${user} -d ${database}`;
+"${psqlBinPath_win}/raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} | "${psqlBinPath_win}/psql" -h ${host} -p ${port} -U ${user} -d ${database}`;
         try {
             //await fs_writeFile(importBatchFile, batchScript);
             await util.promisify(fs.writeFile)(importBatchFile, batchScript);
@@ -1738,7 +1747,7 @@ class PostgresWorkspace {
         await copyFile(filePath, path.join(shareVolume, filename));
         
         var batchScript = `export PGPASSWORD=${password}
-        "raster2pgsql" -s ${srid} -I -d -C -M "${filename}" -t 100x100 public.${tbl} | "${psqlBinPath}/psql" -p ${port} -U ${user} -d ${database}`;
+        "raster2pgsql" -s ${srid} -I -d -C -M "${filename}" -t 100x100 public.${tbl} | "${psqlBinPath_linux}/psql" -p ${port} -U ${user} -d ${database}`;
 
         try {
             //await fs_writeFile(importBatchFile, batchScript);
