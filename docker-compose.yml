@@ -1,10 +1,23 @@
 version: '2.1'
 
 services:
+  postgis:
+    restart: unless-stopped
+    image: mdillon/postgis:latest 
+    ports: 
+      - "25431:5432/tcp"
+    environment: 
+      POSTGRES_PASSWORD=postgres
+    volumes: 
+      - db-data:/data
   imsep:
+    restart: unless-stopped
     image: imsep
     build: .
     environment:
       NODE_ENV: production
     ports:
-      - 1337:1337
+      - "1337:1337"      
+volumes:
+  db-data:
+    
