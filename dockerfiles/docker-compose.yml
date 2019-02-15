@@ -1,13 +1,13 @@
 version: '2.1'
 
 services:
-  imsep_postgis:
+  postgis:
     restart: unless-stopped
     image: kartoza/postgis:latest 
     ports: 
       - "25432:5432"
     volumes:  
-      - /data/imsep/db_data:/var/lib/postgresql/data  
+      - db-data:/var/lib/postgresql/data  
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
@@ -18,15 +18,15 @@ services:
     image: imsep
     build: .
     depends_on:
-      - imsep_postgis
+      - postgis
     links:
-      - imsep_postgis
+      - postgis
     environment:
       NODE_ENV: production
-      DB_HOSTNAME: imsep_postgis 
+      DB_HOSTNAME: postgis 
       DB_PORT: 5432
       DB_PASSWORD: d747db4520c046ccb5db14f39a014746
-      GDB_HOSTNAME: imsep_postgis
+      GDB_HOSTNAME: postgis
       GDB_PORT: 5432
       GDB_PASSWORD: d747db4520c046ccb5db14f39a014746
       DB_REBUILD: 'false'
@@ -34,10 +34,9 @@ services:
     ports:
       - "1336:1337"   
     volumes:
-      - /data/imsep/log:/usr/src/app/log
-      - /data/imsep/uploads:/usr/src/app/uploads   
+      - ./log:/usr/src/app/log
+      - ./uploads:/usr/src/app/uploads   
       
 volumes:
-  postgis:
-  imsep:
+  db-data:
     
