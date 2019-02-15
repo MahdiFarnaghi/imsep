@@ -9,9 +9,8 @@ services:
     volumes:  
       - db-data:/var/lib/postgresql/data  
     environment: 
-      POSTGRES_PASSWORD: postgres
       POSTGRES_USER: postgres
-      POSTGRES_PASS: postgres
+      POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
       POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL
 
   imsep:
@@ -26,8 +25,10 @@ services:
       NODE_ENV: production
       DB_HOSTNAME: postgis 
       DB_PORT: 5432
+      DB_PASSWORD: d747db4520c046ccb5db14f39a014746
       GDB_HOSTNAME: postgis
       GDB_PORT: 5432
+      GDB_PASSWORD: d747db4520c046ccb5db14f39a014746
       DB_REBUILD: 'false'
       DB_SEED: 'false'
     ports:
