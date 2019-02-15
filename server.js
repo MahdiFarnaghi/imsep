@@ -752,8 +752,8 @@ async function initGDB(){
 
 
 async function initDataAsync() {
-    var superAdmin = await models.User.create({ userName: 'superadmin', password: 'superadmin', parent: null });
-    var admin = await models.User.create({ userName: 'admin', password: 'admin',  parent: superAdmin.id });
+    var superAdmin = await models.User.create({ userName: 'superadmin', password: '8001msep#', parent: null });
+    var admin = await models.User.create({ userName: 'admin', password: '80fmsep#',  parent: superAdmin.id });
     
     var administrators = await models.Group.create({ name: 'administrators',type:'system', ownerUser: admin.id });
     await administrators.setUsers([superAdmin, admin]);

@@ -1,4 +1,4 @@
-version: '2.1'
+version: '2'
 
 services:
   imsep_postgis:
@@ -32,7 +32,6 @@ services:
       GDB_PORT: 5432
       GDB_PASSWORD: d747db4520c046ccb5db14f39a014746
       DB_REBUILD: 'false'
-      DB_SEED: 'false'
     ports:
       - "1336:1337"   
     volumes:
