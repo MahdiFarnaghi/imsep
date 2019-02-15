@@ -8,7 +8,7 @@ services:
     ports: 
       - "25432:5432"
     volumes:  
-      - db-data:/var/lib/postgresql/data  
+      - imsepdb:/var/lib/postgresql/data  
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
@@ -40,5 +40,5 @@ services:
       - ./uploads:/usr/src/app/uploads   
       
 volumes:
-  db-data:
+  imsepdb:
     
