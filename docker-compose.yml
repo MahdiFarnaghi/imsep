@@ -2,6 +2,7 @@ version: '2.1'
 
 services:
   imsep_postgis:
+    container_name: imsep_postgis
     restart: unless-stopped
     image: kartoza/postgis:latest 
     ports: 
@@ -14,6 +15,7 @@ services:
       POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL
 
   imsep:
+    container_name: imsep
     restart: unless-stopped
     image: imsep
     build: .
