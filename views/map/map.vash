@@ -273,13 +273,13 @@
                                 </div>
                                 <div id="pnlAddLayerContent" class="panel-collapse collapse">
                                     <div class="panel-body">
-                                        <p style="padding-left:1em;">Add from existing data layers</p>
+                                        <label><p style="padding-left:1em;">Add from existing data layers:</p></label>
                                         <input id="autoSearchLayers" class="mySearch-searchinput form-control background-position-right" placeholder="Search..." type="search" />
                                         <div id="autoSearchLayers_results" class="autocomplete-custom-results">
 
                                         </div>
                                           @if(model.identity.isAdministrator || model.identity.isDataManager){
-                                            <p  style="padding-left:1em;">Or</p>
+                                              <label><p style="padding-left:1em;">Or:</p></label>
                                            <button id="cmdAddGeoJSON" title="Add GeoJSON layer" class="btn-primary form-control ">Add GeoJSON </button>
                                           }
                                     </div>
