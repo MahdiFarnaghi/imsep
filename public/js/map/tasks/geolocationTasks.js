@@ -146,7 +146,7 @@ GeolocationTasks.prototype._init = function (dataObj) {
         //html: '<span style="display:block;line-height:28px;background-position:center center" class="measure_24_Icon" >&nbsp;</span>',
         html: '<i class=" glyphicon glyphicon-record"></i>',
         className:'myOlbutton24',
-        title: "measure",
+        title: "My location",
         onToggle:function(toggle){
             if(!toggle){
                 self.deActivate();

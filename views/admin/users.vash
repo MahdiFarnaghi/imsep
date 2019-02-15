@@ -46,6 +46,13 @@
                     <tbody id="tblItems">
                         @{var i=0;}
                         @model.items.forEach(function(item) {
+                         
+                             @{var show =true};
+                             @if(item.userName=="superadmin" && !model.identity.isSuperAdministrator ){
+                                 @{show=false};
+                             }
+                         
+                         @if(show){ 
                         <tr>
                             <td>@(++i)</td>
                             <td>
@@ -73,6 +80,7 @@
                                 }
                             </td>
                         </tr>
+                         }
                         })
 
                     </tbody>

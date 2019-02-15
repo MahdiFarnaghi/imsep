@@ -308,8 +308,8 @@ this.topToolbar.addControl(identifyTool);
   this.measureTasks= new MeasureTasks(this.app,this,{});
   this.measureTasks.OnActivated();
   if (location.protocol === 'https:') {
-    this.geolocationTasks= new GeolocationTasks(this.app,this,{});
-    this.geolocationTasks.OnActivated();
+    //this.geolocationTasks= new GeolocationTasks(this.app,this,{});
+    //this.geolocationTasks.OnActivated();
    }
   
 

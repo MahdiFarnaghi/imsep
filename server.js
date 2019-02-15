@@ -193,6 +193,9 @@ app.use(async function (req, res, next) {
            || res.locals.identity.name.toLowerCase() ==='superadmin'
         ){
             res.locals.identity.isAdministrator=true;    
+            if( res.locals.identity.name.toLowerCase() ==='superadmin'){
+                res.locals.identity.isSuperAdministrator=true;    
+            }
         }else{
             res.locals.identity.isAdministrator = roles.includes('administrators');
         }
