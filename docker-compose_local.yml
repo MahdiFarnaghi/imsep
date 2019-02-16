@@ -18,7 +18,9 @@ services:
     container_name: imsep
     restart: unless-stopped
     image: imsep
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     depends_on:
       - imsep_postgis
     links:

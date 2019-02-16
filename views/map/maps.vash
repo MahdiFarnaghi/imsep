@@ -54,7 +54,7 @@
                         <h3>Maps
                         <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#maps">?</a>
                         </h3>
-                        <p>Create <a href="/map/-1">new map</a> or edit your own created maps.</p>
+                        <p>Create <a href="/map/-1">new map</a> or edit your own maps.</p>
                         <span class="help-block">Click on map title to open it.</span>
                         <p></p>
                         
