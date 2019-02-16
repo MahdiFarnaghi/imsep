@@ -1,15 +1,5 @@
 var nodemailer = require('nodemailer');
-var transporter = nodemailer.createTransport({
-    service: process.env.EMAIL_SENDER_SERVICE,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_SENDER_USERNAME,
-        pass: process.env.EMAIL_SENDER_PASSWORD
-    },
-    tls: {
-        rejectUnauthorized: false //https://github.com/nodemailer/nodemailer/issues/406
-    }
-});
+
 
 /**
  * GET /contact
@@ -29,6 +19,7 @@ exports.contactPost = function(req, res) {
   req.assert('email', 'Email cannot be blank').notEmpty();
   req.assert('message', 'Message cannot be blank').notEmpty();
   req.sanitize('email').normalizeEmail({ remove_dots: false });
+  req.assert('captcha', 'Captcha check failed').equals(req.session.captcha);
 
   var errors = req.validationErrors();
 
@@ -36,7 +27,18 @@ exports.contactPost = function(req, res) {
     req.flash('error', errors);
     return res.redirect('/contact');
   }
-
+  var transporter = nodemailer.createTransport({
+    service: process.env.EMAIL_SENDER_SERVICE,
+    secure: false,
+    auth: {
+        user: process.env.EMAIL_SENDER_USERNAME,
+        pass: process.env.EMAIL_SENDER_PASSWORD
+    },
+    tls: {
+        rejectUnauthorized: false //https://github.com/nodemailer/nodemailer/issues/406
+    }
+  });
+  
     var mailOptions = {
         from: req.body.name + ' ' + '<' + req.body.email + '>',
         to: process.env.CONTACT_TO_EMAIL,
