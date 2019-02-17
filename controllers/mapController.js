@@ -430,6 +430,109 @@ module.exports = function () {
                     'details':req.body.details,
                     ownerUser: (owner ? owner.id : 0)
                 });
+                var map= newMap;
+                if(map ){
+                    //clear all group permissions
+                //     try{
+                //         await models.Permission.destroy(
+                //        {
+                //             where: {
+                //                  contentType: 'Map',
+                //                  contentId: map.id,
+                //                  permissionName: 'View',
+                //                  grantToType: 'group'
+                //                  //, grantToId: ?
+                //                 }
+                             
+                //        });
+                //    }catch(ex){}
+                       if(req.body.groupsWhoCanViewMap && req.body.groupsWhoCanViewMap.length){
+                           for(var i=0;i<req.body.groupsWhoCanViewMap.length;i++){
+                               try{
+                                   var map_grantViewViewToGroup = await models.Permission.create(
+                                       {
+                                           contentType: 'Map',
+                                           contentId: map.id,
+                                           permissionName: 'View',
+                                           grantToType: 'group',
+                                           grantToId: req.body.groupsWhoCanViewMap[i],
+                                           insertedByUserId: req.user.id
+                                       });
+                               }catch(ex){}
+                           }
+                       }
+                    var [, allUsers] = await util.call(models.Group.findOne({ where: { name: 'users' } }));
+                    if(allUsers){
+                        if(req.body.grantViewPermissionToAllUsers){
+                            // try{
+                            //     var tryDeletePrevPermissions = await models.Permission.destroy(
+                            //         {
+                            //             where: {
+                            //                 contentType: 'Map',
+                            //                 contentId: map.id,
+                            //                 permissionName: 'View',
+                            //                 grantToType: 'group',
+                            //                 grantToId: allUsers.id
+                            //                 }
+                                        
+                            //         });
+                            // }catch(ex){}
+                            var map_shareViewWithAllUsers = await models.Permission.create(
+                                {
+                                    contentType: 'Map',
+                                    contentId: map.id,
+                                    permissionName: 'View',
+                                    grantToType: 'group',
+                                    grantToId: allUsers.id,
+                                    insertedByUserId: req.user.id
+                                }); 
+                        }else{
+                            var map_shareViewWithAllUsers = await models.Permission.destroy(
+                                {
+                                     where: {
+                                          contentType: 'Map',
+                                          contentId: map.id,
+                                          permissionName: 'View',
+                                          grantToType: 'group',
+                                          grantToId: allUsers.id
+                                         }
+                                      
+                                });
+                               
+                        }
+                    }
+
+                    //clear all user permissions
+                    // try{
+                    //      await models.Permission.destroy(
+                    //     {
+                    //          where: {
+                    //               contentType: 'Map',
+                    //               contentId: map.id,
+                    //               permissionName: 'View',
+                    //               grantToType: 'user'
+                    //               //, grantToId: ?
+                    //              }
+                              
+                    //     });
+                    // }catch(ex){}
+                        if(req.body.usersWhoCanViewMap && req.body.usersWhoCanViewMap.length){
+                            for(var i=0;i<req.body.usersWhoCanViewMap.length;i++){
+                                try{
+                                    var map_grantViewViewToUser = await models.Permission.create(
+                                        {
+                                            contentType: 'Map',
+                                            contentId: map.id,
+                                            permissionName: 'View',
+                                            grantToType: 'user',
+                                            grantToId: req.body.usersWhoCanViewMap[i],
+                                            insertedByUserId: req.user.id
+                                        });
+                                }catch(ex){}
+                            }
+                        }
+
+                }
                 result.status=true;
                 result.id=newMap.id;
                 return res.json(result) ;

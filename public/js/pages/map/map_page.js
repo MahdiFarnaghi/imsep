@@ -96,6 +96,7 @@ var pageTask={
             }
     },
     init:function(){
+        var self=this;
         app.mapContainer= new MapContainer(app,{targetEl:'map'});
         app.mapContainer.create();
         //app.mapContainer.loadFromJson(atob(app.pageData.mapData)); 
@@ -157,116 +158,258 @@ var pageTask={
                  event.preventDefault();
            }
         });
-        frmMap.submit(function (e) {
+        $('#cmdSaveMap').click(function(){
+            self.saveMap(frmMap,false);
+            
+         });
+         $('#cmdSaveMapAs').click(function(){
+            self.saveMap(frmMap,true);
+            
+         });
+        //  frmMap.submit(function (e) {
 
-                e.preventDefault();
-                var $form = $(this);
-                if(! $form.valid()) return false;
+        //     e.preventDefault();
+        //     var $form = $(this);
+        //     if(! $form.valid()) return false;
+        //  });
+        // frmMap.submit(function (e) {
 
-                waitingDialog.show('Saving map', { progressType: ''});
+        //         e.preventDefault();
+        //         var $form = $(this);
+        //         if(! $form.valid()) return false;
+
+        //         waitingDialog.show('Saving map', { progressType: ''});
 
 
-                var currentExtent=app.mapContainer.getCurrentGeoExtent();
+        //         var currentExtent=app.mapContainer.getCurrentGeoExtent();
                 
-                $form.find('#ext_north').val(currentExtent.maxy);
-                $form.find('#ext_east').val(currentExtent.maxx);
-                $form.find('#ext_south').val(currentExtent.miny);
-                $form.find('#ext_west').val(currentExtent.minx);
-                $form.find('#details').val(app.mapContainer.getMapDetailsJsonStr());
+        //         $form.find('#ext_north').val(currentExtent.maxy);
+        //         $form.find('#ext_east').val(currentExtent.maxx);
+        //         $form.find('#ext_south').val(currentExtent.miny);
+        //         $form.find('#ext_west').val(currentExtent.minx);
+        //         $form.find('#details').val(app.mapContainer.getMapDetailsJsonStr());
 
-                $.ajax({
-                    type: $form.attr('method'),
-                    url: $form.attr('action'),
-                    data: $form.serialize(),
-                    success: function (data) {
-                        var mapId=data.id;
-                        if(!data.status){
-                            waitingDialog.hide();
-                            $.notify({
-                                message:  data.message ||"Failed to save map."
-                            },{
-                                type:'danger',
-                                delay:2000,
-                                animate: {
-                                    enter: 'animated fadeInDown',
-                                    exit: 'animated fadeOutUp'
-                                }
-                            });
-                            return;
-                        }
-                        //waitingDialog.hide();
-                        //console.log('Submission was successful.');
-                    // console.log(data);
-                        //app.mapContainer.exportPngBase64Str(function(pngBase64){
-                        //    var a=1;
-                    // });
+        //         $.ajax({
+        //             type: $form.attr('method'),
+        //             url: $form.attr('action'),
+        //             data: $form.serialize(),
+        //             success: function (data) {
+        //                 var mapId=data.id;
+        //                 if(!data.status){
+        //                     waitingDialog.hide();
+        //                     $.notify({
+        //                         message:  data.message ||"Failed to save map."
+        //                     },{
+        //                         type:'danger',
+        //                         delay:2000,
+        //                         animate: {
+        //                             enter: 'animated fadeInDown',
+        //                             exit: 'animated fadeOutUp'
+        //                         }
+        //                     });
+        //                     return;
+        //                 }
+        //                 //waitingDialog.hide();
+        //                 //console.log('Submission was successful.');
+        //             // console.log(data);
+        //                 //app.mapContainer.exportPngBase64Str(function(pngBase64){
+        //                 //    var a=1;
+        //             // });
 
-                    var clean_uri = location.protocol + '//' + location.host + location.pathname;
-                    var savedMapPathName='/map/'+ data.id;
-                    if(savedMapPathName !=location.pathname){ 
-                            var new_uri = location.protocol + '//' + location.host + savedMapPathName;
-                            window.history.replaceState({}, document.title, new_uri);
-                    }
-                    frmMap.attr('action', savedMapPathName);
+        //             var clean_uri = location.protocol + '//' + location.host + location.pathname;
+        //             var savedMapPathName='/map/'+ data.id;
+        //             if(savedMapPathName !=location.pathname){ 
+        //                     var new_uri = location.protocol + '//' + location.host + savedMapPathName;
+        //                     window.history.replaceState({}, document.title, new_uri);
+        //             }
+        //             frmMap.attr('action', savedMapPathName);
                     
 
-                    waitingDialog.show('Updating map\'s thumbnail', { progressType: 'info'});
-                    if(data.status){
-                        $.notify({
-                            message: "Map saved successfully"
-                        },{
-                            type:'success',
-                            delay:2000,
-                            animate: {
-                                enter: 'animated fadeInDown',
-                                exit: 'animated fadeOutUp'
-                            }
-                        });
-                    }
-                    app.mapContainer.exportPngBlob(function(blob){
-                            //https://stackoverflow.com/questions/6850276/how-to-convert-dataurl-to-file-object-in-javascript
-                            if(!blob){
-                                waitingDialog.hide();
-                                return;
-                            }
-                            var formdata = new FormData();
-                            formdata.append("file", blob);
-                            $.ajax({
-                            url: '/map/' + mapId +'/thumbnail',
-                            type: "POST",
-                            data: formdata,
-                            processData: false,
-                            contentType: false,
-                            }).done(function(respond){
-                                    waitingDialog.hide();
+        //             waitingDialog.show('Updating map\'s thumbnail', { progressType: 'info'});
+        //             if(data.status){
+        //                 $.notify({
+        //                     message: "Map saved successfully"
+        //                 },{
+        //                     type:'success',
+        //                     delay:2000,
+        //                     animate: {
+        //                         enter: 'animated fadeInDown',
+        //                         exit: 'animated fadeOutUp'
+        //                     }
+        //                 });
+        //             }
+        //             app.mapContainer.exportPngBlob(function(blob){
+        //                     //https://stackoverflow.com/questions/6850276/how-to-convert-dataurl-to-file-object-in-javascript
+        //                     if(!blob){
+        //                         waitingDialog.hide();
+        //                         return;
+        //                     }
+        //                     var formdata = new FormData();
+        //                     formdata.append("file", blob);
+        //                     $.ajax({
+        //                     url: '/map/' + mapId +'/thumbnail',
+        //                     type: "POST",
+        //                     data: formdata,
+        //                     processData: false,
+        //                     contentType: false,
+        //                     }).done(function(respond){
+        //                             waitingDialog.hide();
                                     
-                                    if(respond.status)  { 
-                                        $.notify({
-                                            message: "Map's thumbnail saved successfully"
-                                        },{
-                                            type:'info',
-                                            delay:2000,
-                                            animate: {
-                                                enter: 'animated fadeInDown',
-                                                exit: 'animated fadeOutUp'
-                                            }
-                                        });
-                                      }else{
-                                          $.notify({
-                                            message:  respond.message ||"Failed to save thumbnail."
-                                        },{
-                                            type:'danger',
-                                            delay:2000,
-                                            animate: {
-                                                enter: 'animated fadeInDown',
-                                                exit: 'animated fadeOutUp'
-                                            }
-                                        });
-                                      }
-                            }).fail(function( jqXHR, textStatus, errorThrown) {
-                                waitingDialog.hide();
+        //                             if(respond.status)  { 
+        //                                 $.notify({
+        //                                     message: "Map's thumbnail saved successfully"
+        //                                 },{
+        //                                     type:'info',
+        //                                     delay:2000,
+        //                                     animate: {
+        //                                         enter: 'animated fadeInDown',
+        //                                         exit: 'animated fadeOutUp'
+        //                                     }
+        //                                 });
+        //                               }else{
+        //                                   $.notify({
+        //                                     message:  respond.message ||"Failed to save thumbnail."
+        //                                 },{
+        //                                     type:'danger',
+        //                                     delay:2000,
+        //                                     animate: {
+        //                                         enter: 'animated fadeInDown',
+        //                                         exit: 'animated fadeOutUp'
+        //                                     }
+        //                                 });
+        //                               }
+        //                     }).fail(function( jqXHR, textStatus, errorThrown) {
+        //                         waitingDialog.hide();
+        //                         $.notify({
+        //                             message: "Failed to save thumbnail"
+        //                         },{
+        //                             type:'danger',
+        //                             delay:2000,
+        //                             animate: {
+        //                                 enter: 'animated fadeInDown',
+        //                                 exit: 'animated fadeOutUp'
+        //                             }
+        //                         });
+        //                     });
+                        
+        //                 });
+        //             },
+        //             error: function ( jqXHR,  textStatus,  errorThrown) {
+        //                 waitingDialog.hide();
+        //                 console.log('An error occurred.');
+        //                 $.notify({
+        //                     message: "Failed to save Map"
+        //                 },{
+        //                     type:'danger',
+        //                     delay:2000,
+        //                     animate: {
+        //                         enter: 'animated fadeInDown',
+        //                         exit: 'animated fadeOutUp'
+        //                     }
+        //                 });
+        //             },
+        //         });
+        //     });
+
+    },
+    saveMap:function(frmMap,isNew){
+        var $form = $(frmMap);
+        if(! $form.valid()) return false;
+
+        waitingDialog.show('Saving map', { progressType: ''});
+
+
+        var currentExtent=app.mapContainer.getCurrentGeoExtent();
+        
+        $form.find('#ext_north').val(currentExtent.maxy);
+        $form.find('#ext_east').val(currentExtent.maxx);
+        $form.find('#ext_south').val(currentExtent.miny);
+        $form.find('#ext_west').val(currentExtent.minx);
+        $form.find('#details').val(app.mapContainer.getMapDetailsJsonStr());
+        var url=$form.attr('action');
+        if(isNew){
+            url='/map/-1';
+        }
+        $.ajax({
+            type: $form.attr('method'),
+            url: url,
+            data: $form.serialize(),
+            success: function (data) {
+                var mapId=data.id;
+                if(!data.status){
+                    waitingDialog.hide();
+                    $.notify({
+                        message:  data.message ||"Failed to save map."
+                    },{
+                        type:'danger',
+                        delay:2000,
+                        animate: {
+                            enter: 'animated fadeInDown',
+                            exit: 'animated fadeOutUp'
+                        }
+                    });
+                    return;
+                }
+                //waitingDialog.hide();
+                //console.log('Submission was successful.');
+            // console.log(data);
+                //app.mapContainer.exportPngBase64Str(function(pngBase64){
+                //    var a=1;
+            // });
+
+            var clean_uri = location.protocol + '//' + location.host + location.pathname;
+            var savedMapPathName='/map/'+ data.id;
+            if(savedMapPathName !=location.pathname){ 
+                    var new_uri = location.protocol + '//' + location.host + savedMapPathName;
+                    window.history.replaceState({}, document.title, new_uri);
+            }
+            frmMap.attr('action', savedMapPathName);
+            
+
+            waitingDialog.show('Updating map\'s thumbnail', { progressType: 'info'});
+            if(data.status){
+                $.notify({
+                    message: "Map saved successfully"
+                },{
+                    type:'success',
+                    delay:2000,
+                    animate: {
+                        enter: 'animated fadeInDown',
+                        exit: 'animated fadeOutUp'
+                    }
+                });
+            }
+            app.mapContainer.exportPngBlob(function(blob){
+                    //https://stackoverflow.com/questions/6850276/how-to-convert-dataurl-to-file-object-in-javascript
+                    if(!blob){
+                        waitingDialog.hide();
+                        return;
+                    }
+                    var formdata = new FormData();
+                    formdata.append("file", blob);
+                    $.ajax({
+                    url: '/map/' + mapId +'/thumbnail',
+                    type: "POST",
+                    data: formdata,
+                    processData: false,
+                    contentType: false,
+                    }).done(function(respond){
+                            waitingDialog.hide();
+                            
+                            if(respond.status)  { 
                                 $.notify({
-                                    message: "Failed to save thumbnail"
+                                    message: "Map's thumbnail saved successfully"
+                                },{
+                                    type:'info',
+                                    delay:2000,
+                                    animate: {
+                                        enter: 'animated fadeInDown',
+                                        exit: 'animated fadeOutUp'
+                                    }
+                                });
+                              }else{
+                                  $.notify({
+                                    message:  respond.message ||"Failed to save thumbnail."
                                 },{
                                     type:'danger',
                                     delay:2000,
@@ -275,15 +418,11 @@ var pageTask={
                                         exit: 'animated fadeOutUp'
                                     }
                                 });
-                            });
-                        
-                        });
-                    },
-                    error: function ( jqXHR,  textStatus,  errorThrown) {
+                              }
+                    }).fail(function( jqXHR, textStatus, errorThrown) {
                         waitingDialog.hide();
-                        console.log('An error occurred.');
                         $.notify({
-                            message: "Failed to save Map"
+                            message: "Failed to save thumbnail"
                         },{
                             type:'danger',
                             delay:2000,
@@ -292,10 +431,25 @@ var pageTask={
                                 exit: 'animated fadeOutUp'
                             }
                         });
-                    },
+                    });
+                
                 });
-            });
-
+            },
+            error: function ( jqXHR,  textStatus,  errorThrown) {
+                waitingDialog.hide();
+                console.log('An error occurred.');
+                $.notify({
+                    message: "Failed to save Map"
+                },{
+                    type:'danger',
+                    delay:2000,
+                    animate: {
+                        enter: 'animated fadeInDown',
+                        exit: 'animated fadeOutUp'
+                    }
+                });
+            },
+        });
     },
     activateTab: function(tab){
         $('.nav-tabs a[href="#' + tab + '"]').tab('show');

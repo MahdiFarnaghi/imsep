@@ -234,9 +234,14 @@
                          
                         @if(model.userIsOwnerOfMap || model.userHasEditPermission ){
                         <div class="form-group">
-                            <div class="col-sm-12"><button type="submit" class="btn btn-primary btn-success">Save</button></div>
+                            <div class="col-sm-12"><button id="cmdSaveMap" type="button" class="btn btn-primary btn-success">Save</button></div>
                         </div>
                         }
+                        @*
+                          <div class="form-group">
+                            <div class="col-sm-12"><button id="cmdSaveMapAs" type="button" class="btn btn-primary btn-small btn-info">Save a Copy</button></div>
+                        </div>
+                        *@
                     </form>
 
                 </div>
