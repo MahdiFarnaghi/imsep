@@ -405,10 +405,10 @@ this.legend=legend;
   });
   map.on('singleclick', function(evt) {
     var ct=self.getCurrentTool();
-    if(!ct){
-        return;
-    }
-    if(ct.name !=='identify_tool'){
+    //if(!ct){
+    //    return;
+   // }
+    if(ct && ct.name !=='identify_tool'){
         return;
     }
       var coordinate = evt.coordinate;
@@ -452,10 +452,17 @@ this.legend=legend;
        
             
           var feature = featureAt.feature;
+          var layer=featureAt.layer;
           var content = "";
           //content += "<img src='"+feature.get("img")+"'/>";
           content += '<table class="table table-condensed">';
-          content += '<thead><tr><th>Field</th><th>Value</th></tr></thead>';
+          content += '<thead>';
+          if(layer && layer.get('title')){
+            content += '<tr><th>' + layer.get('title')+'</th></tr>';    
+          }else{
+            content += '<tr><th>Field</th><th>Value</th></tr>';
+          }
+          content += '</thead>';
           content += '<tbody>';
           var properties = feature.getProperties();
           for (var key in properties) {
