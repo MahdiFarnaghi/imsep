@@ -17,12 +17,33 @@
             "url": "http://localhost:1337" ,
             "webRoot": "${workspaceFolder}\\public"
             
-        }
+        },
+        {
+            "name": "Docker: Attach to Node",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "address": "localhost",
+            "localRoot": "${workspaceFolder}",
+            "remoteRoot": "/usr/src/app",
+            "protocol": "inspector"
+          },{
+            "type":"chrome",
+            "request": "launch",
+            "name": "Chrome1338",
+            "url": "http://localhost:1338" ,
+            "webRoot": "${workspaceFolder}\\public"
+            
+        },
     ],
     "compounds": [
         {
             "name": "Server/Chrome",
             "configurations": ["Server", "Chrome"]
+        },
+        {
+            "name": "Docker/Chrome1338",
+            "configurations": ["Docker: Attach to Node", "Chrome1338"]
         }
         
     ]
