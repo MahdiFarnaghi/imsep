@@ -185,7 +185,7 @@ module.exports = function (passportConfig) {
                 userName: req.body.userName,
                 email: req.body.email,
                 emailVerified:false,
-                emailVerifyToken,emailToken,
+                emailVerifyToken:emailToken,
                 emailVerifyExpires:new Date(Date.now() + (30*24*3600000)),//expires in 1 month
                 password: req.body.password
                 , parent: (superAdmin ? superAdmin.id : 0)
