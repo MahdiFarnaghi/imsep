@@ -208,7 +208,7 @@ module.exports = function (passportConfig) {
                     }
                 });
                 var mailOptions = {
-                    to: user.email,
+                    to: newUser.email,
                     from: process.env.SUPPORT_EMAIL,
                     subject: '✔ Verify your email on ' + process.env.SITE_NAME,
                     text: 'You are receiving this email because this email address is linked to an account in this site.\n\n' +
