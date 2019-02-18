@@ -151,6 +151,7 @@ app.use(compression());
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/favicon.ico', express.static('/public/favicon.ico'));
+app.use('/earth48.png', express.static('/public/earth48.png'));
 
 //app.use(bodyParser.json());
 //app.use(bodyParser.urlencoded({ extended: false }));

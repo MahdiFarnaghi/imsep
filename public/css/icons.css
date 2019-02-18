@@ -1,4 +1,23 @@
-﻿
+﻿.eathIcon64{
+    background-image: url(images/earth64.png) !important;
+    background-repeat: no-repeat;
+    padding-left: 64px;
+    background-position-y: center;
+}
+.eathIcon48{
+    background-image: url(images/earth48.png) !important;
+    background-repeat: no-repeat;
+    padding-left: 48px;
+    background-position-y: center;
+}
+.eathIcon36{
+    background-image: url(images/earth36.png) !important;
+    background-repeat: no-repeat;
+    padding-left: 36px;
+    background-position-y: center;
+       color: #0471a0 !important;
+        margin-left: 4px;
+}
 .drawLineIcon
 {
     background-image: url(images/drawLine.png) !important;
