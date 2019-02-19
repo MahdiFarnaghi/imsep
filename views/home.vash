@@ -64,57 +64,132 @@
                 </div>
             </div>
             *@
-            <div class="col-sm-4">
+            <div class="col-sm-6">
                 <div class="panel">
                     <div class="panel-body">
                         <h3>Maps</h3>
-                        <p>Last published or modified maps</p>
+                         @if(model.user){
+                            <p>Last published or modified maps</p>
+                         }else{
+                             <p>Last published maps</p>
+                         }
                          @{var i=0;}
-   @model.maps.forEach(function(item) {
-    @{i++}                        
-    @if(i<=3){
-    <div class="col-xs-18 col-sm-12 col-md-12 listItem">
-        <div class="item-container" >
-          <div class="thumbnail">
-           
-            <div class="caption">
-                <a href="/map/@item.id">
-                @if (item.thumbnail){<img class="avatar" src="/map/@item.id/thumbnail" />}
-                else {<i class="avatar fa fa-map"> </i>}
-                <h4>@item.name</h4>
-                </a>
-                <p>@html.raw(item.description)</p>
-                
-                <ul class="list-inline">
-                    
-                    <li>
-                        <i class="fa fa-calendar" title="Last modified at"></i><span title="Last modified at" class="convertTolocalDateTime" >@item.updatedAt.toUTCString()</span>
-                    </li>
-                    <li>
-                        <i class="fa fa-user" title="Owner"></i>
-                         @if(model.identity.id==item.OwnerUser.id){
-                              <b> <span title="Owner" >@item.OwnerUser.userName</span></b>
-                          }else{
-                            <span title="Owner" >@item.OwnerUser.userName</span>
-                          }
+                        @model.maps.forEach(function(item) {
+                            @{i++}                        
+                            @if(i<=3){
+                            <div class="col-xs-18 col-sm-12 col-md-12 listItem">
+                                <div class="item-container" >
+                                <div class="thumbnail">
+                                
+                                    <div class="caption">
+                                        <a href="/map/@item.id">
+                                        @if (item.thumbnail){<img class="avatar" src="/map/@item.id/thumbnail" />}
+                                        else {<i class="avatar fa fa-map"> </i>}
+                                        <h4>@item.name</h4>
+                                        </a>
+                                        <p>@html.raw(item.description)</p>
+                                        
+                                        <ul class="list-inline">
+                                            
+                                            <li>
+                                                <i class="fa fa-calendar" title="Last modified at"></i><span title="Last modified at" class="convertTolocalDateTime" >@item.updatedAt.toUTCString()</span>
+                                            </li>
+                                            <li>
+                                                <i class="fa fa-user" title="Owner"></i>
+                                                @if(model.identity.id==item.OwnerUser.id){
+                                                    <b> <span title="Owner" >@item.OwnerUser.userName</span></b>
+                                                }else{
+                                                    <span title="Owner" >@item.OwnerUser.userName</span>
+                                                }
+                                                
+                                            </li>
+                                            
+                                        </ul>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+
+
+                            }
                         
-                    </li>
-                    
-                </ul>
-            </div>
-          </div>
-          </div>
-     </div>
-
-
-    }
-   
-   })
+                        })
                         <p></p>
                         <a href="/maps" role="button" class="btn btn-default">View all</a>
                     </div>
                 </div>
             </div>
+
+
+    <div class="col-sm-6">
+                <div class="panel">
+                    <div class="panel-body">
+                        <h3>Data layers</h3>
+                         @if(model.user){
+                            <p>Last published or modified data layers</p>
+                         }else{
+                             <p>Last published data layers</p>
+                         }
+                         @{var i=0;}
+                        @model.layers.forEach(function(item) {
+                            @{i++}                        
+                            @if(i<=3){
+                            <div class="col-xs-18 col-sm-12 col-md-12 listItem">
+                                <div class="item-container" >
+                                <div class="thumbnail">
+                                
+                                    <div class="caption">
+                                         @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || (model.identity.isDataManager && item._userHasPermission_EditSchema)){
+                                        <a href="/datalayer/@item.id?dataType=@item.dataType" >
+                                        @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
+                                        else {<i class="avatar fa fa-map"> </i>}
+                                        <h4>@item.name</h4>
+                                        </a>
+                                        }else
+                                        {
+                                        <label>
+                                        @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
+                                        else {<i class="avatar fa fa-map"> </i>}
+                                        <h4>@item.name</h4>
+                                        </label>
+                                        }
+                                         <p style="white-space: pre;" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
+                                       
+                                        <ul class="list-inline">
+                                            <li>
+                                                <i class="fa fa-user" title="Owner" ></i> 
+                                                @if(model.identity.id==item.OwnerUser.id){
+                                                    <b> <span title="Owner" >@item.OwnerUser.userName</span></b>
+                                                }else{
+                                                    <span title="Owner">@item.OwnerUser.userName</span>
+                                                }
+                                                
+                                            </li>
+                                            <li>
+                                                <i class="fa fa-calendar"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
+                                            </li>
+                                            <li>
+                                                <a title="Preview or edit" href="/map/preview?layers=@item.id"><i class="glyphicon glyphicon-edit"></i></a> 
+                                            </li>
+                                          
+                                        </ul>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+
+
+                            }
+                        
+                        })
+                        <p></p>
+                        <a href="/datalayers" role="button" class="btn btn-default">View all</a>
+                    </div>
+                </div>
+            </div>
+
+
+
         </div>
     </div>
   })

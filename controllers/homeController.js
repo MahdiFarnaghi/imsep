@@ -14,7 +14,7 @@ module.index = async function(req, res) {
   // getMap list
   var items;
   if (res.locals.identity.isAdministrator) {
-      items = await models.Map.findAll( { limit:5,
+      items = await models.Map.findAll( { limit:7,
           //include: [ { model: models.User, as: 'OwnerUser' }]
           include: [ {
                model: models.User, as: 'OwnerUser',
@@ -108,13 +108,125 @@ module.index = async function(req, res) {
        return false;
    });
    items=filteredItems;
-}
+  }
+  var maps=items;
+   // get data list
+   items=null;
+   if (res.locals.identity.isAdministrator) {
+     
+    items = await models.DataLayer.findAll( {limit:7,
+      include: [ {
+         model: models.User, as: 'OwnerUser',
+         attributes: ['userName','id','firstName','lastName','parent'] 
+        }],
+      order:[     ['updatedAt','DESC'] ]                        
+              });
 
+   } else if ( req.user && req.user.id) {
+       
+       items = await models.DataLayer.findAll({ 
+        //where: { ownerUser: req.user.id },
+        include: [ { model: models.User, as: 'OwnerUser', attributes: ['userName','id','firstName','lastName','parent']}
+                    ,{ model: models.Permission, as: 'Permissions'
+                        ,include: [
+                            {
+                                model: models.User, as: 'assignedToUser',
+                                required: false,
+                                where: {
+                                    id:  req.user.id
+                                }
+                            },
+                            {
+                                model: models.Group, as: 'assignedToGroup',
+                                required: false,
+                                include: [
+                                    {
+                                        model: models.User, as: 'Users',
+                                        required: true,
+                                        where: {
+                                            id: req.user.id
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                        }
+                ],
+                    
+        order:[     ['updatedAt','DESC'] ]
+    });
 
+    var filteredItems = items.filter((v) => {
+        if(v.ownerUser == req.user.id){
+            v._userHasPermission_EditSchema=true;
+            return true;
+        }
+        if(v.OwnerUser && (v.OwnerUser.parent == req.user.id)){
+            v._userHasPermission_EditSchema=true;
+            return true;
+        }
+        if(v.Permissions && v.Permissions.length){
+            var hasPermission= v.Permissions.some((p)=>{
+             
+                if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                    return (p.permissionName=='Edit'|| p.permissionName=='View' );
+                }else return false;
+            });
+            var hasPermission_EditSchema= v.Permissions.some((p)=>{
+                if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                    return (p.permissionName=='EditSchema' );
+                }else return false;
+            });
+            if(hasPermission_EditSchema){
+                v._userHasPermission_EditSchema=true;
+            }
+            return (hasPermission);
+        }
+        return false;
+    });
+    items=filteredItems;
+
+   }else  {
+       
+     items = await models.DataLayer.findAll({
+    //where: { ownerUser: req.user.id },
+       include: [ { model: models.User, as: 'OwnerUser',
+            attributes: ['userName','id','firstName','lastName','parent']}
+                ,{ model: models.Permission, as: 'Permissions'
+                    ,include: [
+                      
+                        {
+                            model: models.Group, as: 'assignedToGroup',
+                            required: true,
+                            where: {
+                             name:  'users'
+                            }
+                            
+                        }
+                    ]
+                    }
+            ],
+                
+    order:[     ['updatedAt','DESC'] ]
+    });
+    var filteredItems = items.filter((v) => {
+        if(v.Permissions && v.Permissions.length){
+            var hasPermission= v.Permissions.some((p)=>{
+                return (p.permissionName=='Edit'|| p.permissionName=='View' );
+            });
+            return (hasPermission);
+        }
+        return false;
+    });
+    items=filteredItems;
+   }
+ 
+   layers=items;
 
     res.render('home', {
         title: 'Home',
-        maps:items
+        maps:maps,
+        layers:layers
   });
 };
   

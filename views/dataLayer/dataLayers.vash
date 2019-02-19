@@ -87,11 +87,11 @@
                                 </a>
                                 }else
                                 {
-                                <a href="#" >
+                                 <label>
                                 @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
                                 else {<i class="avatar fa fa-map"> </i>}
                                 <h4>@item.name</h4>
-                                </a>
+                                </label>
                                 }
                             <p style="white-space: pre;" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
                             
