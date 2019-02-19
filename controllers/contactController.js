@@ -5,8 +5,25 @@ var nodemailer = require('nodemailer');
  * GET /contact
  */
 exports.contactGet = function(req, res) {
+  var name='';
+  var email='';
+  if(req.user){
+    name=req.user.userName;
+    if(req.user.firstName || req.user.lastName)
+    {
+      name+='(';
+      if(req.user.firstName)
+        name += req.user.firstName +' ';
+      if(req.user.lastName)
+        name += req.user.lastName ;
+      name+=')';   
+    }
+    email=req.user.email;
+  }
   res.render('contact', {
-    title: 'Contact'
+    title: 'Contact',
+    name:name,
+    email:email
   });
 };
 

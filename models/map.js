@@ -14,7 +14,8 @@ module.exports = (sequelize, DataTypes) => {
         ext_south:DataTypes.FLOAT,
         ext_west:DataTypes.FLOAT,
         details: DataTypes.TEXT,
-        thumbnail:DataTypes.BLOB('medium')
+//        thumbnail:DataTypes.BLOB('medium')
+        thumbnail:DataTypes.BLOB
         
     }, {
 

@@ -661,7 +661,9 @@ app.set('port', process.env.PORT || 3000);
     var server = app.listen(app.get('port'), function () {
         //debug('Express server listening on port ' + server.address().port);
         //console.log()
-        console.log('\x1b[47m\x1b[30m%s\x1b[0m', 'Server listening on port ' + server.address().port);  
+      //  console.log('\x1b[47m\x1b[30m%s\x1b[0m', 'Server listening on port ' + server.address().port);  
+       
+      console.log('\x1b[42m\x1b[42m%s\x1b[32m', 'iMSEP is running on local port:' + server.address().port);  
     });
 
 })();
@@ -757,7 +759,7 @@ async function initGDB(){
 
 async function initDataAsync() {
     var superAdmin = await models.User.create({ userName: 'superadmin', password: '8001msep#', parent: null });
-    var admin = await models.User.create({ userName: 'admin', password: '80fmsep#',  parent: superAdmin.id });
+    var admin = await models.User.create({ userName: 'admin', password: process.env.INIT_ADMIN_PASSWORD?process.env.INIT_ADMIN_PASSWORD:'80fmsep#',  parent: superAdmin.id });
     
     var administrators = await models.Group.create({ name: 'administrators',type:'system', ownerUser: admin.id });
     await administrators.setUsers([superAdmin, admin]);
