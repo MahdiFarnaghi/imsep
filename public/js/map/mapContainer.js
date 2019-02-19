@@ -1170,13 +1170,29 @@ MapContainer.prototype.getMapDetailsJsonStr = function() {
   details.layers = layers;
   return JSON.stringify(details);
 }
-MapContainer.prototype.exportPngBase64Str = function(callback) {
-
+MapContainer.prototype.exportPngBase64Str = function(callback,outWidth) {
+    var getResizedCanvas= function (canvas,newWidth,newHeight) {
+        var tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = newWidth;
+        tmpCanvas.height = newHeight;
+    
+        var ctx = tmpCanvas.getContext('2d');
+        ctx.drawImage(canvas,0,0,canvas.width,canvas.height,0,0,newWidth,newHeight);
+    
+        return tmpCanvas;
+    }
   var map = this.map;
 
   //map.once('rendercomplete', function(event) {
   map.once('postcompose', function(event) {
       var canvas = event.context.canvas;
+      if(typeof outWidth !=='undefined'){
+
+        var outHeight=  (outWidth/canvas.width)*canvas.height;
+        try{
+            canvas=getResizedCanvas(canvas,outWidth,outHeight);
+            }catch(ex){}
+     }
       if (navigator.msSaveBlob) {
           //navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
           var dataURL = canvas.toDataURL();
@@ -1196,13 +1212,31 @@ MapContainer.prototype.exportPngBase64Str = function(callback) {
   map.renderSync();
   // map.render();
 }
-MapContainer.prototype.exportPngBlob = function(callback) {
+MapContainer.prototype.exportPngBlob = function(callback,outWidth) {
+   
+    var getResizedCanvas= function (canvas,newWidth,newHeight) {
+        var tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = newWidth;
+        tmpCanvas.height = newHeight;
+    
+        var ctx = tmpCanvas.getContext('2d');
+        ctx.drawImage(canvas,0,0,canvas.width,canvas.height,0,0,newWidth,newHeight);
+    
+        return tmpCanvas;
+    }
 
   var map = this.map;
 
   //map.once('rendercomplete', function(event) {
   map.once('postcompose', function(event) {
       var canvas = event.context.canvas;
+      if(typeof outWidth !=='undefined'){
+
+          var outHeight=  (outWidth/canvas.width)*canvas.height;
+          try{
+          canvas=getResizedCanvas(canvas,outWidth,outHeight);
+          }catch(ex){}
+      }
       if (navigator.msSaveBlob) {
           //navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
           var blob = canvas.msToBlob();

@@ -433,7 +433,7 @@ var pageTask={
                         });
                     });
                 
-                });
+                },256);
             },
             error: function ( jqXHR,  textStatus,  errorThrown) {
                 waitingDialog.hide();
