@@ -59,21 +59,27 @@ module.index = async function(req, res) {
                   
       order:[     ['updatedAt','DESC'] ]
       });
+     
       var filteredItems = items.filter((v) => {
-          if(v.ownerUser == req.user.id){
-              return true;
-          }
-          if(v.OwnerUser && (v.OwnerUser.parent == req.user.id)){
-              return true;
-          }
-          if(v.Permissions && v.Permissions.length){
-              var hasPermission= v.Permissions.some((p)=>{
-                  return (p.permissionName=='Edit'|| p.permissionName=='View' );
-              });
-              return (hasPermission);
-          }
-          return false;
-      });
+        if(v.ownerUser == req.user.id){
+            return true;
+        }
+        if(v.OwnerUser && (v.OwnerUser.parent == req.user.id)){
+            return true;
+        }
+        if(v.Permissions && v.Permissions.length){
+            var hasPermission= v.Permissions.some((p)=>{
+                if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                        return (p.permissionName=='Edit'|| p.permissionName=='View' );
+                }else
+                {
+                    return false;
+                }
+            });
+            return (hasPermission);
+        }
+        return false;
+    });
       items=filteredItems;
   }else  {
       

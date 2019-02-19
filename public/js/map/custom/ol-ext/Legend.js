@@ -139,7 +139,7 @@ ol.control.Legend.prototype.refresh = function() {
   canvas.width = 5*width;
   canvas.height = (this._rows.length+1) * height * ol.has.DEVICE_PIXEL_RATIO;
   this._imgElement.innerHTML = '';
-  this._imgElement.append(canvas);
+  this._imgElement.appendChild(canvas);
   this._imgElement.style.height = (this._rows.length+1)*height + 'px';
   for (var i=0, r; r = this._rows[i]; i++) {
     addRow(r.title, false, r, i);
