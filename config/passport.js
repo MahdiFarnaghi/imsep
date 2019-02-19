@@ -3,6 +3,7 @@ var models = require('../models/index');
 //var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+var nodemailer = require('nodemailer');
 
 var RememberMeStrategy = require('passport-remember-me').Strategy;
 //var RememberMeStrategy = require('./rememberMeStrategy').Strategy;
@@ -160,19 +161,70 @@ passport.use(new RememberMeStrategy(
                 return done();
             }
             try {
+                var superAdmin = await User.findOne({ where: { userName: 'superadmin' } });
+                var [, allUsers] = await util.call(models.Group.findOne({ where: { name: 'users' } }));
+                var emailToken = await util.generateUrlSafeToken();
                 user = await User.create({
                     firstName: profile.name.givenName,
                     lastName: profile.name.familyName,
 
                     userName: profile.emails[0].value,
                     email: profile.emails[0].value,
+                    emailVerified:false,
+                    emailVerifyToken:emailToken,
+                    emailVerifyExpires:new Date(Date.now() + (30*24*3600000)),//expires in 1 month
                     gender: profile._json.gender,
                     location: profile._json.location,
                     picture: profile._json.image.url,
                     google: profile.id,
-                    // parent: (superAdmin ? superAdmin.id : 0)
-                    parent: 0
+                    parent: (superAdmin ? superAdmin.id : 0)
+                    
                 });
+                if(user){
+                    try{
+                        allUsers.setUsers(user);
+                    }catch(ex){
+    
+                    }
+                    var transporter = nodemailer.createTransport({
+                        service: process.env.EMAIL_SENDER_SERVICE,
+                        secure: false,
+                        auth: {
+                            user: process.env.EMAIL_SENDER_USERNAME,
+                            pass: process.env.EMAIL_SENDER_PASSWORD
+                        },
+                        tls: {
+                            rejectUnauthorized: false//https://github.com/nodemailer/nodemailer/issues/406
+                        }
+                    });
+                    var mailOptions = {
+                        to: user.email,
+                        from: process.env.SUPPORT_EMAIL,
+                        subject: '✔ Verify your email on ' + process.env.SITE_NAME,
+                        text: 'You are receiving this email because this email address is linked to an account in this site.\n\n' +
+                            'Please click on the following link, or paste this into your browser to complete email verification process:\n\n' +
+                            'http://' + req.headers.host + '/verifyemail/' + emailToken + '\n\n' +
+                            ''
+                        };
+                   
+                    try {
+                        await transporter.sendMail(mailOptions);
+                        
+                    } catch (ex) {
+                    }
+                    if(req.session){
+                        req.session.returnToUrl= '/account';
+                        req.flash('notify', {
+                            type:'success',
+                            notify:true,
+                            delay:3000,
+                            html: 'Your account is created.<br/>Please set a password for your new account'
+                        });
+                        req.flash('info', {
+                            msg: 'Please set a password for your new account'
+                        });
+                    }
+                }
             } catch (ex) {
                 var b = 1;
             }

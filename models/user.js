@@ -292,8 +292,12 @@ module.exports = (sequelize, DataTypes) => {
 
     User.prototype.comparePassword = async function (password) {
         var model = this;
+        try{
         const isMatch = await bcrypt.compare(password, model.get('password'));
         return isMatch;
+        }catch(ex){
+            return false;
+        }
     };
 
     User.beforeCreate(onBeforeSave);
