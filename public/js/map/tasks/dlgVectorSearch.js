@@ -181,6 +181,9 @@ DlgVectorSearch.prototype.createAttributesPanelUI=function(isActive){
   htm+='                          <option value="<" >&#x3C;</option>';
   htm+='                          <option value="<=" >&#x3C;=</option>';
   htm+='                          <option value="LIKE" >LIKE</option>';
+  htm+='                          <option value="IS NULL" >IS NULL</option>';
+  htm+='                          <option value="IS NOT NULL" >IS NOT NULL</option>';
+  
   htm+='    </select></div>';
   htm+=' </div>';
 
@@ -330,7 +333,7 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
     if(!field){
       return;
     }
-    
+    fieldName= '"'+fieldName+'"';
     var logicalOperator = 'AND';
     var newExp = "";
     var needValue = true;
