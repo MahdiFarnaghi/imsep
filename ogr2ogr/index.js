@@ -177,9 +177,19 @@ Ogr2ogr.prototype._run = function() {
     if (ogr2ogr._options) args = args.concat(ogr2ogr._options)
 
     var errbuf = ''
-
-    var s = cp.spawn( path.join(process.env.PSQL_BIN_PATH , 'ogr2ogr'), logCommand(args))
-    //var s = cp.spawn('ogr2ogr', logCommand(args))
+    var s;
+    var psqlBinPath_win = process.env.PSQL_BIN_PATH_WIN;
+    var psqlBinPath_linux = process.env.PSQL_BIN_PATH_LINUX;
+    if(process.platform=='win32'){
+      if(psqlBinPath_win ){
+        s = cp.spawn( path.join(psqlBinPath_win , 'ogr2ogr'), logCommand(args))
+       }else{
+         s = cp.spawn('ogr2ogr', logCommand(args))
+       }
+    }else{
+      s = cp.spawn('ogr2ogr', logCommand(args))
+    }
+    
 
     if (!ogr2ogr._isZipOut) s.stdout.pipe(ostream, {end: false})
 

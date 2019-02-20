@@ -1,5 +1,6 @@
 #FROM postgisnode
 FROM niranshahi/pg11node10:latest
+RUN apt-get install gdal-bin
 
 ENV NODE_ENV production
 WORKDIR /usr/src/app
