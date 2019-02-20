@@ -26,10 +26,10 @@ services:
     environment:
       NODE_ENV: production
       DB_HOSTNAME: imsep_postgis 
-      DB_PORT: 5432
+      DB_PORT: 25432
       DB_PASSWORD: d747db4520c046ccb5db14f39a014746
       GDB_HOSTNAME: imsep_postgis
-      GDB_PORT: 5432
+      GDB_PORT: 25432
       GDB_PASSWORD: d747db4520c046ccb5db14f39a014746
       DB_REBUILD: 'false'
     ports:
