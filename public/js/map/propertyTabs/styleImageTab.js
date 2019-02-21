@@ -296,9 +296,9 @@ function StyleImageTab() {
 
     htm+='<div class="form-group">';
     htm+='    <label>Symbol</label>';
-    htm+='    <div class="input-group">';
+    htm+='    <div class="input-group" data-toggle="popover" data-placement="top" data-content="Type symbol name" >';
     
-    htm+='        <input type="text" name="glyph" id="glyph" value="" placeholder="Symbol" class="form-control" data-val="true" data-val-required="Symbol is required"  />'
+    htm+='        <input type="text" name="glyph" id="glyph" value="" placeholder="Symbol"  class="form-control" data-val="true" data-val-required="Symbol is required"  />'
     htm+='        <span class="input-group-addon" id="glyphAddon" ></span>';
     htm+='    </div>';
     htm+='    <span class="field-validation-valid" data-valmsg-for="glyph" data-valmsg-replace="true"></span>';
@@ -397,6 +397,8 @@ function StyleImageTab() {
    self.drawSample();
   self.create_glyph_AutoSearch();
    
+  self.symbolTypeContent.find('[data-toggle="popover"]').popover();
+
    self.symbolTypeContent.find('#glyph').val()
    self.symbolTypeContent.find('#glyph').val(this._image.getGlyphName());
    self.symbolTypeContent.find('#glyph').change( function(){

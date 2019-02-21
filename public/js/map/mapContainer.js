@@ -1479,7 +1479,7 @@ MapContainer.prototype.addNewOSMXML_withOptions=function(options,features){
 }
 MapContainer.prototype.addNewOSMXML=function(){
     var self=this;
-      var dlg = new DlgOSMFilter(this, {filterArray:app.osmFilterArray}, {
+      var dlg_ = new DlgOSMFilter(this, {filterArray:app.osmFilterArray}, {
           title:'Filter OSM data',
           onapply:function(dlg,data){
                 var filterArray= data.filterArray;
@@ -1495,7 +1495,30 @@ MapContainer.prototype.addNewOSMXML=function(){
                        }
                     }
                 }
-              self.addNewOSMXML_filter(filterExpression);
+                if(filterExpression){
+                    dlg_.close();
+                    self.addNewOSMXML_filter(filterExpression);
+                }else{
+                    var msg='No filter is defined. Are you sure you want to continue?';
+                    var confirmDlg= new ConfirmDialog();
+                    confirmDlg.show(msg, function (confirm) {
+
+                        if (confirm) {
+                           // setTimeout(function() {
+                                dlg_.close();
+                                self.addNewOSMXML_filter(filterExpression);    
+                           // }, 1000);
+                            
+                        }else{
+                          
+                        }
+                    },
+                        {
+                            dialogSize: 'm',
+                            alertType: 'danger'
+                        }
+                    );
+                }
           }   
         }).show();
   
@@ -1529,7 +1552,7 @@ MapContainer.prototype.addNewOSMXML_filter=function(filterExpression){
     //   formdata.append('layerInfo',JSON.stringify(layerInfo));
 
       var processNotify= $.notify({
-        message: '<i class="wait-icon-with-padding">The processing is running in the background</i><br /> Analysing OSM Data volume...'
+        message: '<i class="wait-icon-with-padding">The processing is running in the background</i><br /> Retrieving data from OSM services...'
         },{
           z_index:50000,
             type:'info',
@@ -1547,6 +1570,7 @@ MapContainer.prototype.addNewOSMXML_filter=function(filterExpression){
         data:  query_count,
         processData: false,
         dataType: 'json',
+        timeout: app.OSM_REQUEST_TIMEOUT,
         contentType: 'application/json; charset=utf-8'
         }).done(function(data){
           if (data && data.elements && data.elements.length ) {
@@ -1558,11 +1582,11 @@ MapContainer.prototype.addNewOSMXML_filter=function(filterExpression){
             }
            if(tags.total){
                 var total= parseInt(tags.total);
-                if(total<= 100000){
+                if(total<= app.OSM_FEATURE_COUNT_LIMIT1){
                     do_Download();
                 }
-                else if(total> 100000 && total < 500000){
-                    var msg='There are too many features ('+ total+') to be downloaded.</br><span class="text-info"> Please try for a smaller map extent! or confrim to continue</span><br/><b class="text-info">Continue?</b>';
+                else if(total> app.OSM_FEATURE_COUNT_LIMIT1 && total < app.OSM_FEATURE_COUNT_LIMIT2){
+                    var msg='There are too many features ('+ total+') to be downloaded.</br><span class="text-info"> Please try for a smaller map extent or define more restricted filter or confrim to continue</span><br/><b class="text-info">Continue?</b>';
                     confirmDialog.show(msg, function (confirm) {
 
                         if (confirm) {
@@ -1570,7 +1594,7 @@ MapContainer.prototype.addNewOSMXML_filter=function(filterExpression){
                         }
                     },
                         {
-                            dialogSize: 'sm',
+                            dialogSize: 'm',
                             alertType: 'danger'
                         }
                     );
@@ -1613,18 +1637,31 @@ MapContainer.prototype.addNewOSMXML_filter=function(filterExpression){
                 
               
         }).fail(function( jqXHR, textStatus, errorThrown) {
+            if(textStatus=="timeout"){
+                $.notify({
+                    message: 'Requet Timeout</br><b><span class="text-info"> Please try for a smaller map extent or define more restricted filter!</span></b>'
+                },{
+                  z_index:50000,
+                    type:'danger',
+                    delay:10000,
+                    animate: {
+                        enter: 'animated fadeInDown',
+                        exit: 'animated fadeOutUp'
+                    }
+                }); 
+            }else{
               $.notify({
                 message: ""+ errorThrown+"<br/>Failed to complete task"
-            },{
-              z_index:50000,
-                type:'danger',
-                delay:2000,
-                animate: {
-                    enter: 'animated fadeInDown',
-                    exit: 'animated fadeOutUp'
-                }
-            }); 
-
+                },{
+                z_index:50000,
+                    type:'danger',
+                    delay:2000,
+                    animate: {
+                        enter: 'animated fadeInDown',
+                        exit: 'animated fadeOutUp'
+                    }
+                }); 
+            }    
             processNotify.close();
         });
 

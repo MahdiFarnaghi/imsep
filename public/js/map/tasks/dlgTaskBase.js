@@ -126,6 +126,11 @@ function DlgTaskBase(id,title,mapContainer,obj,options) {
   DlgTaskBase.prototype.closed=function(){
 
   }
+  DlgTaskBase.prototype.close=function(){
+    this.dlg.close();
+    this.closed();
+  }
+
   DlgTaskBase.prototype.create=function(){
     if(this.createUI){
       this.createUI();

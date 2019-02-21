@@ -10,6 +10,10 @@ var app = {
     initMap_Lat:9,
     initMap_Zoom:4,
 
+    OSM_REQUEST_TIMEOUT:20000,//ms
+    OSM_FEATURE_COUNT_LIMIT1:100000,//confirm zone
+    OSM_FEATURE_COUNT_LIMIT2:500000,
+
     setIdentity: function (identityJsonStr) {
         this.identity = JSON.parse(identityJsonStr);
         //alert(JSON.stringify(identity));

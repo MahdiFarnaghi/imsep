@@ -2,7 +2,9 @@
 function DlgOSMFilter(mapContainer,obj,options) {
   options=options||{};
   options.closable=false;
-
+    options.showOKButton=false;
+    options.showApplyButton=true;
+    options.applyButtonTitle='Search';
   DlgTaskBase.call(this, 'DlgOSMFilter'
       ,(options.title || 'Select OSM Keys')
       ,  mapContainer,obj,options);   

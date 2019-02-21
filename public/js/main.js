@@ -435,12 +435,10 @@ var waitingDialog2 = waitingDialog2 || (function ($) {
 
 })(jQuery);
 
-var confirmDialog = confirmDialog || (function ($) {
-    'use strict';
 
-	// Creating modal dialog's DOM
+function ConfirmDialog(){
 	var $dialog = $(
-		'<div class="modal fade" id="confirmDialog" role="dialog">'+
+		'<div class="modal fade" style="z-index:1055" id="confirmDialog" role="dialog">'+
 		'<div class="modal-dialog ">'+
 		 ' <div class="modal-content">'+
 		 '	<div class="modal-header">'+
@@ -457,70 +455,59 @@ var confirmDialog = confirmDialog || (function ($) {
 		 '</div>'+
 		 '</div>'+
 		 '</div>');
-	return {
-		/**
-		 * Opens our dialog
-		 * @param message Custom message
-		 * @param callback Custom message
-		 * @param options Custom options:
-		 * 				  options.title 
-		 *  			  options.yesTitle
-		 * 				  options.noTitle
-		 * 				  options.dialogSize - bootstrap postfix for dialog size, e.g. "sm", "m";
-		 * 				  options.alertType - bootstrap alert type e.g. success,danger, info, warning
-		 * 				  
-		 */
-		show: function (message,callback, options) {
-			// Assigning defaults
-			if (typeof options === 'undefined') {
-				options = {};
-			}
-			if (typeof message === 'undefined') {
-				message = 'Please Confirm';
-			}
-			var settings = $.extend({
-				title:'Confirm',
-				yesTitle:'Yes',
-				noTitle:'No',
-				dialogSize: 'm',
-				alertType:'warning'
-			}, options);
+	this.dialog=$dialog;
+}
+ConfirmDialog.prototype.show= function (message,callback, options) {
+	// Assigning defaults
+	var $dialog= this.dialog;
+	if (typeof options === 'undefined') {
+		options = {};
+	}
+	if (typeof message === 'undefined') {
+		message = 'Please Confirm';
+	}
+	var settings = $.extend({
+		title:'Confirm',
+		yesTitle:'Yes',
+		noTitle:'No',
+		dialogSize: 'm',
+		alertType:'warning'
+	}, options);
 
-			// Configuring dialog
-			$dialog.find('.modal-dialog').attr('class', 'modal-dialog').addClass('modal-' + settings.dialogSize);
-			if (settings.alertType) {
-				$dialog.find('.modal-body').addClass('alert-' + settings.alertType);
-			}
-			$dialog.find('.modal-title').text(settings.title);
-			$dialog.find('#confirmDialog_yes').text(settings.yesTitle);
-			$dialog.find('#confirmDialog_no').text(settings.noTitle);
-			$dialog.find('#confirmDialog_yes').click(function(){
-				if(callback){
-					callback(true);
-				}
-				$dialog.modal('hide');
-			});
-			$dialog.find('#confirmDialog_no').click(function(){
-				if(callback){
-					callback(false);
-				}
-				$dialog.modal('hide');
-			});
+	// Configuring dialog
+	$dialog.find('.modal-dialog').attr('class', 'modal-dialog').addClass('modal-' + settings.dialogSize);
+	if (settings.alertType) {
+		$dialog.find('.modal-body').addClass('alert-' + settings.alertType);
+	}
+	$dialog.find('.modal-title').text(settings.title);
+	$dialog.find('#confirmDialog_yes').text(settings.yesTitle);
+	$dialog.find('#confirmDialog_no').text(settings.noTitle);
+	$dialog.find('#confirmDialog_yes').click(function(){
+		if(callback){
+			callback(true);
+		}
+		$dialog.modal('hide');
+	});
+	$dialog.find('#confirmDialog_no').click(function(){
+		if(callback){
+			callback(false);
+		}
+		$dialog.modal('hide');
+	});
 
-			$dialog.find('#confirmDialog_content').html(message);
-			// Opening dialog
-			$dialog.modal();
-		},
-		/**
-		 * Closes dialog
-		 */
-		hide: function () {
-			$dialog.modal('hide');
-        },
-        
-        setMessage:function(message){
-			$dialog.find('#confirmDialog_content').html(message);
-        }
-	};
+	$dialog.find('#confirmDialog_content').html(message);
+	// Opening dialog
+	$dialog.modal();
+}
+/**
+ * Closes dialog
+ */
+ConfirmDialog.prototype.hide= function () {
+	this.dialog.modal('hide');
+}
 
-})(jQuery);
+ConfirmDialog.prototype.setMessage=function(message){
+	this.dialog.find('#confirmDialog_content').html(message);
+}
+var confirmDialog= new ConfirmDialog();
+
