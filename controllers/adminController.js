@@ -194,19 +194,19 @@ module.exports = function () {
                 });
                 try {
                     //if (req.body.isAdministrator) {
-                    //    administrators.setUsers(newUser);
+                    //    administrators.addUser(newUser);
                     //} else {
                     //}
                 } catch (ex) { }
                 try {
                     
-                    allUsers.setUsers(newUser);
+                    allUsers.addUser(newUser);
                     
                 } catch (ex) { }
                 try {
                     if (res.locals.identity.isAdministrator) {
                         if (req.body.isPowerUser) {
-                            powerUsers.setUsers(newUser);
+                            powerUsers.addUser(newUser);
                         } else {
                         }
                     }
@@ -214,13 +214,13 @@ module.exports = function () {
                 try {
                     
                     if (req.body.isDataManager) {
-                        dataManagers.setUsers(newUser);
+                        dataManagers.addUser(newUser);
                     } else {
                     }
                 } catch (ex) { }
                 try {
                     if (req.body.isDataAnalyst) {
-                        dataAnalysts.setUsers(newUser);
+                        dataAnalysts.addUser(newUser);
                     } else {
                     }
                 } catch (ex) { }
@@ -335,7 +335,7 @@ module.exports = function () {
 
                 try {
                     //if (req.body.isAdministrator) {
-                    //    administrators.setUsers(user);
+                    //    administrators.addUser(user);
                     //} else {
                     //    administrators.removeUsers(user);
                     //}
@@ -343,7 +343,7 @@ module.exports = function () {
                 try {
                     if (res.locals.identity.isAdministrator) {
                         if (req.body.isPowerUser) {
-                            powerUsers.setUsers(user);
+                            powerUsers.addUser(user);
                         } else {
                             powerUsers.removeUsers(user);
                         }
@@ -351,14 +351,14 @@ module.exports = function () {
                 } catch (ex) { }
                 try {
                     if (req.body.isDataManager) {
-                        dataManagers.setUsers(user);
+                        dataManagers.addUser(user);
                     } else {
                         dataManagers.removeUsers(user);
                     }
                 } catch (ex) { }
                 try {
                     if (req.body.isDataAnalyst) {
-                        dataAnalysts.setUsers(user);
+                        dataAnalysts.addUser(user);
                     } else {
                         dataAnalysts.removeUsers(user);
                     }
@@ -579,7 +579,7 @@ module.exports = function () {
         if (res.locals.identity.isAdministrator) {
             items = await models.Group.findAll(
                 {
-                     where: { type:{[Op.ne]:'hidden'} }, 
+                    // where: { type:{[Op.ne]:'hidden'} }, 
                      include: [
                         { model: models.User, as: 'OwnerUser', attributes: ['userName','id','firstName','lastName','parent']},
                     ],
@@ -624,7 +624,7 @@ module.exports = function () {
             if (res.locals.identity.isAdministrator) {
                     [err, item] = await util.call(models.Group.findOne({
                     where: {
-                        type:{[Op.ne]:'hidden'},
+                      //  type:{[Op.ne]:'hidden'},
                         id: req.params.id
                     },
                     include: [
@@ -762,7 +762,7 @@ module.exports = function () {
                 });
                 try {
                     //if (req.body.isAdministrator) {
-                    //    administrators.setUsers(newUser);
+                    //    administrators.addUser(newUser);
                     //} else {
                     //}
                 } catch (ex) { }
@@ -796,7 +796,7 @@ module.exports = function () {
                 if (res.locals.identity.isAdministrator) {
                     group = await models.Group.findOne({
                         where: {
-                            type:{[Op.ne]:'hidden'},
+                        //    type:{[Op.ne]:'hidden'},
                             id: groupId
                         }
                     });
@@ -913,7 +913,7 @@ module.exports = function () {
                 });
                 try {
                     //if (req.body.isAdministrator) {
-                    //    administrators.setUsers(newUser);
+                    //    administrators.addUser(newUser);
                     //} else {
                     //}
                 } catch (ex) { }
@@ -928,7 +928,7 @@ module.exports = function () {
                 if (res.locals.identity.isAdministrator) {
                     group = await models.Group.findOne({
                         where: {
-                            type:{[Op.ne]:'hidden'},
+                           // type:{[Op.ne]:'hidden'},
                             id: groupId
                         },
                         include: [

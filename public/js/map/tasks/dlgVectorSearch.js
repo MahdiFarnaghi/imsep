@@ -417,16 +417,41 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
   htm+=' </div>';
 
   htm+='<div class="form-group">';
-  htm+='    <div class="col-sm-4 "><select class="form-control  " id="spatialOperator" >';
+  htm+='    <div class="col-sm-5 "><select class="form-control  " id="spatialOperator" >';
   htm+='                          <option value="ST_Intersects" >Intersect</option>';
   htm+='                          <option value="NOT ST_Intersects" >Do not Intersect</option>';
-  htm+='                          <option value="ST_Within" >Are within</option>';
-  htm+='                          <option value="NOT ST_Within" >Are not within</option>';
   htm+='                          <option value="ST_Contains" >Contain</option>';
   htm+='                          <option value="NOT ST_Contains" >Do not Contain</option>';
+  htm+='                          <option value="ST_Within" >Are within</option>';
+  htm+='                          <option value="NOT ST_Within" >Are not within</option>';
+  htm+='                          <option value="ST_DWithin" >Are within distance</option>';
+  htm+='                          <option value="ST_Nearest" >Are nearest to</option>';
 
   htm+='    </select></div>';
   htm+=' </div>';
+  htm+='  <div class="form-group" id="ST_DWithin_options">';
+  htm+='    <span class="col-sm-2 " for="distance">Distance:</span>';
+  htm+='    <div class="col-sm-3 ">';
+  htm+='      <input type="number" name="distance" id="distance" value="" placeholder="Meters" class="form-control" data-val="true" data-val-requiredif="Distance is required" data-val-requiredif-dependentproperty="spatialOperator"  data-val-requiredif-targetvalue="ST_DWithin"  />'
+  htm+='    </div>';
+  htm+='    <span class="field-validation-valid" data-valmsg-for="distance" data-valmsg-replace="true"></span>';
+  htm+='  </div>';
+
+  htm+='  <div class="form-group" id="ST_Nearest_options">';
+  htm+='    <span class="col-sm-5 " for="nearestSearchDistance">Maximum search distance:</span>';
+  htm+='    <div class="col-sm-4 ">';
+  htm+='      <input type="number" name="nearestSearchDistance" id="nearestSearchDistance" value="" placeholder="Meters" class="form-control" data-val="true" data-val-requiredif="Distance is required" data-val-requiredif-dependentproperty="spatialOperator"  data-val-requiredif-targetvalue="ST_Nearest"  />'
+  htm+='    </div>';
+  htm+='    <span class="field-validation-valid" data-valmsg-for="nearestSearchDistance" data-valmsg-replace="true"></span>';
+  htm+='  </div>';
+  htm+='  <div class="form-group" id="ST_Nearest_options2">';
+  htm+='    <span class="col-sm-5 " for="nearestMaxNumber">Find maximum</span>';
+  htm+='    <div class="col-sm-2 ">';
+  htm+='      <input type="number" name="nearestMaxNumber" id="nearestMaxNumber" min="1" value="1" placeholder="" class="form-control" data-val="true" data-val-requiredif="Maximum number of nearest features is required"  />'
+  htm+='    </div>';
+  htm+='    <span class=" " >of nearest features</span>';
+  htm+='    <span class="field-validation-valid" data-valmsg-for="nearestMaxNumber" data-valmsg-replace="true"></span>';
+  htm+='  </div>';
 
   htm+='<div class="form-group">';
   htm+='  <div class="radio col-sm-12 ">';
@@ -525,8 +550,24 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
     this.addShape(filter.spatialFilter.searchArea);
   }
   
-
-
+  content.find('#spatialOperator').change(function(){
+    var operator=$(this).val();
+    if(operator==='ST_DWithin'){
+      content.find('#ST_DWithin_options').show();
+    }else{
+      content.find('#ST_DWithin_options').hide();
+    }
+    if(operator==='ST_Nearest'){
+      content.find('#ST_Nearest_options').show();
+      content.find('#ST_Nearest_options2').show();
+    }else{
+      content.find('#ST_Nearest_options').hide();
+      content.find('#ST_Nearest_options2').hide();
+    }
+    //
+  });
+  content.find('#spatialOperator').trigger('change');
+  
   var $form = $(content.find('#'+tabId +'_form'));
   $form.on('submit', function(event){
     // prevents refreshing page while pressing enter key in input box

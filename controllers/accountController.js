@@ -192,7 +192,7 @@ module.exports = function (passportConfig) {
             });
             if(newUser){
                 try{
-                    allUsers.setUsers(newUser);
+                    allUsers.addUser(newUser);
                 }catch(ex){
 
                 }
