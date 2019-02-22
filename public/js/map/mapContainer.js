@@ -2296,8 +2296,14 @@ MapContainer.prototype.duplicateLayer=function(layer,options){
                 
               
         }).fail(function( jqXHR, textStatus, errorThrown) {
+            var msg=errorThrown;
+            if(jqXHR.responseJSON){
+                if(jqXHR.responseJSON.error){
+                   msg=jqXHR.responseJSON.error; 
+                }
+            }
               $.notify({
-                message: ""+ errorThrown+"<br/>Failed to complete task"
+                message: ""+ msg+"<br/>Failed to complete task"
             },{
               z_index:50000,
                 type:'danger',
