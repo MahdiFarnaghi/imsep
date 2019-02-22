@@ -668,6 +668,7 @@ app.set('port', process.env.PORT || 3000);
        
       console.log('\x1b[42m\x1b[42m%s\x1b[32m', 'iMSEP is running on local port:' + server.address().port);  
     });
+    server.timeout = 60000*5;// 5 minutes
 
 })();
 //#endregion SERVER 

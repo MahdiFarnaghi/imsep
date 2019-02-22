@@ -1422,7 +1422,7 @@ MapContainer.prototype.addNewOSMXML_withOptions=function(options,features){
     var shapeType= options.shapeType || 'Point';
     var fields=[];
     if(options.info && options.info[shapeType] && options.info[shapeType].tags ){
-        for(var i=0;i< options.info[shapeType].tags.length;i++){
+        for(var i=0;i< options.info[shapeType].tags.length && i<10;i++){
             var tag= options.info[shapeType].tags[i];
             if(tag.name){
                 fields.push({
@@ -1564,7 +1564,7 @@ MapContainer.prototype.addNewOSMXML_filter=function(filterExpression){
         });
 
       $.ajax({
-        url: 'https://overpass-api.de/api/interpreter',
+        url:  app.overpassApiServer,
         //url: '/datalayer/toShapefile',
         type: "POST",
         data:  query_count,
@@ -1707,7 +1707,7 @@ MapContainer.prototype.addNewOSMXML_downloadData=function(filterExpression,epsg4
         });
 
       $.ajax({
-        url: 'https://overpass-api.de/api/interpreter',
+        url: app.overpassApiServer,
         //url: '/datalayer/toShapefile',
         type: "POST",
         data:  query,

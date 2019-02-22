@@ -17,6 +17,10 @@ var app = {
     routeServiceTokens:[
             '5b3ce3597851110001cf6248534f1763f9fd495086cc8333c25725fd'
     ],
+    //overpassApiServer:'https://overpass-api.de/api/interpreter',
+    overpassApiServer:'//overpass-api.de/api/interpreter',
+    //overpassApiServer:'//overpass.openstreetmap.fr/api/interpreter',
+    
     setIdentity: function (identityJsonStr) {
         this.identity = JSON.parse(identityJsonStr);
         //alert(JSON.stringify(identity));

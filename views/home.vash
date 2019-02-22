@@ -139,6 +139,12 @@
                                 <div class="thumbnail">
                                 
                                     <div class="caption">
+                                        <a href="/map/preview?layers=@item.id" >
+                                        @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
+                                        else {<i class="avatar fa fa-map"> </i>}
+                                        <h4>@item.name</h4>
+                                        </a>
+                                        @*
                                          @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || (model.identity.isDataManager && item._userHasPermission_EditSchema)){
                                         <a href="/datalayer/@item.id?dataType=@item.dataType" >
                                         @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
@@ -152,7 +158,7 @@
                                         else {<i class="avatar fa fa-map"> </i>}
                                         <h4>@item.name</h4>
                                         </label>
-                                        }
+                                        }*@
                                          <p style="white-space: pre;" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
                                        
                                         <ul class="list-inline">
@@ -171,7 +177,12 @@
                                             <li>
                                                 <a title="Preview or edit" href="/map/preview?layers=@item.id"><i class="glyphicon glyphicon-edit"></i></a> 
                                             </li>
-                                          
+                                            
+                                          @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || (model.identity.isDataManager && item._userHasPermission_EditSchema)){
+                                            <li>
+                                                <a href="/datalayer/@item.id?dataType=@item.dataType"><i class="glyphicon glyphicon-edit"></i></a> 
+                                            </li>   
+                                            }
                                         </ul>
                                     </div>
                                 </div>

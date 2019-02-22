@@ -176,7 +176,7 @@ SourceFactory.prototype.createOsmVectorSource = function(dataObj,mapContainer) {
           }
 
           var client = new XMLHttpRequest();
-          client.open('POST', 'https://overpass-api.de/api/interpreter');
+          client.open('POST', app.overpassApiServer);
           client.addEventListener('load', function() {
             var features = formatOSMXML.readFeatures(client.responseText, {
               featureProjection: view.getProjection()
