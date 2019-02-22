@@ -45,7 +45,11 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
         image: new ol.style.Circle({
             radius: 6,
             fill: new ol.style.Fill({
-                color: '#002828'
+                color: '#00ffff'
+            }),
+            stroke: new ol.style.Stroke({
+                color: 'blue',
+                width:2
             })
         })
     })

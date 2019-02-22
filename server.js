@@ -502,17 +502,20 @@ app.post('/admin/user/:id',
 
 
     app.get('/datalayer/:id',
-    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+//    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    [Authenticated],
     handleErrors(dataLayerController.dataLayerGet));
     app.post('/datalayer/:id',
-    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    [Authenticated],
     handleErrors(dataLayerController.dataLayerPost));
     app.get('/datalayer/:id/info',
     [Authenticated], //Todo: check data permission
     handleErrors(dataLayerController.dataLayerInfoGet));
     
     app.delete('/datalayer/:id/delete',
-    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    [Authenticated],
     handleErrors(dataLayerController.dataLayerDelete));
     
 

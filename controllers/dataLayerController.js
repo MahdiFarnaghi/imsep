@@ -189,14 +189,21 @@ module.exports = function (postgresWorkspace) {
         if(req.query && 'dataType' in req.query){
             dataType=req.query.dataType;
         }
-        if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
-            req.flash('error', {
-                msg: 'Access denied'
-            });
-            return res.redirect('/');
-        }
+        // if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
+        //     req.flash('error', {
+        //         msg: 'Access denied'
+        //     });
+        //     return res.redirect('/');
+        // }
         //#region getitem
         if (req.params.id && req.params.id == '-1' && dataType=='vector') {
+            
+            if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
+                req.flash('error', {
+                    msg: 'Access denied'
+                });
+                return res.redirect('/');
+            }
             var newLayer = await models.DataLayer.create(
                 { 
                     name: '',
@@ -250,9 +257,13 @@ module.exports = function (postgresWorkspace) {
                     },include: [ { model: models.User, as: 'OwnerUser' ,attributes: ['userName','id','firstName','lastName','parent']}] 
                 }));
                 if(item){
+                    
                     if(item.ownerUser!==req.user.id){
                         if(item.OwnerUser && item.OwnerUser.parent===req.user.id){
                         }else{
+                            item=null;
+                        }
+                        if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
                             item=null;
                         }
                     }
@@ -527,6 +538,11 @@ module.exports = function (postgresWorkspace) {
 
     var owner = req.user;
     if (layerId == -1) {
+        if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
+            result.status=false;
+            result.message= 'Access denied';
+            return res.json(result) ;          
+        }
         try {
             var newLayer = await models.DataLayer.create(
                 { 
@@ -574,6 +590,9 @@ module.exports = function (postgresWorkspace) {
                 if(item.OwnerUser && item.OwnerUser.parent===req.user.id){
                 }else{
                     item=null;
+                }
+                if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
+                  item=null;       
                 }
             }
         }

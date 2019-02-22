@@ -69,6 +69,10 @@ DlgVectorSearch.prototype.createUI=function(){
         var applySpatialFilterEl= tabSpatialContent.find('#applySpatialFilter');
         var applySpatialFilter= applySpatialFilterEl.prop('checked');
         var spatialOperator= tabSpatialContent.find('#spatialOperator').val();
+        var within_distance= tabSpatialContent.find('#distance').val();
+        var nearest_searchDistance= tabSpatialContent.find('#nearestSearchDistance').val();
+        var nearest_maxNumber= tabSpatialContent.find('#nearestMaxNumber').val();
+
         var shapeOrLayer = tabSpatialContent.find("input[name='shapeOrLayer']:checked").val();
         var byFeaturesOfLayer;
         if(shapeOrLayer=='layer'){
@@ -109,7 +113,11 @@ DlgVectorSearch.prototype.createUI=function(){
             spatialOperator:spatialOperator,
             searchArea:searchAreajson,
             searchAreaSrid: 3857,
-            byFeaturesOfLayer:byFeaturesOfLayer
+            byFeaturesOfLayer:byFeaturesOfLayer,
+            within_distance:within_distance,
+            nearest_searchDistance:nearest_searchDistance,
+            nearest_maxNumber:nearest_maxNumber
+
           };
         }else {
           evt.data.filter.spatialFilter=undefined;
@@ -413,10 +421,11 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
   }else{
     htm+='    <label><input id="applySpatialFilter" type="checkbox"> Select features that:</label>';
   }
+  htm+='<span style="display:none" id= "applySpatialFilter_error"class="field-validation-error" ><span class="">No spatial condition is defined!</span></span>';
   htm+='  </div>';
   htm+=' </div>';
 
-  htm+='<div class="form-group">';
+  htm+='<div class="form-group" >';
   htm+='    <div class="col-sm-5 "><select class="form-control  " id="spatialOperator" >';
   htm+='                          <option value="ST_Intersects" >Intersect</option>';
   htm+='                          <option value="NOT ST_Intersects" >Do not Intersect</option>';
@@ -429,10 +438,10 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
 
   htm+='    </select></div>';
   htm+=' </div>';
-  htm+='  <div class="form-group" id="ST_DWithin_options">';
+  htm+='  <div class="form-group" id="ST_DWithin_options" >';
   htm+='    <span class="col-sm-2 " for="distance">Distance:</span>';
   htm+='    <div class="col-sm-3 ">';
-  htm+='      <input type="number" name="distance" id="distance" value="" placeholder="Meters" class="form-control" data-val="true" data-val-requiredif="Distance is required" data-val-requiredif-dependentproperty="spatialOperator"  data-val-requiredif-targetvalue="ST_DWithin"  />'
+  htm+='      <input type="number" name="distance" id="distance" min="0" value="" placeholder="Meters" class="form-control" data-val="true" data-val-requiredif="Distance is required" data-val-requiredif-dependentproperty="spatialOperator"  data-val-requiredif-targetvalue="ST_DWithin"  />'
   htm+='    </div>';
   htm+='    <span class="field-validation-valid" data-valmsg-for="distance" data-valmsg-replace="true"></span>';
   htm+='  </div>';
@@ -440,16 +449,16 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
   htm+='  <div class="form-group" id="ST_Nearest_options">';
   htm+='    <span class="col-sm-5 " for="nearestSearchDistance">Maximum search distance:</span>';
   htm+='    <div class="col-sm-4 ">';
-  htm+='      <input type="number" name="nearestSearchDistance" id="nearestSearchDistance" value="" placeholder="Meters" class="form-control" data-val="true" data-val-requiredif="Distance is required" data-val-requiredif-dependentproperty="spatialOperator"  data-val-requiredif-targetvalue="ST_Nearest"  />'
+  htm+='      <input type="number" name="nearestSearchDistance" id="nearestSearchDistance" min="0" value="" placeholder="Meters" class="form-control" data-val="true" data-val-requiredif="Distance is required" data-val-requiredif-dependentproperty="spatialOperator"  data-val-requiredif-targetvalue="ST_Nearest"  />'
   htm+='    </div>';
   htm+='    <span class="field-validation-valid" data-valmsg-for="nearestSearchDistance" data-valmsg-replace="true"></span>';
   htm+='  </div>';
   htm+='  <div class="form-group" id="ST_Nearest_options2">';
-  htm+='    <span class="col-sm-5 " for="nearestMaxNumber">Find maximum</span>';
-  htm+='    <div class="col-sm-2 ">';
+  htm+='    <span class="col-sm-offset-2 col-sm-3 " for="nearestMaxNumber">Find maximum</span>';
+  htm+='    <div class=" col-sm-2 ">';
   htm+='      <input type="number" name="nearestMaxNumber" id="nearestMaxNumber" min="1" value="1" placeholder="" class="form-control" data-val="true" data-val-requiredif="Maximum number of nearest features is required"  />'
   htm+='    </div>';
-  htm+='    <span class=" " >of nearest features</span>';
+  htm+='    <span class=" " >number of nearest features</span>';
   htm+='    <span class="field-validation-valid" data-valmsg-for="nearestMaxNumber" data-valmsg-replace="true"></span>';
   htm+='  </div>';
 
@@ -548,25 +557,21 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
        content.find('#spatialOperator').val(filter.spatialFilter.spatialOperator);
     }
     this.addShape(filter.spatialFilter.searchArea);
-  }
+
+    if(filter.spatialFilter.within_distance){
+      content.find('#distance').val(filter.spatialFilter.within_distance);
+    }
+    if(filter.spatialFilter.nearest_searchDistance){
+      content.find('#nearestSearchDistance').val(filter.spatialFilter.nearest_searchDistance);
+    }
+    if(filter.spatialFilter.nearest_maxNumber){
+      content.find('#nearestMaxNumber').val(filter.spatialFilter.nearest_maxNumber);
+    }
   
-  content.find('#spatialOperator').change(function(){
-    var operator=$(this).val();
-    if(operator==='ST_DWithin'){
-      content.find('#ST_DWithin_options').show();
-    }else{
-      content.find('#ST_DWithin_options').hide();
-    }
-    if(operator==='ST_Nearest'){
-      content.find('#ST_Nearest_options').show();
-      content.find('#ST_Nearest_options2').show();
-    }else{
-      content.find('#ST_Nearest_options').hide();
-      content.find('#ST_Nearest_options2').hide();
-    }
-    //
-  });
-  content.find('#spatialOperator').trigger('change');
+  }
+
+  
+ 
   
   var $form = $(content.find('#'+tabId +'_form'));
   $form.on('submit', function(event){
@@ -574,6 +579,46 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
     event.preventDefault();
   });
   this.beforeApplyHandlers.push(function(evt){
+    content.find('#applySpatialFilter_error').hide();
+    var applySpatialFilterEl= content.find('#applySpatialFilter');
+    var applySpatialFilter= applySpatialFilterEl.prop('checked');
+    var spatialOperator= content.find('#spatialOperator').val();
+    
+    var shapeOrLayer = content.find("input[name='shapeOrLayer']:checked").val();
+    var byFeaturesOfLayer;
+    if(shapeOrLayer=='layer'){
+      byFeaturesOfLayer =content.find('#byFeaturesOfLayer').val();
+      try{
+        byFeaturesOfLayer=parseInt(byFeaturesOfLayer);
+      }catch(ex){}
+    }
+    var geomArray=[];
+    if(self.layer){
+        var features = self.layer.getSource().getFeatures();
+        for(var i=0;i< features.length;i++){
+          geomArray.push( features[i].getGeometry());
+        }
+    }
+    
+    var ready=true;
+    if(applySpatialFilter){
+      if (geomArray.length>0 || byFeaturesOfLayer){
+        ready=true;
+      }else {
+        ready=false;
+        evt.cancel= true;
+        tabHeader.find('a').addClass('text-danger');
+        //self.activate();
+       $('.nav-tabs a[href="#' + tabId + '"]').tab('show');
+          evt.cancel= true;
+        content.find('#applySpatialFilter_error').show();
+          return;
+        }
+  
+    }
+    
+
+
     var origIgone= $.validator.defaults.ignore;
     $.validator.setDefaults({ ignore:'' });
     $.validator.unobtrusive.parse($form);
@@ -614,6 +659,24 @@ DlgVectorSearch.prototype.createSpatialPanelUI_actions=function(content){
   var expressionEl=content.find('#expression');
   var operatorEl= content.find('#operator');
 
+  content.find('#spatialOperator').change(function(){
+    var operator=$(this).val();
+  //  content.find('#applySpatialFilter').prop('checked',true);
+    if(operator==='ST_DWithin'){
+      content.find('#ST_DWithin_options').show();
+    }else{
+      content.find('#ST_DWithin_options').hide();
+    }
+    if(operator==='ST_Nearest'){
+      content.find('#ST_Nearest_options').show();
+      content.find('#ST_Nearest_options2').show();
+    }else{
+      content.find('#ST_Nearest_options').hide();
+      content.find('#ST_Nearest_options2').hide();
+    }
+    //
+  });
+  content.find('#spatialOperator').trigger('change');
    
   content.find('#drawPoint').click(function(){self.drawShape('point'); });
   content.find('#drawBox').click(function(){self.drawShape('box'); });
@@ -635,6 +698,7 @@ DlgVectorSearch.prototype.createSpatialPanelUI_actions=function(content){
     if(selectedLayer){
       self.tabSpatialContent.find('#shapeOrLayer_layer').prop('checked',true);
       self.tabSpatialContent.find('#applySpatialFilter').prop('checked',true);
+      self.tabSpatialContent.find('#applySpatialFilter_error').hide();
     }else{
       self.tabSpatialContent.find('#shapeOrLayer_shape').prop('checked',true);
     }
@@ -721,6 +785,7 @@ DlgVectorSearch.prototype.drawShape=function(shapeType){
   var self=this;
   self.tabSpatialContent.find('#applySpatialFilter').prop('checked',true);
   self.tabSpatialContent.find('#shapeOrLayer_shape').prop('checked',true);
+  self.tabSpatialContent.find('#applySpatialFilter_error').hide();
   var mapContainer = this.mapContainer;
   var map = mapContainer.map;
  

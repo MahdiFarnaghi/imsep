@@ -889,14 +889,36 @@ class PostgresWorkspace {
                 var searchAreaSrid=filter.spatialFilter.searchAreaSrid || 3857;
                 var spatialOperator=filter.spatialFilter.spatialOperator || 'ST_Intersects';
                 var bufferDistance =filter.spatialFilter.bufferDistnace;
+              
                 var searchGeom=`ST_SetSRID(ST_CollectionHomogenize(ST_GeomFromGeoJSON('${JSON.stringify(searchAreaGeometry)}')),${searchAreaSrid})`;
                 if(typeof bufferDistance !=='undefined'){
                     searchGeom=`ST_Buffer( ST_Transform (${searchGeom}, 4326)::geography , ${bufferDistance})::geometry`;
                 }
-
+                var spatialWhere=`${spatialOperator}(${shapeField}, ST_Transform(${searchGeom},${srid}))`;
+                if(spatialOperator=='ST_DWithin'){
+                    var within_distance=filter.spatialFilter.within_distance;
+                     spatialWhere=`${spatialOperator}(ST_Transform (${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
+                }
                 //var spatialWhere=`${spatialOperator}(${shapeField}, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(searchAreaGeometry)}'),${searchAreaSrid}),${srid}))`;
                 //ST_CollectionHomogenize
-                var spatialWhere=`${spatialOperator}(${shapeField}, ST_Transform(${searchGeom},${srid}))`;
+                var orderByExpr='';
+                var limitExpr='';
+                var recordsLimit=filter.recordsLimit;
+                
+                if(spatialOperator=='ST_Nearest'){
+                    spatialOperator='ST_DWithin';
+                    var within_distance=filter.spatialFilter.nearest_searchDistance;
+                     spatialWhere=`${spatialOperator}(ST_Transform (${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
+                     //note: there is no need to convert to geography
+                     orderByExpr=` ORDER BY ST_Distance(${shapeField}, ST_Transform(${searchGeom},${srid})) `;
+                     recordsLimit= filter.spatialFilter.nearest_maxNumber;
+                     if(!recordsLimit){
+                        recordsLimit=1;
+                     }
+                }
+                if(recordsLimit && recordsLimit>0){
+                    limitExpr=` LIMIT ${recordsLimit}`;
+                }
                 if(where){
                     var atWhere=where;
                     where= `(${where}) AND (${spatialWhere})`; 
@@ -908,7 +930,8 @@ class PostgresWorkspace {
                 if (where) {
                     whereStr = ` WHERE ${where}`;
                 }
-                selectFrom=`${tableName}${whereStr}`;
+                //selectFrom=`${tableName}${whereStr} ${orderByExpr} ${limitExpr}`;
+                selectFrom=`(SELECT * FROM ${tableName} ${whereStr} ${orderByExpr} ${limitExpr}) as j`;
             }else if (filter.spatialFilter.byFeaturesOfLayerItem_details){
                 var details_r=filter.spatialFilter.byFeaturesOfLayerItem_details;
                 var tableName_r = details_r.datasetName;
@@ -939,13 +962,65 @@ class PostgresWorkspace {
                     not='';
                 }
                 var spatialCondition=`${spatialOperator}(A.${shapeField}, ST_Transform(${searchGeom},${srid}))`;
-               
+                if(spatialOperator=='ST_DWithin'){
+                    var within_distance=filter.spatialFilter.within_distance;
+                    spatialCondition=`${spatialOperator}(ST_Transform (A.${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
+                }
+                var orderByExpr='';
+                var limitExpr='';
+                var recordsLimit=filter.recordsLimit;
+                
+                
+                if(spatialOperator=='ST_Nearest'){
+                    spatialOperator='ST_DWithin';
+                    var within_distance=filter.spatialFilter.nearest_searchDistance;
+                    spatialCondition=`${spatialOperator}(ST_Transform (A.${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
+                     //note: there is no need to convert to geography
+                    // orderByExpr=` ORDER BY A.${oidField}, ST_Distance(A.${shapeField}, ST_Transform(${searchGeom},${srid})) `;
+                     var distanceField=`ST_Distance(A.${shapeField}, ST_Transform(${searchGeom},${srid}))`;
+                     orderByExpr=` ORDER BY AtoB_distance  `;
+                     recordsLimit= filter.spatialFilter.nearest_maxNumber;
+                     if(!recordsLimit){
+                        recordsLimit=1;
+                     }
+                     if(recordsLimit && recordsLimit>0){
+                        limitExpr=` LIMIT ${recordsLimit}`;
+                    }
 
+                    //  selectFrom=`(SELECT * from
+                    //  (SELECT DISTINCT ON (A.${oidField}) A.*, ${distanceField} as AtoB_distance 
+                    // FROM  ${baseSelect} as A
+                    // LEFT JOIN ${tableName_r} as B
+                    // ON ${spatialCondition}
+                    //  WHERE (${not}  B.${oidField_r} IS NULL)
+                    //  ) as j0
+                    //  ${orderByExpr} ${limitExpr}) as j `;
+                    selectFrom=`(SELECT * from
+                        (SELECT DISTINCT ON (${oidField}) * from
+                            (SELECT A.*, ${distanceField} as AtoB_distance 
+                                FROM  ${baseSelect} as A
+                                LEFT JOIN ${tableName_r} as B
+                                ON ${spatialCondition}
+                                    WHERE (${not}  B.${oidField_r} IS NULL)
+                                    ${orderByExpr}
+                            ) as j0
+                        ) as j00 
+                        ${orderByExpr} ${limitExpr}) as j 
+                         
+                         `;
+                }else
+                {
+                     if(recordsLimit && recordsLimit>0){
+                        limitExpr=` LIMIT ${recordsLimit}`;
+                    }
                 selectFrom=`(SELECT DISTINCT ON (A.${oidField}) A.* 
                     FROM  ${baseSelect} as A
                     LEFT JOIN ${tableName_r} as B
                     ON ${spatialCondition}
-                     WHERE ${not}  B.${oidField_r} IS NULL) as j `;
+                     WHERE (${not}  B.${oidField_r} IS NULL)
+                     ${orderByExpr} ${limitExpr}
+                     ) as j `;
+                }
             }
         }
      
