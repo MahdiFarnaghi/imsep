@@ -243,7 +243,8 @@ DlgVectorTableView.prototype.createUI=function(){
   var self=this;
   self.mainPanel.html('');
   var layer= this.obj;
-  
+  self.forceShowOnlySelection= self.options.forceShowOnlySelection;
+
   var layerCustom= layer.get('custom');
   var details= LayerHelper.getDetails(layer);
   var source= layer.getSource();
@@ -252,6 +253,7 @@ DlgVectorTableView.prototype.createUI=function(){
   var selectedDic={};
   var layerSelectTask= LayerHelper.getVectorLayerSelectTask(layer);
   var selectedFeatures;
+  var selectedFeaturesCount=0;
   if(!self.isInitialized){
     self.showSelectedOnly=false;
     
@@ -261,13 +263,14 @@ DlgVectorTableView.prototype.createUI=function(){
 
         if(selectedFeatures.getLength())
         {
-                for (var i = 0, f; f = selectedFeatures.item(i); i++) {
-                   selectedDic[f.getId()]=true;
-                } 
-                if(!self.isInitialized){
-                  self.isInitialized=true;
-                  self.showSelectedOnly=true;
-                } 
+          selectedFeaturesCount=selectedFeatures.getLength();
+          for (var i = 0, f; f = selectedFeatures.item(i); i++) {
+              selectedDic[f.getId()]=true;
+          } 
+          if(!self.isInitialized){
+            self.isInitialized=true;
+            self.showSelectedOnly=true;
+          } 
         }
     }
 
@@ -317,10 +320,18 @@ DlgVectorTableView.prototype.createUI=function(){
   }
   var tableId= self.id +'-table';
   var htm='<div class="scrollable-content" ><form id="'+self.id+'_form" class="modal-body form-horizontal">';  
-  if(self.showSelectedOnly){
-    htm+='    <label><input id="showSelectedOnly" checked="checked" type="checkbox"> Show only selected rows</label>';
+  if(self.forceShowOnlySelection){
+    if(self.showSelectedOnly){
+      htm+='    <label><input id="showSelectedOnly" checked="checked" disabled="disabled" type="checkbox"> Show only selected rows</label>';
+    }else{
+      htm+='    <label><input id="showSelectedOnly" type="checkbox" disabled="disabled"> Show only selected rows</label>';
+    }
   }else{
-    htm+='    <label><input id="showSelectedOnly" type="checkbox"> Show only selected rows</label>';
+    if(self.showSelectedOnly){
+      htm+='    <label><input id="showSelectedOnly" checked="checked" type="checkbox"> Show only selected rows</label>';
+    }else{
+      htm+='    <label><input id="showSelectedOnly" type="checkbox"> Show only selected rows</label>';
+    }
   }
   htm+='  <div class="form-group">';
   htm+='    <table id="'+ tableId+'" class="table table-condensed table-hover table-responsive" data-search="true" data-show-columns="true" data-pagination="false" >';
@@ -339,7 +350,9 @@ DlgVectorTableView.prototype.createUI=function(){
   content.find('#showSelectedOnly').change(function(){
     var selected= $(this).prop("checked");
     self.showSelectedOnly= (selected?true:false);
-   
+    if(self.forceShowOnlySelection){
+      self.showSelectedOnly=true;
+    }
     self.createUI();
   })
   

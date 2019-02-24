@@ -174,15 +174,14 @@
                                             <li>
                                                 <i class="fa fa-calendar"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
                                             </li>
-                                            <li>
-                                                <a title="Preview or edit" href="/map/preview?layers=@item.id"><i class="glyphicon glyphicon-edit"></i></a> 
-                                            </li>
                                             
+                                            @*
                                           @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || (model.identity.isDataManager && item._userHasPermission_EditSchema)){
                                             <li>
                                                 <a href="/datalayer/@item.id?dataType=@item.dataType"><i class="glyphicon glyphicon-edit"></i></a> 
                                             </li>   
                                             }
+                                            *@
                                         </ul>
                                     </div>
                                 </div>

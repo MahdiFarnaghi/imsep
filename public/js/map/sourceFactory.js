@@ -193,14 +193,22 @@ SourceFactory.prototype.createOsmVectorSource = function(dataObj,mapContainer) {
         //       //'););out meta;';
         //       // out qt for more speed in loading
         //       // out 10 to limit results count
-              var bbox='('+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+           
+          var bbox='('+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
               epsg4326Extent[3] + ',' + epsg4326Extent[2]+')' ;
-              
-          
               var query = '(node'+ filterExpression+ bbox +';';
               query += 'way'+ filterExpression+ bbox +';';
               query += 'rel'+ filterExpression+ bbox +';';
               query+=');(._; >;);out meta;';
+
+            // var bbox=''+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+            // epsg4326Extent[3] + ',' + epsg4326Extent[2]+'' ;
+            //   var query = '[out:xml][bbox:'+ bbox+'];'
+            //     query += '(node'+ filterExpression +';';
+            //     query += 'way'+ filterExpression +';';
+            //     query += 'rel'+ filterExpression +';';
+            //     //query+=');out;>;out meta;';
+            //     query+=');(._; >;);out meta;';
 
 /*
 [out:json];

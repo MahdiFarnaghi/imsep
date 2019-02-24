@@ -502,15 +502,19 @@ module.exports = function (passportConfig) {
             switch (req.params.provider) {
                 case 'facebook':
                     user.set('facebook', null);
+                    user.set('picture',null);
                     break;
                 case 'google':
                     user.set('google', null);
+                    user.set('picture',null);
                     break;
                 case 'twitter':
                     user.set('twitter', null);
+                    user.set('picture',null);
                     break;
                 case 'vk':
                     user.set('vk', null);
+                    user.set('picture',null);
                     break;
                 default:
                     req.flash('error', { msg: 'Invalid OAuth Provider' });

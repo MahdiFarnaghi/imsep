@@ -103,6 +103,25 @@
         padding-left: 5px;
         padding-right: 5px;
     }
+
+
+/*
+    dlgOSMTagSelection styles
+*/
+       .dual-list .list-group {
+            margin-top: 8px;
+            padding:2px;
+        }
+        .list-left li, .list-right li {
+            cursor: pointer;
+        }
+        .list-arrows {
+            padding-top: 100px;
+        }
+        .list-arrows button {
+                margin-bottom: 20px;
+        }
+
 </style>
         
     })
@@ -421,6 +440,7 @@
         
         <script src="/js/map/tasks/dlgOSMFilter.js"></script>
         <script src="/js/map/tasks/dlgOSMShapeTypeSelection.js"></script>
+        <script src="/js/map/tasks/dlgOSMTagSelection.js"></script>
         <script src="/js/map/tasks/dlgAddGeoJSON.js"></script>
         <script src="/js/map/tasks/dlgWCS.js"></script>
         

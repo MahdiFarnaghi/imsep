@@ -277,6 +277,7 @@ var pageTask={
                 self.fillUI(JSON.parse(data.item.details));
               }catch(ex){}
             }
+            window.location.href=location.protocol + '//' + location.host + '/datalayers';
           }else{
             $.notify({
                 message:data.errors || data.error|| data.message || "Failed to save Data Layer"

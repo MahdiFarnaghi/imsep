@@ -13,6 +13,9 @@ var app = {
     OSM_REQUEST_TIMEOUT:20000,//ms
     OSM_FEATURE_COUNT_LIMIT1:100000,//confirm zone
     OSM_FEATURE_COUNT_LIMIT2:500000,
+
+    MAx_TABLE_VIEW_RECORDS:1000,
+
     //openrouteservice
     routeServiceTokens:[
             '5b3ce3597851110001cf6248534f1763f9fd495086cc8333c25725fd'

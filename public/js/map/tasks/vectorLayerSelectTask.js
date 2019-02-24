@@ -57,6 +57,7 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
         hitTolerance:5,
         multi:true,
         layers: [vector],
+        
         style: function(f,r){
             return defaultSelectionStyle;
           
@@ -64,8 +65,41 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
         }
         
     });
+    self.interactionSelectByBox = new ol.interaction.DragBox({
+        condition: ol.events.condition.platformModifierKeyOnly,
+        style: function(f,r){
+            return defaultSelectionStyle;
+        }
+    });
+    self.interactionSelectByBox.on('boxend', function(e) {
+        // features that intersect the box are added to the collection of
+        var selectedFeatures=self.interactionSelect.getFeatures();
+        var extent = self.interactionSelectByBox.getGeometry().getExtent();
+        
+        source.forEachFeatureIntersectingExtent(extent, function(feature) {
+          selectedFeatures.push(feature);
+          self.interactionSelect.dispatchEvent({
+            type: 'select',
+            selected: [feature],
+            deselected: []
+         }); 
+        
+        });
+        
+        
+      });
+      
+      // clear selection when drawing a new box and when clicking on the map
+      self.interactionSelectByBox.on('boxstart', function(e) {
+       // self.interactionSelect.getFeatures().clear();
+        
+      })
+
     map.addInteraction(self.interactionSelect);
     self.interactionSelect.setActive(false);
+    map.addInteraction(self.interactionSelectByBox);
+    self.interactionSelectByBox.setActive(false);
+
     vector.on('change:visible',function(e){
         if(!vector.get('visible')){
             self.interactionSelect.getFeatures().clear();
@@ -105,6 +139,7 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
         onToggle: function (toggle) {
             //map.removeInteraction(self.interactionSelect);
             self.interactionSelect.setActive(false);
+            self.interactionSelectByBox.setActive(false);
             if (!toggle) {
                 self.mapContainer.setCurrentTool(null);
                 return;
@@ -131,11 +166,15 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
                     map.removeInteraction(self.interactionSelect);
                     map.addInteraction(self.interactionSelect);
                     self.interactionSelect.setActive(true);
+                    map.removeInteraction(self.interactionSelectByBox);
+                    map.addInteraction(self.interactionSelectByBox);
+                    self.interactionSelectByBox.setActive(true);
                 },
                 onDeactivate: function (event) {
                     self.mapContainer.setCurrentEditAction('');
                     //map.removeInteraction(self.interactionSelect);
                     self.interactionSelect.setActive(false);
+                    self.interactionSelectByBox.setActive(false);
                     if (event.newTool && event.newTool.name !== 'select_select') {
                         self.selectCtrl.setActive(false);
                     }
@@ -338,17 +377,52 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
          }); 
     }
     var tableView=new ol.control.Button({
-        html: '<span style="display:block;line-height:28px;background-position:center center" class="attributesWindow_24_Icon" >&nbsp;</span>',
+        html: '<span style="display:block;line-height:28px;background-position:center center" class="tableWindow_24_Icon" >&nbsp;</span>',
         className:'myOlbutton24',
         title: "View rows",
         handleClick: function () {
             var title;
+
+           
+            var source= self.layer.getSource();
+            
+            var features= source.getFeatures();
+            var layerSelectTask= LayerHelper.getVectorLayerSelectTask(self.layer);
+            var selectedFeatures;
+            var numberOfRecords=features.length;
+            var forceShowOnlySelection=false;
+            if(numberOfRecords> app.MAx_TABLE_VIEW_RECORDS){
+                forceShowOnlySelection=true;
+            } 
+            if(layerSelectTask){
+                selectedFeatures=layerSelectTask.interactionSelect.getFeatures();
+                if(selectedFeatures.getLength()>0){
+                    numberOfRecords=selectedFeatures.getLength();
+                }
+             }
+
+             if(numberOfRecords> app.MAx_TABLE_VIEW_RECORDS){
+                BootstrapDialog.alert({
+                    title: 'WARNING',
+                    message: 'Too many records ('+numberOfRecords+') to show!<br/> Please select maximum ' + app.MAx_TABLE_VIEW_RECORDS +' number of records and try again.',
+                    type: BootstrapDialog.TYPE_WARNING, // <-- Default value is BootstrapDialog.TYPE_PRIMARY
+                    closable: true, // <-- Default value is false
+                    draggable: true // <-- Default value is false
+                    
+                    // ,callback: function(result) {
+                    //     // result will be true if button was click, while it will be false if users close the dialog directly.
+                    //     alert('Result is: ' + result);
+                    // }
+                });
+                return;
+             }   
             if(self.layer.get && self.layer.get('title')){
                 title='Rows: '+ self.layer.get('title') ;
               }else{
                 title='Rows';
               }
             var dlg = new DlgVectorTableView(mapContainer, self.layer, {
+                forceShowOnlySelection:forceShowOnlySelection,
                 title:title,
                 onapply:function(dlg,data){
                     

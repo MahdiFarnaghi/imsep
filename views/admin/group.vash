@@ -102,13 +102,13 @@
                             </div>
 
                             <div class="list-arrows col-md-1 text-center">
+                                <button type="button" class="btn btn-default btn-sm move-right">
+                                    <span class="glyphicon glyphicon-chevron-right"></span>
+                                </button>
                                 <button type="button" class="btn btn-default btn-sm move-left">
                                     <span class="glyphicon glyphicon-chevron-left"></span>
                                 </button>
 
-                                <button type="button" class="btn btn-default btn-sm move-right">
-                                    <span class="glyphicon glyphicon-chevron-right"></span>
-                                </button>
                             </div>
 
                             <div class="dual-list list-right col-md-5">

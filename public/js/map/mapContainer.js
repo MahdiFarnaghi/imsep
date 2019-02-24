@@ -436,8 +436,9 @@ this.legend=legend;
 
       if (featureAt && featureAt.feature) {
         var fieldsDic={};
+        var fields=null;
         if(featureAt.layer){
-            var fields= LayerHelper.getFields(featureAt.layer);
+            fields= LayerHelper.getFields(featureAt.layer);
             if(fields){
                 fieldsDic={};
                 for(var i=0;i< fields.length;i++){
@@ -465,18 +466,45 @@ this.legend=legend;
           content += '</thead>';
           content += '<tbody>';
           var properties = feature.getProperties();
-          for (var key in properties) {
-              if (key !== 'geometry') {
-                  content += '<tr>';
-                  content += '<td>';
-                  content +=  fieldsDic[key] || key;
-                  content += '</td>';
-                  content += '<td>';
-                  content += properties[key];
-                  content += '</td>';
-                  content += '</tr>';
-              }
+          if(fields){
+            for(var i=0;i< fields.length;i++){
+                var fld= fields[i];
+                var fldName=fld.name;
+                var title= fld.alias|| fldName;
+                var visible=true;
+                if(typeof fld.visible !=='undefined'){
+                    visible= fld.visible;
+                }
+                if(typeof fld.hidden !=='undefined'){
+                    visible= !fld.hidden;
+                }
+                if(visible){
+                    var key= fldName;
+                    content += '<tr>';
+                    content += '<td>';
+                    content +=  fieldsDic[key] || title;
+                    content += '</td>';
+                    content += '<td>';
+                    content += properties[key];
+                    content += '</td>';
+                    content += '</tr>';
+                }
+            }
+          }else{
+            for (var key in properties) {
+                if (key !== 'geometry') {
+                    content += '<tr>';
+                    content += '<td>';
+                    content +=  fieldsDic[key] || key;
+                    content += '</td>';
+                    content += '<td>';
+                    content += properties[key];
+                    content += '</td>';
+                    content += '</tr>';
+                }
+            }
           }
+          
           content += '</tbody>';
           content += '</table>';
 
@@ -556,7 +584,7 @@ MapContainer.prototype.zoomToLayer = function(layer) {
         }
         if(extent && extent[0]!==Infinity){
             try{
-                this.map.getView().fit(extent, this.map.getSize());
+                this.map.getView().fit(extent, {size:this.map.getSize()});
                 return;
             }catch(ex){
 
@@ -566,7 +594,7 @@ MapContainer.prototype.zoomToLayer = function(layer) {
             source.requestExtent(function(extent){
                 if(extent && extent[0]!==Infinity){
                     try{
-                        self.map.getView().fit(extent, self.map.getSize());
+                        self.map.getView().fit(extent, {size:self.map.getSize()});
                         return;
                     }catch(ex){
         
@@ -596,7 +624,19 @@ MapContainer.prototype.zoomToFeature = function(feature) {
     }
 
     var extent = geom.getExtent();
-    this.map.getView().fit(extent,this.map.getSize());
+    try{
+        if(extent){
+            if(extent[0]==extent[2] && extent[1]==extent[3]){
+                var size=this.map.getSize();
+                this.map.getView().fit(extent,{size:size,maxZoom:16});
+            }else{
+        
+                this.map.getView().fit(extent,{size:this.map.getSize()});
+            }
+        }
+    }catch(ex0){
+        
+    }
     
 },
 MapContainer.prototype.setGeoExtent = function(west,south,east,north) {
@@ -621,7 +661,7 @@ MapContainer.prototype.setGeoExtent = function(west,south,east,north) {
     var mapProjectionCode = view.getProjection().getCode();
     var extent = [west,south,east,north];
     extent = ol.extent.applyTransform(extent, ol.proj.getTransform("EPSG:4326", mapProjectionCode));
-    map.getView().fit(extent, map.getSize());
+    map.getView().fit(extent,{size:map.getSize()});
 },
 MapContainer.prototype.updateUI = function() {
       var activeLayer = this.getActiveLayer();
@@ -662,7 +702,7 @@ MapContainer.prototype.load = function(mapSettings) {
 
 
       extent = ol.extent.applyTransform(extent, ol.proj.getTransform("EPSG:4326", mapProjectionCode));
-      map.getView().fit(extent, map.getSize());
+      map.getView().fit(extent, {size:map.getSize()});
   }
   var details = mapSettings.details;
   if (details && details.layers && details.layers.length) {
@@ -1422,17 +1462,36 @@ MapContainer.prototype.addNewOSMXML_withOptions=function(options,features){
     var shapeType= options.shapeType || 'Point';
     var fields=[];
     if(options.info && options.info[shapeType] && options.info[shapeType].tags ){
-        for(var i=0;i< options.info[shapeType].tags.length && i<10;i++){
-            var tag= options.info[shapeType].tags[i];
-            if(tag.name){
-                fields.push({
-                    name:tag.name,alias:tag.name,
-                    type:'varchar',
-                    length: tag.length || 8
-                });
+        var cInfo=options.info[shapeType];
+        if(!cInfo.selectedTags){
+            for(var i=0;i< cInfo.tags.length && i<20;i++){
+                var tag= cInfo.tags[i];
+                if(tag.name){
+                    fields.push({
+                        name:tag.name,alias:tag.name,
+                        type:'varchar',
+                        length: tag.length || 8
+                    });
+                }
             }
-            
+        }else if(cInfo.selectedTags.length){
+            for(var j=0;j<cInfo.selectedTags.length;j++){
+                var selTag= cInfo.selectedTags[j];
+
+                for(var i=0;i< cInfo.tags.length ;i++){
+                    var tag= cInfo.tags[i];
+                    if(tag.name && tag.name===selTag){
+                        fields.push({
+                            name:tag.name,alias:tag.name,
+                            type:'varchar',
+                            length: tag.length || 8
+                        });
+                        break;
+                    }
+                }
+            }
         }
+       
     }
     var layerInfo={
             title:'',
@@ -1535,17 +1594,22 @@ MapContainer.prototype.addNewOSMXML_filter=function(filterExpression){
     var epsg4326Extent= this.getCurrentGeoExtentArray();
     var bbox='('+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
     epsg4326Extent[3] + ',' + epsg4326Extent[2]+')' ;
-    //var query_count = '[out:json];(node(' +
-
-    // var query_count = '[out:json];(node'+ filterExpression+ bbox +';rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw);';
-    // query_count += 'way'+ filterExpression+ bbox +';rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw);';
-    // query_count += 'rel'+ filterExpression+ bbox +';rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw);';
-    // query_count+=');out count;';
+  
+   
 
     var query_count = '[out:json];(node'+ filterExpression+ bbox +';';
     query_count += 'way'+ filterExpression+ bbox +';';
     query_count += 'rel'+ filterExpression+ bbox +';';
     query_count+=');(._; >;);out count;';
+    
+      // var bbox=''+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+    // epsg4326Extent[3] + ',' + epsg4326Extent[2]+'' ;
+    // var query_count = '[out:json][bbox:'+ bbox+'];'
+    // query_count += '(node'+ filterExpression +';';
+    // query_count += 'way'+ filterExpression +';';
+    // query_count += 'rel'+ filterExpression +';';
+    // //query_count+=');out count;';
+    // query_count+=');(._; >;);out count;';
     
     //   var formdata = new FormData();
     //   formdata.append("file", blob,'geojson.json');
@@ -1677,19 +1741,30 @@ MapContainer.prototype.addNewOSMXML_downloadData=function(filterExpression,epsg4
     {
         filterExpression='';
     }
-    var query = '(node'+filterExpression+'(' +
-    epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
-    epsg4326Extent[3] + ',' + epsg4326Extent[2] +
-    ');rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw););out body;';
+    // var query = '(node'+filterExpression+'(' +
+    // epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+    // epsg4326Extent[3] + ',' + epsg4326Extent[2] +
+    // ');rel(bn)->.foo;way(bn);node(w)->.foo;rel(bw););out body;';
 
-    var bbox='('+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
-    epsg4326Extent[3] + ',' + epsg4326Extent[2]+')' ;
+     var bbox='('+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+     epsg4326Extent[3] + ',' + epsg4326Extent[2]+')' ;
     
 
     var query = '(node'+ filterExpression+ bbox +';';
     query += 'way'+ filterExpression+ bbox +';';
     query += 'rel'+ filterExpression+ bbox +';';
     query+=');(._; >;);out body;';
+
+    // var bbox=''+epsg4326Extent[1] + ',' + epsg4326Extent[0] + ',' +
+    // epsg4326Extent[3] + ',' + epsg4326Extent[2]+'' ;
+    
+    // var query = '[out:xml][bbox:'+ bbox+'];'
+    // query += '(node'+ filterExpression +';';
+    // query += 'way'+ filterExpression +';';
+    // query += 'rel'+ filterExpression +';';
+    // //query+=');out;>;out body;';
+    // query+=');(._; >;);out body;';
+
     //   var formdata = new FormData();
     //   formdata.append("file", blob,'geojson.json');
     //   formdata.append('layerInfo',JSON.stringify(layerInfo));
@@ -1827,13 +1902,37 @@ MapContainer.prototype.addNewOSMXML_SelectShapeType=function(info,features){
     var dlg = new DlgOSMShapeTypeSelection(this, info, {
         title:'Select shape type',
         onapply:function(dlg,data){
-            self.addNewOSMXML_withOptions({shapeType:data.shapeType,info: data.info},features) ;
+            //self.addNewOSMXML_withOptions({shapeType:data.shapeType,info: data.info},features) ;
+            self.addNewOSMXML_SelectTags({shapeType:data.shapeType,info: data.info},features) ;
            
         }
 
       }).show();
 }
 
+MapContainer.prototype.addNewOSMXML_SelectTags=function(options,features){
+    var self=this; 
+    options= options||{};
+    var shapeType= options.shapeType || 'Point';
+    var selecteTags=[];
+    if(options.info && options.info[shapeType] && options.info[shapeType].tags ){
+        var selectedInfo=options.info[shapeType];
+        var tags= options.info[shapeType].tags;
+
+        var dlg = new DlgOSMTagSelection(this, tags, {
+            title:'Select Tags',
+            onapply:function(dlg,data){
+                if(data.selectedTags){
+                    selectedInfo.selectedTags=data.selectedTags;
+                }
+                self.addNewOSMXML_withOptions(options,features) ;
+               
+            }
+    
+          }).show();   
+    }
+    
+}
 
 MapContainer.prototype.addGeoJSON=function(){
   var self=this;

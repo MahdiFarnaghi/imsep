@@ -274,11 +274,14 @@ var pageTask={
     }
     //mainForm.submit();
     waitingDialog.show('Saving Datalayer', { progressType: ''});
-
+    var datasetName= this.details.datasetName;
     if(this.details.isNew){
+      
       this.details.shapeType=$('#shapeType').val();
     }
-    
+    if(!datasetName){
+      datasetName='';
+    }
     
   
     $form.find('#details').val( JSON.stringify( this.details));
@@ -314,9 +317,13 @@ var pageTask={
                 self.fillUI(JSON.parse(data.item.details));
               }catch(ex){}
             }
+            window.location.href=location.protocol + '//' + location.host + '/datalayers';
           }else{
+            var msg=data.errors || data.error|| data.message || "Failed to save Data Layer";
+            msg=msg+'';
+            msg=msg.replace(new RegExp(datasetName, 'g'), '');
             $.notify({
-                message:data.errors || data.error|| data.message || "Failed to save Data Layer"
+                message:msg
             },{
                 type:'danger',
                 delay:10000,

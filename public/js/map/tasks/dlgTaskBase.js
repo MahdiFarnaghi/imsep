@@ -3,9 +3,12 @@ function DlgTaskBase(id,title,mapContainer,obj,options) {
      self.id=id || 'DlgTaskBase';
       this.mapContainer= mapContainer;
       this.obj=obj;
+      
       this.options = options || {};
       this.title=title|| options.title;
       var _closable=(typeof options.closable !=='undefined')?options.closable:true;
+      
+      var dialogSize=(typeof options.dialogSize!=='undefined')?options.dialogSize: BootstrapDialog.SIZE_NORMAL;
       var showOKButton=(typeof options.showOKButton!=='undefined')?options.showOKButton: true;
       var showApplyButton= options.showApplyButton || false;
       var okButtonTitle=options.okButtonTitle || 'OK';
@@ -27,6 +30,7 @@ function DlgTaskBase(id,title,mapContainer,obj,options) {
         title: this.title,
         message: this.body,
         draggable:true,
+        size: dialogSize,
         closable: _closable,
             closeByBackdrop: true,
             closeByKeyboard: true,
