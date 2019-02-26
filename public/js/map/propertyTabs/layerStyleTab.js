@@ -320,7 +320,8 @@ function LayerStyleTab() {
       htm+='<tr>';
       htm+='<td>' +item['value'] +'</td>' ;
       htm+='<td id="item_' +i +'"></td>' ;
-      htm+='<td></td>';
+      //htm+='<td></td>';
+      htm +=' <td><button type="button" class="ibtnDel btn btn-xs btn-danger	" id="delete_'+i+'" data-key="'+key+'"  title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button></td>';
       htm+='</tr>';
       i++;
     }
@@ -378,6 +379,18 @@ function LayerStyleTab() {
 
       })
       this.rendererContent.find('#item_'+i).html(sym);
+
+      this.rendererContent.find('#delete_'+i).click(function(e){
+        e.stopPropagation();
+				e.preventDefault();
+        var keyToRemove= $(this).data('key');
+      //  items.splice(index, 1);
+        try{
+          delete items[keyToRemove];
+          self.populateUniqueValueRenderer();
+        }catch(ex0){}
+      });
+
       i++;
     }
 
@@ -470,7 +483,8 @@ function LayerStyleTab() {
       htm+='<td>' + ((typeof fromValue !=='undefined')?fromValue:'')  +'</td>' ;
       htm+='<td>' + ((typeof toValue !=='undefined')?toValue:'')  +'</td>' ;
       htm+='<td id="item_' +i +'"></td>' ;
-      htm+='<td></td>';
+      //htm+='<td></td>';
+      htm +=' <td><button type="button" class="ibtnDel btn btn-xs btn-danger	" id="delete_'+i+'" data-index="'+i+'"  title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button></td>';
       htm+='</tr>';
     }
     htm+=' </tbody>';
@@ -524,9 +538,19 @@ function LayerStyleTab() {
           },
           helpLink:'/help#style'
         }).show();
-
-
-      })
+      });
+      
+      this.rendererContent.find('#delete_'+i).click(function(e){
+        e.stopPropagation();
+        e.preventDefault();
+        try{
+          var indexToRemove= $(this).data('index');
+          items.splice(indexToRemove, 1);
+        //delete items[keyToRemove];
+          self.populateRangeRenderer();
+        }catch(ex){}
+      });
+      
     }
 
     this.rendererContent.find('#cmdCreateRangevalue').click(function(){

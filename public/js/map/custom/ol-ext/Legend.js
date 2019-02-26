@@ -146,6 +146,18 @@ ol.control.Legend.prototype.refresh = function() {
     canvas = this.getStyleImage(r, canvas, i+(this.get('title')?1:0));
   };
 };
+
+ol.control.Legend.prototype.getVisible = function() {
+  return !this.element.classList.contains('ol-collapsed');
+};
+ol.control.Legend.prototype.setVisible = function(value) {
+  if(value){
+    this.show()
+  }else{
+    this.hide();
+  }
+  
+};
 /** Show control
  */
 ol.control.Legend.prototype.show = function() {

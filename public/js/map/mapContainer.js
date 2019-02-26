@@ -741,6 +741,7 @@ MapContainer.prototype.load = function(mapSettings) {
           zoomLayer=this.addData(mapSettings.preview[i]);
       }
       this.zoomToLayer(zoomLayer);
+      this.legend.setVisible(false);
   }
 
   // var vectorSource = new ol.source.Vector({
@@ -758,6 +759,9 @@ MapContainer.prototype.load = function(mapSettings) {
   // });
 
   // map.addLayer(vectorLayer);
+  if(details && details.ui){
+      this.legend.setVisible(details.ui.legend);
+  }
 }
 MapContainer.prototype.addLayer = function(layerInfo,parentLayer) {
     var newLayer = this.createLayer(layerInfo);
@@ -1195,6 +1199,9 @@ MapContainer.prototype.getMapDetailsJsonStr = function() {
       zoom: view.getZoom(),
       center: view.getCenter(),
       rotation: view.getRotation()
+  }
+  details.ui={
+    legend:this.legend.getVisible()
   }
 
   function getLayersInfo(layerCollection) {
