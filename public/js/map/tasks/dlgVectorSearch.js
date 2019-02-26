@@ -284,20 +284,26 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
     }
     valueArray=valueArray.sort();
     sampleValueEl.val(undefined);
-    sampleValueEl.autocomplete({
+    $(sampleValueEl).autocomplete({
       appendTo:content,
       minLength: 0,
       source: function (request, response) {
           if (valueArray) {
 
-              response($.map(valueArray, function (item) {
-                        return {
-                            label: item,
-                            value: item
-                        }
+                                 var term = request.term;
+                    var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
+                    var text = $( this ).text();
+                    var mappedData=$.map(valueArray, function (item) {
+                      if ( item && ( !request.term || matcher.test(item) ) ){
+                            return {
+                              label: item,
+                              value: item
+                            };
+                      }
+                    })
+                    response(mappedData);
+                    return;
 
-                      })
-                    );
           }
       },
       focus: function (event, ui) {
@@ -316,7 +322,20 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
       // }
     }) .focus(function (event, ui) {
       $(this).autocomplete("search");
-    });
+ }).data("ui-autocomplete")._renderItem = function (ul, item) {
+   var label = item.label;
+   var term = this.term;
+   if (term) {
+      label = String(label).replace( new RegExp(term, "gi"),
+           "<strong class='ui-state-highlight'>$&</strong>");
+   }
+   var class_ =  '';
+   var htm = '';
+   htm += '<div class="' + class_ + '" >';
+   htm += '<strong>'+label+'</strong>' ;
+    return $("<li></li>").append(htm).appendTo(ul);
+  
+};
     
   });
 
@@ -362,7 +381,7 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
           ) {
           //if (s.charAt(0) != "'")
            //   s = "N'" + s + "'";
-           s = "'" + s + "'";
+           s = "'" + s.replace(new RegExp("'", 'g'), "''") + "'";
       } else {
           if (s == "" && needValue) {
               alert("Value is not defined");
@@ -372,7 +391,7 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
              // alert("Operator 'LIKE' is used for String Fields");
               //return;
               fieldName= fieldName+"::text";
-              s = "'" + s + "'";
+              s = "'" + s.replace(new RegExp("'", 'g'), "''")  + "'";
 
           }
       }
