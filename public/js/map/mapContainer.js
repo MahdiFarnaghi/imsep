@@ -302,13 +302,13 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
         self.setCurrentTool({
             name: 'identify_tool',
             cursor:function(map,e){
-                //c='url("/css/images/Identify_24_cursor.png")1 1,auto';
+                //c='url("/css/images/identify_24_cursor.png")1 1,auto';
                 c='';
                 var pixel = map.getEventPixel(e.originalEvent);
                 var hit = map.hasFeatureAtPixel(pixel,{});
                     if(hit){
-                       // c='url("/css/images/Identify_24_cursor_hover.png")1 1,auto'; 
-                       c='url("/css/images/Identify_24_cursor.png")1 1,auto'; 
+                       // c='url("/css/images/identify_24_cursor_hover.png")1 1,auto'; 
+                       c='url("/css/images/identify_24_cursor.png")1 1,auto'; 
                     }
                     return c;
               },
