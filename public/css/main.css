@@ -430,12 +430,28 @@ input[type="checkbox"].input-validation-error {
     .wait-icon {
       background-image:url(images/loading.gif)!important;
       background-repeat: no-repeat;
+
     }
+   
     .wait-icon-with-padding {
       background-image:url(images/loading.gif)!important;
       background-repeat: no-repeat;
       padding-left:1.5em; 
     }
+    .wait-updating-record {
+      background-image:url(images/wait32.gif)!important;
+      background-repeat: no-repeat;
+      background-position-y:center;
+    }
+    .updating-record-faild /*.x-tree-node-anchor*/
+{
+     background-image: url(images/invalid_line.gif) !important;
+    background-repeat:repeat-x  !important;
+    background-position: 50% 99%;
+    /* background-position: bottom; */
+    background-color: #f7e8ea !important;
+}
+
     .background-position-left{
       background-position: left center;
     }

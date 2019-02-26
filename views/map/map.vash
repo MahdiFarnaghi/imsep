@@ -470,6 +470,8 @@
     
     <script src="/js/map/propertyTabs/featureAttributesTab.js"></script>
     <script src="/js/map/propertyTabs/featureShapeTab.js"></script>
+    <script src="/js/map/propertyTabs/featurePointTab.js"></script>
+    
 
     <script src="/js/map/propertyTabs/styleImageTab.js"></script>
     <script src="/js/map/propertyTabs/styleFillTab.js"></script>

@@ -157,7 +157,8 @@ passport.use(new RememberMeStrategy(
                 user = await User.findOne({ where: { email: profile.emails[0].value } });
             } catch (ex) { }
             if (user) {
-                req.flash('error', { msg: user.get('email') + ' is already associated with another account.' });
+              //  req.flash('error', { msg: user.get('email') + ' is already associated with another account.' });
+              req.flash('error', { msg: user.get('email') + ' is already associated with an account. If it\'s yours, go to your profile and link it to your Google account.' });
                 return done();
             }
             try {

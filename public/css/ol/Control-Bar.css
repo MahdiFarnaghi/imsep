@@ -271,12 +271,23 @@
 
 
 
-.myOlbutton24 button{
-	width: 28px!important;
+.myOlbutton24 >button{
+	min-width: 28px!important;
     height: 28px!important;
 }
 .myOlTextButton24 button {
     width: auto!important;
+    height: 28px!important;
+	padding:0.3em!important;
+	white-space: nowrap;
+}
+
+.myOlbutton32 button{
+	min-width: 32px!important;
+    height: 28px!important;
+}
+.myOlTextButton32 button {
+    min-width: auto!important;
     height: 28px!important;
 	padding:0.3em!important;
 	white-space: nowrap;

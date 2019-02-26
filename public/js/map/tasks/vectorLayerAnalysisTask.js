@@ -4,6 +4,7 @@ function VectorLayerAnalysisTask(app, mapContainer, layer, options) {
     this.mapContainer = mapContainer;
     this.layer = layer;
     this.options = options || {};
+    this.hasEditPermission= this.options.hasEditPermission;
     this._initialized = false;
     this._activated = false;
 

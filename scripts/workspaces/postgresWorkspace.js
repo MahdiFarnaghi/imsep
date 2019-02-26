@@ -1583,7 +1583,9 @@ class PostgresWorkspace {
             var thumbnail = null;
             if (thumbnailFile) {
                 thumbnail = await sharp(thumbnailFile)
-                    .resize(160)
+                    .resize(160,100,{
+                        fit: sharp.fit.inside
+                      })
                     .png()
                     .toBuffer();
             }
@@ -1864,7 +1866,9 @@ class PostgresWorkspace {
             var thumbnail = null;
             if (thumbnailFile) {
                 thumbnail = await sharp(thumbnailFile)
-                    .resize(160)
+                .resize(160,100,{
+                    fit: sharp.fit.inside
+                  })
                     .png()
                     .toBuffer();
             } else {
@@ -1952,7 +1956,9 @@ class PostgresWorkspace {
                         display: display
                     });
                     thumbnail = await sharp(resultThumbnail.output)
-                        .resize(160)
+                    .resize(160,100,{
+                        fit: sharp.fit.inside
+                      })
                         .png()
                         .toBuffer();
                 } catch (ex) {
@@ -2602,7 +2608,9 @@ SELECT AddRasterConstraints(
                     display: display
                 });
                 thumbnail = await sharp(resultThumbnail.output)
-                    .resize(160)
+                    .resize(160,100,{
+                        fit: sharp.fit.inside
+                    })
                     .png()
                     .toBuffer();
             } catch (ex) {
@@ -2848,7 +2856,9 @@ SELECT AddRasterConstraints(
                     display: display
                 });
                 thumbnail = await sharp(resultThumbnail.output)
-                    .resize(160)
+                    .resize(160,100,{
+                        fit: sharp.fit.inside
+                    })
                     .png()
                     .toBuffer();
             } catch (ex) {
@@ -3097,7 +3107,9 @@ SELECT AddRasterConstraints(
                     display: display
                 });
                 thumbnail = await sharp(resultThumbnail.output)
-                    .resize(160)
+                    .resize(160,100,{
+                        fit: sharp.fit.inside
+                    })
                     .png()
                     .toBuffer();
             } catch (ex) {

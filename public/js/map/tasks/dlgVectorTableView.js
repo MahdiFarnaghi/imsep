@@ -1,5 +1,8 @@
 
 function DlgVectorTableView(mapContainer,obj,options) {
+  options.showOKButton=false;
+  options.closable=false;
+  options.cancelButtonTitle='Close';
   DlgTaskBase.call(this, 'DlgVectorTableView'
       ,(options.title || 'Attributes')
       ,  mapContainer,obj,options);   
@@ -16,6 +19,9 @@ DlgVectorTableView.prototype.createUI_0=function(){
   var source= layer.getSource();
   var fields= LayerHelper.getFields(layer);
   var features= source.getFeatures();
+  var hasEditPermission= this.options.hasEditPermission;
+  var layerSelectTask= LayerHelper.getVectorLayerSelectTask(layer);
+  var editable=hasEditPermission && layerSelectTask ;
 
   var columns=[];
   for(var i=0;i< fields.length;i++){
@@ -252,8 +258,12 @@ DlgVectorTableView.prototype.createUI=function(){
   var features= source.getFeatures();
   var selectedDic={};
   var layerSelectTask= LayerHelper.getVectorLayerSelectTask(layer);
+  var layerEditTask= LayerHelper.getVectorLayerEditTask(layer);
   var selectedFeatures;
   var selectedFeaturesCount=0;
+  var hasEditPermission= this.options.hasEditPermission;
+  var editable=hasEditPermission && layerEditTask ;
+  var table;
   if(!self.isInitialized){
     self.showSelectedOnly=false;
     
@@ -273,16 +283,136 @@ DlgVectorTableView.prototype.createUI=function(){
           } 
         }
     }
+   
+    var editRow= function(row,index,defaultFieldToEdit,$tr){
+      if(editable){
+        layerEditTask.editFeatureAttributes(row._row_,{
+          defaultFieldToEdit:defaultFieldToEdit,
+          onCommit:function(){
+            if($tr){
+              $tr.removeClass('updating-record-faild');
+              $tr.addClass('wait-updating-record');
+            }
+          },
+          onFailed:function(){
+            if($tr){
+              $tr.removeClass('wait-updating-record');
+              $tr.addClass('updating-record-faild');
+              
+            }
+          },
+          onSuccess:function(){
+            if($tr){
+              $tr.removeClass('updating-record-faild');
+              $tr.removeClass('wait-updating-record');
+            }
+            var feature=row._row_;
+            var d={_row_:feature};
+            for(var i=0;i<columns.length;i++){
+              d[columns[i].field]=feature.get(columns[i].field );
+            }
+            
+            d['_sys_featureid_']=row['_sys_featureid_'];
+            d['_sys_isSelected_']= row['_sys_isSelected_']
+            table.bootstrapTable('updateRow', {
+              index: index,
+              row: d
+            });
+          }
 
+        });
+    }
+  };
+  var deleteRow=function(row,index,$tr){
+      if(editable){
+        layerEditTask.deleteSingleFeature(row._row_,{
+          msg:'Delete feature?',
+          onCommit:function(){
+            if($tr){
+              $tr.removeClass('updating-record-faild');
+              $tr.addClass('wait-updating-record');
+            }
+          },
+          onFailed:function(){
+            if($tr){
+              $tr.removeClass('wait-updating-record');
+              $tr.addClass('updating-record-faild');
+              
+            }
+          },
+          onSuccess:function(){
+            if($tr){
+              $tr.removeClass('updating-record-faild');
+              $tr.removeClass('wait-updating-record');
+            }
+            table.bootstrapTable('remove', {
+              field: '_sys_featureid_',
+              values: [row['_sys_featureid_']]
+            })
+          }
+
+        });
+      }
+    };
+   var opFormaterStr= '<div style="display: flex;">';
+   //opFormaterStr+='<a class="zoomTo" href="javascript:void(0)" title="Zoom to">';
+   //opFormaterStr+= '<i  class="glyphicon glyphicon-zoom-in"></i>';
+   //opFormaterStr+= '</a>  ';
+   opFormaterStr+= '<button style="margin: 2px;" type="button" class="zoomTo btn btn-xs btn-primary	" title="Zoomto" ><span class="glyphicon glyphicon-zoom-in"></span></button>';
+   if(editable){
+    //opFormaterStr+='<a class="remove" href="javascript:void(0)" title="Remove">';
+    //opFormaterStr+='<i class="fa fa-trash"></i>';
+    //opFormaterStr+='</a>';
+    opFormaterStr+= '<button style="margin: 2px;" type="button" class="remove btn btn-xs btn-danger	" title="Delete" ><span class="glyphicon glyphicon-remove"></span></button>';
+
+    //opFormaterStr+='<a class="edit" href="javascript:void(0)" title="Edit">';
+    //opFormaterStr+= '<i style="height:28px;width:30px;display:flex" class="attributesWindow_24_Icon"></i>';
+    //opFormaterStr+= '</a>';
+    opFormaterStr+= '<button style="margin: 2px;" type="button" class="edit btn btn-xs btn-info	" title="Edit" ><span class="glyphicon glyphicon-edit"></span></button>';
+   }
+   opFormaterStr+= '</div>';
+  
+   
+  
   var columns=[];
   columns.push({
     checkbox:true,
-    field: '_isSelected_',
+    field: '_sys_isSelected_',
     sortable:true,
   });
   columns.push({
+    title:'',
+    field: '_sys_operate_',
+    width:'100px',
+    formatter:function(value, row, index) {
+      return opFormaterStr;
+    },
+    events:{
+      'click .zoomTo': function (e, value, row, index) {
+        var feature= row['_row_'];
+        if(feature && feature.getGeometry ){
+          self.mapContainer.zoomToFeature(feature);
+        }
+      },
+      'click .remove': function (e, value, row, index) {
+        var tr=e.target.closest('tr');
+               deleteRow(row,index,$(tr));
+       
+      },
+      'click .edit': function (e, value, row, index) {
+        var tr=e.target.closest('tr');
+        
+        //$table.bootstrapTable('updateRow', {index: index, row: row})
+            editRow(row,index,undefined,$(tr));
+        
+      }
+    }
+    ,
+    sortable:false,
+  });
+  columns.push({
     title:'id',
-    field: '_featureid_',
+    field: '_sys_featureid_',
     visible:true,
     sortable:true,
   });
@@ -306,10 +436,10 @@ DlgVectorTableView.prototype.createUI=function(){
       d[columns[i].field]=row.get(columns[i].field );
     }
     var fid=row.getId()
-    d['_featureid_']=fid;
-    d['_isSelected_']= (selectedDic[fid]?true:false);
+    d['_sys_featureid_']=fid;
+    d['_sys_isSelected_']= (selectedDic[fid]?true:false);
     
-    var isSelected=d['_isSelected_'];
+    var isSelected=d['_sys_isSelected_'];
     if(self.showSelectedOnly){
       if(isSelected){
         data.push(d);
@@ -371,7 +501,8 @@ DlgVectorTableView.prototype.createUI=function(){
 
 });
   var tableEl=content.find('#'+tableId);
-  var table=tableEl.bootstrapTable({
+   table=tableEl.bootstrapTable({
+    //showToggle:true,
     data:data,columns:columns
   }
     );
@@ -433,11 +564,28 @@ DlgVectorTableView.prototype.createUI=function(){
 
     
     table.on('dbl-click-row.bs.table', function (e, row, $el) {
+      var index = $el.closest('tr').data('index');
       var feature= row['_row_'];
       if(feature && feature.getGeometry ){
         self.mapContainer.zoomToFeature(feature);
       }
+      // if(feature){
+      //   editRow(row,index);
+      // }
     	//alert('check index: ' + $el.closest('tr').data('index'));
+    });
+    table.on('dbl-click-cell.bs.table', function (e, field, value, row, $el) {
+      var tr=$el.closest('tr');
+      var index=$el.closest('tr').data('index');
+
+      var feature= row['_row_'];
+      if(feature){
+        editRow(row,index,field,$(tr));
+      }
+      // EditCellValue($el.closest('tr').data('index'),
+      //               $el.closest('td'), 
+      //               row.id, 
+      //               value);
     });
   var $form = $(content.find('#'+self.id +'_form'));
   $form.on('submit', function(event){
@@ -484,6 +632,8 @@ DlgVectorTableView.prototype.exportToCsv=function(columns, rows,selectedDic) {
        var column= columns[j];
        if(column.checkbox)
           continue;
+       if(column.field=='_sys_operate_')
+          continue;   
        if(typeof column.visible !=='undefined' && !column.visible)
           continue; 
       if(!column.field)
@@ -506,18 +656,30 @@ DlgVectorTableView.prototype.exportToCsv=function(columns, rows,selectedDic) {
         var column= columns[j];
         if(column.checkbox)
            continue;
+        if(column.field=='_sys_operate_')
+           continue;   
         if(typeof column.visible !=='undefined' && !column.visible)
            continue; 
         if(!column.field)
            continue;            
          var rowVal=row.get(column.field );
-         if(column.field=='_featureid_'){
+         if(column.field=='_sys_featureid_'){
            rowVal= row.getId();
          }
-          var innerValue = rowVal === null ? '' : rowVal.toString();
+         var innerValue='';
+         if(rowVal===null){
+
+         }else if (typeof rowVal==='undefined'){
+
+         }else{
           if (rowVal instanceof Date) {
-              innerValue = rowVal.toLocaleString();
-          };
+            innerValue = rowVal.toLocaleString();
+          }else{
+            innerValue=rowVal.toString();
+          }
+         }
+          //var innerValue = rowVal === null ? '' : rowVal.toString();
+          
           var result = innerValue.replace(/"/g, '""');
           if (result.search(/("|,|\n)/g) >= 0)
               result = '"' + result + '"';

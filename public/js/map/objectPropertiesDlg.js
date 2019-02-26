@@ -101,6 +101,12 @@ function ObjectPropertiesDlg(mapContainer,obj,options) {
       if(self.options.onshown){
         self.options.onshown(dialogRef);
       }
+      for(var i=0;i<self.propertyTabs.length;i++){
+        var propertyTab= self.propertyTabs[i];
+        if(propertyTab && propertyTab.onshown){
+          propertyTab.onshown();
+        }
+      }
       if(self.activeTabIndex){
         try{
           self.propertyTabs[self.activeTabIndex].activate();

@@ -109,6 +109,28 @@ MapContainer.prototype.create = function() {
          else
            return false;   
     }
+    // ,
+    // style:function(feature,resolution){
+    //  return   new ol.style.Style({
+    //         stroke: new ol.style.Stroke({
+    //             color: 'blue',
+    //             width:3
+    //         }),
+    //         // fill: new ol.style.Fill({
+    //         //     color: 'rgba(100,100,100,0.6)'
+    //         // }),
+    //         image: new ol.style.Circle({
+    //             radius: 1,
+    //             fill: new ol.style.Fill({
+    //                 color: '#00ffff'
+    //             }),
+    //             stroke: new ol.style.Stroke({
+    //                 color: 'blue',
+    //                 width:3
+    //             })
+    //         })
+    //     })
+    // } 
 });
 map.addInteraction(interactionSelectPointerMove);
 

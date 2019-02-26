@@ -19,7 +19,7 @@ module.exports = function (passportConfig) {
         if (req.isAuthenticated()) {
             next();
         } else {
-            req.session.returnToUrl = req.path; 
+            req.session.returnToUrl = req.url; 
             res.redirect('/login');
         }
     };

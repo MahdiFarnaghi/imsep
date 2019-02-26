@@ -16,14 +16,16 @@ function FeatureShapeTab() {
     this.layer=obj.layer;
     this.transactFeature= obj.transactFeature;
     var fields;
+    var shapeType=''
     if(this.layer && this.feature){
       var layerCustom=  this.layer.get('custom');
-      if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.details ){
-       fields= layerCustom.dataObj.details.fields;
+      if(layerCustom && layerCustom.dataObj  ){
+        shapeType= layerCustom.shapeType;
       }
     }
-    
-    return fields?true:false;
+    if(!shapeType)
+      return false;
+    return shapeType!='Point';
   }
   FeatureShapeTab.prototype.create=function(obj,isActive){
     var self=this;

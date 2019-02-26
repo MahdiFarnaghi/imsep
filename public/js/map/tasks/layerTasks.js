@@ -60,14 +60,15 @@ LayerTasks.prototype._createTasks = function () {
     }
     if(custom.type === 'ol.layer.Vector'){
         if (custom.dataObj && custom.source === 'ol.source.Vector') {
-            this._tasks.push( new VectorLayerSelectTask(this.app,this.mapContainer,layer,{}));
+            var hasEditPermission=app.identity.isAdministrator || (app.identity.isDataManager && self.layerPermissions.edit);
+            this._tasks.push( new VectorLayerSelectTask(this.app,this.mapContainer,layer,{hasEditPermission:hasEditPermission}));
 
             if(custom.format === 'ol.format.GeoJSON'){
-                if(app.identity.isAdministrator || (app.identity.isDataManager && self.layerPermissions.edit) ){
-                    this._tasks.push( new VectorLayerEditTask(this.app,this.mapContainer,layer,{}));
+                if(hasEditPermission ){
+                    this._tasks.push( new VectorLayerEditTask(this.app,this.mapContainer,layer,{hasEditPermission:hasEditPermission}));
                 }
                 if(app.identity.isAdministrator || app.identity.isDataAnalyst){
-                    this._tasks.push( new VectorLayerAnalysisTask(this.app,this.mapContainer,layer,{}));
+                    this._tasks.push( new VectorLayerAnalysisTask(this.app,this.mapContainer,layer,{hasEditPermission:hasEditPermission}));
                 }
             }
         }

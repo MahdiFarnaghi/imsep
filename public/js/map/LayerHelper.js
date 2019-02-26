@@ -178,5 +178,15 @@ var LayerHelper={
        }else{
            return null;
        }
-     }
+     },
+     getVectorLayerEditTask:function(layer){
+        if(! layer)
+        return null;   
+         var layerTasks= layer.get('layerTasks');
+         if( layerTasks){
+             return layerTasks.getTaskByName('VectorLayerEditTask');
+         }else{
+             return null;
+         }
+       }
 }

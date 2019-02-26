@@ -925,7 +925,9 @@ module.exports = function () {
          try {
              
              const data = await sharp(req.file.buffer)
-                 .resize(160)
+                .resize(160,100,{
+                    fit: sharp.fit.inside
+                })
                  .png()
                  .toBuffer();
            //  var dataUri= 'data:image/png;base64,' + data.toString('base64');

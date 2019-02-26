@@ -365,20 +365,21 @@ var pageTask={
             }
             frmMap.attr('action', savedMapPathName);
             
-
-            waitingDialog.show('Updating map\'s thumbnail', { progressType: 'info'});
-            if(data.status){
-                $.notify({
-                    message: "Map saved successfully"
-                },{
-                    type:'success',
-                    delay:2000,
-                    animate: {
-                        enter: 'animated fadeInDown',
-                        exit: 'animated fadeOutUp'
-                    }
-                });
-            }
+            waitingDialog.hide();
+            console.log('Updating map\'s thumbnail...');
+            // waitingDialog.show('Updating map\'s thumbnail', { progressType: 'info'});
+            // if(data.status){
+            //     $.notify({
+            //         message: "Map saved successfully"
+            //     },{
+            //         type:'success',
+            //         delay:2000,
+            //         animate: {
+            //             enter: 'animated fadeInDown',
+            //             exit: 'animated fadeOutUp'
+            //         }
+            //     });
+            // }
             app.mapContainer.exportPngBlob(function(blob){
                     //https://stackoverflow.com/questions/6850276/how-to-convert-dataurl-to-file-object-in-javascript
                     if(!blob){
@@ -394,43 +395,47 @@ var pageTask={
                     processData: false,
                     contentType: false,
                     }).done(function(respond){
-                            waitingDialog.hide();
+                           // waitingDialog.hide();
                             
                             if(respond.status)  { 
-                                $.notify({
-                                    message: "Map's thumbnail saved successfully"
-                                },{
-                                    type:'info',
-                                    delay:2000,
-                                    animate: {
-                                        enter: 'animated fadeInDown',
-                                        exit: 'animated fadeOutUp'
-                                    }
-                                });
+                                console.log('Map\'s thumbnail saved successfully');
+                                // $.notify({
+                                //     message: "Map's thumbnail saved successfully"
+                                // },{
+                                //     type:'info',
+                                //     delay:2000,
+                                //     animate: {
+                                //         enter: 'animated fadeInDown',
+                                //         exit: 'animated fadeOutUp'
+                                //     }
+                                // });
                               }else{
-                                  $.notify({
-                                    message:  respond.message ||"Failed to save thumbnail."
-                                },{
-                                    type:'danger',
-                                    delay:2000,
-                                    animate: {
-                                        enter: 'animated fadeInDown',
-                                        exit: 'animated fadeOutUp'
-                                    }
-                                });
+                                console.log(respond.message ||"Failed to save thumbnail.");
+
+                                //   $.notify({
+                                //     message:  respond.message ||"Failed to save thumbnail."
+                                // },{
+                                //     type:'danger',
+                                //     delay:2000,
+                                //     animate: {
+                                //         enter: 'animated fadeInDown',
+                                //         exit: 'animated fadeOutUp'
+                                //     }
+                                // });
                               }
                     }).fail(function( jqXHR, textStatus, errorThrown) {
-                        waitingDialog.hide();
-                        $.notify({
-                            message: "Failed to save thumbnail"
-                        },{
-                            type:'danger',
-                            delay:2000,
-                            animate: {
-                                enter: 'animated fadeInDown',
-                                exit: 'animated fadeOutUp'
-                            }
-                        });
+                        console.log("Failed to save thumbnail");
+                        // waitingDialog.hide();
+                        // $.notify({
+                        //     message: "Failed to save thumbnail"
+                        // },{
+                        //     type:'danger',
+                        //     delay:2000,
+                        //     animate: {
+                        //         enter: 'animated fadeInDown',
+                        //         exit: 'animated fadeOutUp'
+                        //     }
+                        // });
                     });
                 
                 },256);

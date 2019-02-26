@@ -9,11 +9,25 @@ function FeatureAttributesTab() {
   FeatureAttributesTab.prototype.activate=function(){
     $('.nav-tabs a[href="#' + this.tabId + '"]').tab('show');
   }
+  FeatureAttributesTab.prototype.onshown=function(){
+   var self=this;
+    var fElem=this.$form.find('[autofocus]').focus().select();  
+    if(fElem && fElem.length){
+      var offset=fElem.offset().top;
+      var tabOffset= this.tabHeader.offset().top;
+      self.tab.animate({
+            scrollTop: offset - tabOffset -60//-160
+          }, 1000);
+  
+    }
+  }
   FeatureAttributesTab.prototype.applied=function(obj){
     var self=this;
     this.feature= obj.feature;
     this.layer=obj.layer;
     this.transactFeature= obj.transactFeature;
+    this.defaultFieldToEdit=obj.defaultFieldToEdit;
+
     var fields;
     if(this.layer && this.feature){
       var layerCustom=  this.layer.get('custom');
@@ -35,7 +49,8 @@ function FeatureAttributesTab() {
     if(isActive)
       active ='active';
     var tabHeader=$('<li class="'+active+'"><a href="#' +self.tabId+'" data-toggle="tab"><i class="glyphicon glyphicon-list-alt"></i> Attributes</a> </li>').appendTo(this.parentDialog.tabPanelNav);
-    
+    this.tabHeader=tabHeader;
+
     this.tab=$('<div class="tab-pane '+active+'" id="' +self.tabId+'"></div>').appendTo(this.parentDialog.tabPanelContent);
     var htm='<div><form id="'+self.tabId+'_form" class="modal-body form-horizontal">';  
     var properties = this.feature.getProperties();
@@ -84,6 +99,10 @@ function FeatureAttributesTab() {
   
 
     var $form = $(content.find('#'+self.tabId+'_form'));
+    this.$form=$form;
+    setTimeout(function() {
+    
+    }, 1000);
     
      $form.find('input,textarea,select').change(function(){
         $(this).addClass('attribute-value-changed');
@@ -139,14 +158,20 @@ function FeatureAttributesTab() {
             properties[fld.name]= dv;
         //  }
         }else if (fldType=='timestamp with time zone' ){
+          if(v==='')
+            v=undefined;
           properties[fld.name]= v;
         }else if (fldType=='smallint' || fldType=='integer' || fldType=='bigint'){
           if(!isNaN(+v)){ 
-            properties[fld.name]= parseInt(v);
+            if(!isNaN(parseInt(v))){
+              properties[fld.name]= parseInt(v);
+            }
           }
         }else if (fldType=='real' || fldType=='double precision' || fldType=='numeric'){
           if(!isNaN(+v)){ 
-            properties[fld.name]= parseFloat(v);
+            if(!isNaN(parseFloat(v))){
+              properties[fld.name]= parseFloat(v);
+            }
           }
         }else if (fldType=='boolean'){
           if(v==='')
@@ -193,15 +218,19 @@ function FeatureAttributesTab() {
     htm='';
     var validate=false;
     var useTextArea=false;
+    var autofocus='';
+    if(this.defaultFieldToEdit== fld.name){
+      autofocus='autofocus';
+    }
     if(!fld.length || fld.length >200){
         useTextArea=true;
     }
     htm+='  <div class="form-group">';
       htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
       if(useTextArea){
-          htm+='    <textarea data-fild-name="'+fld.name+'"  name="'+fldKey+'" id="' +fldKey +'" rows="4" placeholder="'+placeholder+'" class="form-control" ';
+          htm+='    <textarea data-fild-name="'+fld.name+'" '+ autofocus +' name="'+fldKey+'" id="' +fldKey +'" rows="4" placeholder="'+placeholder+'" class="form-control" ';
       }else{
-          htm+='    <input type="text" data-fild-name="'+fld.name+'"  name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
+          htm+='    <input type="text" data-fild-name="'+fld.name+'" '+ autofocus +' name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
       }
       if(isRequired){
         validate=true;
@@ -251,11 +280,15 @@ function FeatureAttributesTab() {
     if(typeof fld.default !=='undefined'){
         placeholder= fld.default;
     }
+    var autofocus='';
+    if(this.defaultFieldToEdit== fld.name){
+      autofocus='autofocus';
+    }
     htm='';
     var validate=false;
     htm+='  <div class="form-group">';
       htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
-      htm+='    <input type="text" data-fild-name="'+fld.name+'"  name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
+      htm+='    <input type="text" data-fild-name="'+fld.name+'" '+ autofocus+' name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
       
       if(isRequired){
         validate=true;
@@ -297,11 +330,15 @@ function FeatureAttributesTab() {
     if(typeof fld.default !=='undefined'){
         placeholder= fld.default;
     }
+    var autofocus='';
+    if(this.defaultFieldToEdit== fld.name){
+      autofocus='autofocus';
+    }
     htm='';
     var validate=false;
     htm+='  <div class="form-group">';
       htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
-      htm+='    <input type="date" data-fild-name="'+fld.name+'"  name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
+      htm+='    <input type="date" data-fild-name="'+fld.name+'" '+ autofocus+'  name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
       
       if(isRequired){
         validate=true;
@@ -345,11 +382,15 @@ function FeatureAttributesTab() {
     if(typeof fld.default !=='undefined'){
         placeholder= fld.default;
     }
+    var autofocus='';
+    if(this.defaultFieldToEdit== fld.name){
+      autofocus='autofocus';
+    }
     htm='';
     var validate=false;
     htm+='  <div class="form-group">';
       htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
-      htm+='    <input type="number" data-fild-name="'+fld.name+'" name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
+      htm+='    <input type="number" data-fild-name="'+fld.name+'" '+ autofocus+' name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
       
       validate=true;
       htm+=' data-val-integer="Input an integer" ';
@@ -405,12 +446,16 @@ function FeatureAttributesTab() {
     if(typeof fld.default !=='undefined'){
         placeholder= fld.default;
     }
+    var autofocus='';
+    if(this.defaultFieldToEdit== fld.name){
+      autofocus='autofocus';
+    }
     var pattern;//='^\d+(?:\.\d{0,2})?$';
     htm='';
     var validate=false;
     htm+='  <div class="form-group">';
       htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
-      htm+='    <input type="number" data-fild-name="'+fld.name+'"  name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
+      htm+='    <input type="number" data-fild-name="'+fld.name+'" '+autofocus+'  name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
       
      
       if(isRequired){
@@ -462,6 +507,10 @@ function FeatureAttributesTab() {
     if(typeof fld.default !=='undefined'){
         placeholder= fld.default;
     }
+    var autofocus='';
+    if(this.defaultFieldToEdit== fld.name){
+      autofocus='autofocus';
+    }
     var pattern;//='^\d+(?:\.\d{0,2})?$';
     htm='';
 
@@ -473,7 +522,7 @@ function FeatureAttributesTab() {
     htm+='  <div class="form-group">';
     if(isRequired){
       htm+='    <label class="">';
-      htm+='    <input type="checkbox" data-fild-name="'+fld.name+'"  name="'+fldKey+'" id="' +fldKey +'" value=""  class="" ';
+      htm+='    <input type="checkbox" data-fild-name="'+fld.name+'" '+autofocus+'  name="'+fldKey+'" id="' +fldKey +'" value=""  class="" ';
       if(value){
         htm+='    checked="checked"';
       }
@@ -483,7 +532,7 @@ function FeatureAttributesTab() {
     }else{
   
         htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
-        htm+='    <select data-fild-name="'+fld.name+'"  name="'+fldKey+'" id="' +fldKey +'"  class="form-control" >';
+        htm+='    <select data-fild-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="form-control" >';
         htm+='    <option value="1" '+ ((value) ? 'selected="selected"' : '' ) +' >True</option>';
         htm+='    <option value="0" '+ ((value) ? '':'selected="selected"' ) +' >False</option>';
         htm+='    <option value="" '+ ((value=='Null') ? 'selected="selected"':'' ) +' >Null</option>';

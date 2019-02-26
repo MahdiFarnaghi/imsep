@@ -4,9 +4,11 @@ function VectorLayerSelectTask(app, mapContainer, layer, options) {
     this.mapContainer = mapContainer;
     this.layer = layer;
     this.options = options || {};
+    this.hasEditPermission=this.options.hasEditPermission;
+
     this._initialized = false;
     this._activated = false;
-
+    
     this._toolbar = null;
 }
 VectorLayerSelectTask.prototype.getName = function () {
@@ -40,7 +42,7 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
             width:2
         }),
         fill: new ol.style.Fill({
-            color: 'rgba(0,100,100,0.2)'
+            color: 'rgba(0,255,255,0.6)'
         }),
         image: new ol.style.Circle({
             radius: 6,
@@ -423,6 +425,7 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
               }
             var dlg = new DlgVectorTableView(mapContainer, self.layer, {
                 forceShowOnlySelection:forceShowOnlySelection,
+                hasEditPermission:self.hasEditPermission,
                 title:title,
                 onapply:function(dlg,data){
                     

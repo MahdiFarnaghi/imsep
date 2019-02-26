@@ -4,6 +4,7 @@ function VectorLayerEditTask(app, mapContainer, layer, options) {
     this.mapContainer = mapContainer;
     this.layer = layer;
     this.options = options || {};
+    this.hasEditPermission= this.options.hasEditPermission;
     this._initialized = false;
     this._activated = false;
 
@@ -37,12 +38,14 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
     self.interaction = undefined; //common draw interaction
     var dirty = {};
     self.dirty=dirty;
-    var transactFeature = function (mode, f) {
+    var transactFeature = function (mode, f,options) {
+        options=options ||{};
         if(sourceFormat instanceof ol.format.GeoJSON){
             var geoJsonFeature;
             var action = 'insert';
             var projectFrom = map.getView().getProjection().getCode();
             switch (mode) {
+                case 'add':
                 case 'insert':
                     action = 'insert';
                     geoJsonFeature = sourceFormat.writeFeatureObject(f, { featureProjection: projectFrom });
@@ -73,7 +76,9 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                 action: action,
                 geoJSON: geoJsonFeature
             }
-            
+            if(options.onCommit){
+                options.onCommit(request);
+            } 
             $.ajax(url, {
                 type: 'POST',
                 dataType: 'json',
@@ -83,15 +88,44 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                 data: JSON.stringify(request),
                 success: function (data) {
                     if (data) {
-
+                        if(data.status){
+                            if(options.onSuccess){
+                                options.onSuccess(data);
+                            }       
+                            return;
+                        }
                     }
+                    
+                            var msg='Error';
+                            if(data && data.message){
+                                msg= data.message;
+                            }
+                            if(options.onFailed){
+                                options.onFailed(undefined, msg, undefined);
+                            }
+                            $.notify({
+                                message: "Failed to apply changes, "+ msg
+                            },{
+                                type:'danger',
+                                z_index:50000,
+                                delay:5000,
+                                animate: {
+                                    enter: 'animated fadeInDown',
+                                    exit: 'animated fadeOutUp'
+                                }
+                            });
+                        
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                    if(options.onFailed){
+                        options.onFailed(xhr, textStatus, errorThrown);
+                    }
                     $.notify({
                         message: "Failed to apply changes, "+ errorThrown
                     },{
                         type:'danger',
-                        delay:2000,
+                        z_index:50000,
+                        delay:5000,
                         animate: {
                             enter: 'animated fadeInDown',
                             exit: 'animated fadeOutUp'
@@ -120,6 +154,9 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
             var xs = new XMLSerializer();
             var payload = xs.serializeToString(node);
             //var url=details.url;// '/proxy/?url=' +details.url;
+            if(options.onCommit){
+                options.onCommit(request);
+            } 
             var url='/proxy/?url=' + encodeURIComponent(details.url);
             $.ajax(url, {
             
@@ -132,15 +169,43 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
 
                 success: function (data) {
                     if (data) {
-
+                        if(data.status){
+                            if(options.onSuccess){
+                                options.onSuccess(data);
+                            }       
+                            return;
+                        }
                     }
+                    
+                            var msg='Error';
+                            if(data && data.message){
+                                msg= data.message;
+                            }
+                            if(options.onFailed){
+                                options.onFailed(undefined, msg, undefined);
+                            }
+                            $.notify({
+                                message: "Failed to apply changes, "+ msg
+                            },{
+                                type:'danger',
+                                z_index:50000,
+                                delay:5000,
+                                animate: {
+                                    enter: 'animated fadeInDown',
+                                    exit: 'animated fadeOutUp'
+                                }
+                            });
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                    if(options.onFailed){
+                        options.onFailed(xhr, textStatus, errorThrown);
+                    }
                     var a = 1;
                     $.notify({
                         message: "Failed to apply, "+ errorThrown
                     },{
                         type:'danger',
+                        z_index:50000,
                         delay:2000,
                         animate: {
                             enter: 'animated fadeInDown',
@@ -281,6 +346,7 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                     message: "First, select a feature!"
                 },{
                     type:'info',
+                    z_index:50000,
                     delay:2000,
                     animate: {
                         enter: 'animated fadeInDown',
@@ -316,6 +382,7 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                 message: "First, select a feature!"
             },{
                 type:'info',
+                z_index:50000,
                 delay:2000,
                 animate: {
                     enter: 'animated fadeInDown',
@@ -409,6 +476,23 @@ this._toolbar.addControl(editAttribute);
 
     this._toolbar.addControl(this.selectCtrl);
 
+
+    var addPointXY=new ol.control.Button({
+        html: '<i class="	glyphicon glyphicon-map-marker" >xy</i>',
+        className:'myOlbutton32',
+        title: "Add point feature by lon/lat",
+        handleClick: function () {
+            
+                self.addPointByXY();
+    
+        }
+        });
+    this.addPointXY=addPointXY;
+    if (!shapeType || shapeType == 'Point') {
+        this._toolbar.addControl(addPointXY);
+    }
+     
+
     // Add editing tools
     var drawPoint = new ol.control.Toggle({
         html: '<i class="	glyphicon glyphicon-map-marker" ></i>',
@@ -469,7 +553,7 @@ this._toolbar.addControl(editAttribute);
         onToggle: function (toggle) {
             //console.log(toggle);
             map.removeInteraction(self.interaction);
-            self.interactionSelect.getFeatures().clear();
+           // self.interactionSelect.getFeatures().clear();
             map.removeInteraction(self.interactionSelect);
             if (!toggle) {
                 self.mapContainer.setCurrentTool(null);
@@ -497,14 +581,60 @@ this._toolbar.addControl(editAttribute);
                     drawLine.setActive(false);
                 }
             });
+            var appendToExisting=false;
+            var appendToFeature=null;
+            if(self.interactionSelect.getFeatures().getLength()==1){
+                appendToFeature=self.interactionSelect.getFeatures().item(0);
+            }
             self.interaction = new ol.interaction.Draw({
                 type: 'LineString',
                 source: vector.getSource(),
+                geometryFunction: function(coordinates, geometry) {
+                    if (geometry) geometry.setCoordinates(coordinates);
+                    else geometry = new ol.geom.LineString(coordinates);
+                   
+                    return geometry;
+                    }
             });
             self.mapContainer.setCurrentEditAction('draw');
             map.addInteraction(self.interaction);
             self.interaction.on('drawend', function (e) {
-                transactFeature('insert', e.feature);
+                if(appendToFeature){
+                    if(e.feature){
+
+                        new ConfirmDialog().show('Append to last selected line?', function (confirm) {
+
+                            if (confirm) {
+                                var geom= e.feature.getGeometry();
+                                var coords= geom.getCoordinates();
+        
+                                var c_geom=appendToFeature.getGeometry();
+                                var c_type=c_geom.getType();
+                                var c_coords=c_geom.getCoordinates();
+                                if(c_type=='MultiLineString'){
+                                    c_coords.push(coords);
+                                    c_geom.setCoordinates(c_coords);
+                                }else{
+                                    c_coords=[c_coords,coords];    
+                                    c_geom =  new ol.geom.MultiLineString(c_coords);
+                                    appendToFeature.setGeometry(c_geom);
+                                }
+                                //c_coords=c_coords.concat(coords);
+                                
+                              //  appendToFeature.setGeometry(c_geom);
+                                 transactFeature('update', appendToFeature);
+                            }else{
+                                transactFeature('insert', e.feature);
+                            }
+                    
+                        }, { dialogSize: 'sm', alertType: 'info' }
+                        );
+
+                        
+                    }
+                }else{
+                    transactFeature('insert', e.feature);
+                }
             });
             map.addInteraction(self.interactionSnap);
         }
@@ -551,7 +681,7 @@ this._toolbar.addControl(editAttribute);
         title: 'Draw polygon',
         onToggle: function (toggle) {
             map.removeInteraction(self.interaction);
-            self.interactionSelect.getFeatures().clear();
+           // self.interactionSelect.getFeatures().clear();
             map.removeInteraction(self.interactionSelect);
             if (!toggle) {
                 self.mapContainer.setCurrentTool(null);
@@ -579,14 +709,62 @@ this._toolbar.addControl(editAttribute);
                     drawPolygon.setActive(false);
                 }
             });
+            var appendToExisting=false;
+            var appendToFeature=null;
+            if(self.interactionSelect.getFeatures().getLength()==1){
+                appendToFeature=self.interactionSelect.getFeatures().item(0);
+            }
             self.interaction = new ol.interaction.Draw({
                 type: 'Polygon',
                 source: vector.getSource(),
+                geometryFunction: function(coordinates, geometry) {
+                    if (geometry) geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
+                    else geometry = new ol.geom.Polygon(coordinates);
+                   
+                    return geometry;
+                    }
             });
             self.mapContainer.setCurrentEditAction('draw');
             map.addInteraction(self.interaction);
             self.interaction.on('drawend', function (e) {
-                transactFeature('insert', e.feature);
+                if(appendToFeature){
+                    if(e.feature){
+
+                        new ConfirmDialog().show('Merge to last selected polyon?', function (confirm) {
+
+                            if (confirm) {
+                                var geom= e.feature.getGeometry();
+                                var coords= geom.getCoordinates();
+        
+                                var c_geom=appendToFeature.getGeometry();
+                                var c_type=c_geom.getType();
+                                var c_coords=c_geom.getCoordinates();
+                                if(coords && coords.length){
+                                    if(c_type=='MultiPolygon'){
+                                        c_coords.push(coords);
+                                        c_geom.setCoordinates(c_coords);
+                                    }else if(c_type=='Polygon'){
+                                        c_coords.push(coords[0]);
+                                        c_geom.setCoordinates(c_coords);
+                                    }else{
+                                        c_coords=[c_coords,coords[0]];    
+                                        c_geom =  new ol.geom.Polygon(c_coords);
+                                        appendToFeature.setGeometry(c_geom);
+                                    }
+                                    transactFeature('update', appendToFeature);
+                                }
+                            }else{
+                                transactFeature('insert', e.feature);
+                            }
+                    
+                        }, { dialogSize: 'sm', alertType: 'info' }
+                        );
+
+                        
+                    }
+                }else{
+                    transactFeature('insert', e.feature);
+                }
             });
             map.addInteraction(self.interactionSnap);
         }
@@ -776,21 +954,59 @@ VectorLayerEditTask.prototype.importSelectionFromSelectTask = function () {
         }
     }
 }
-VectorLayerEditTask.prototype.editFeatureAttributes = function (feature) {
+VectorLayerEditTask.prototype.addPointByXY = function (options) {
     var self=this;
     var vector = this.layer;
-    
+    options=options||{};
+    var feature = new ol.Feature();
+    var defaultFieldToEdit=options.defaultFieldToEdit; 
     var featurePropertiesDlg = new ObjectPropertiesDlg(self.mapContainer, 
         {
             layer:vector,
             feature:feature,
+            defaultFieldToEdit:defaultFieldToEdit,
+            transactFeature:self.transactFeature
+        }
+        , {
+        title:'Add point feature',
+        tabs:[
+            new FeatureAttributesTab(),
+            new FeaturePointTab()
+          ],
+          activeTabIndex:1,
+        onapply:function(dlg){
+            //
+            var f= feature;
+            delete self.dirty[f.getId()];
+            var featureProperties = f.getProperties();
+            delete featureProperties.boundedBy;
+            var clone = new ol.Feature(featureProperties);
+            clone.setId(f.getId());
+            self.transactFeature('add', clone,options);
+        },
+        helpLink:'/help#editing_attributes'
+
+      }).show();
+}
+
+VectorLayerEditTask.prototype.editFeatureAttributes = function (feature,options) {
+    var self=this;
+    var vector = this.layer;
+    options=options||{};
+    var defaultFieldToEdit=options.defaultFieldToEdit; 
+    var featurePropertiesDlg = new ObjectPropertiesDlg(self.mapContainer, 
+        {
+            layer:vector,
+            feature:feature,
+            defaultFieldToEdit:defaultFieldToEdit,
             transactFeature:self.transactFeature
         }
         , {
         title:'Edit attributes',
         tabs:[
             new FeatureAttributesTab(),
-            new FeatureShapeTab()
+            new FeatureShapeTab(),
+            new FeaturePointTab()
           ],
         onapply:function(dlg){
             //
@@ -800,26 +1016,54 @@ VectorLayerEditTask.prototype.editFeatureAttributes = function (feature) {
             delete featureProperties.boundedBy;
             var clone = new ol.Feature(featureProperties);
             clone.setId(f.getId());
-            self.transactFeature('update', clone);
+            self.transactFeature('update', clone,options);
         },
         helpLink:'/help#editing_attributes'
 
       }).show();
 }
 
-
-VectorLayerEditTask.prototype.deleteFeatures = function (features) {
+VectorLayerEditTask.prototype.deleteSingleFeature = function (feature,options) {
     var self=this;
     var vector = this.layer;
-    var msg = "Delete selected feature?";
-    if (features.getLength() > 1)
-        msg = "Delete selected feature(s)?";
+    options=options||{};
+    var msg= options.msg;
+    if(!msg){
+          msg = "Delete selected feature?";
+    }
+
+    confirmDialog.show(msg, function (confirm) {
+
+        if (confirm) {
+           
+                self.transactFeature('delete', feature,options);
+            self.interactionSelect.getFeatures().clear();
+        }
+
+    },
+        {
+            dialogSize: 'sm',
+            alertType: 'danger'
+        }
+    );
+}
+VectorLayerEditTask.prototype.deleteFeatures = function (features,options) {
+    var self=this;
+    var vector = this.layer;
+    options=options||{};
+    var msg= options.msg;
+    if(!msg){
+          msg = "Delete selected feature?";
+        if (features.getLength() > 1)
+            msg = "Delete selected feature(s)?";
+    }
+
     confirmDialog.show(msg, function (confirm) {
 
         if (confirm) {
             for (var i = 0, f; f = features.item(i); i++) {
                 //  vector.getSource().removeFeature(f);
-                self.transactFeature('delete', f);
+                self.transactFeature('delete', f,options);
             }
             self.interactionSelect.getFeatures().clear();
         }
