@@ -602,7 +602,7 @@ this._toolbar.addControl(editAttribute);
                 if(appendToFeature){
                     if(e.feature){
 
-                        new ConfirmDialog().show('Append to last selected line?', function (confirm) {
+                        new ConfirmDialog().show('Append to the last selected line?', function (confirm) {
 
                             if (confirm) {
                                 var geom= e.feature.getGeometry();
@@ -730,7 +730,7 @@ this._toolbar.addControl(editAttribute);
                 if(appendToFeature){
                     if(e.feature){
 
-                        new ConfirmDialog().show('Merge to last selected polyon?', function (confirm) {
+                        new ConfirmDialog().show('Merge to the last selected polygon?', function (confirm) {
 
                             if (confirm) {
                                 var geom= e.feature.getGeometry();
