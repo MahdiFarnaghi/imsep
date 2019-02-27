@@ -740,6 +740,7 @@ module.exports = function (postgresWorkspace) {
         if(creationSucceeded){
             if(details.isNew)
                 delete details.isNew;
+            details.name=req.body.name;    
             item.set('name', req.body.name);
             item.set('description', req.body.description);
             item.set('keywords', req.body.keywords);
@@ -986,7 +987,7 @@ module.exports = function (postgresWorkspace) {
                     }
                 });
                 details.history=history;
-
+            details.name= req.body.name;   
             item.set('name', req.body.name);
             item.set('description', req.body.description);
             item.set('keywords', req.body.keywords);
@@ -1201,17 +1202,21 @@ module.exports = function (postgresWorkspace) {
      * DELETE /datalayer/:id/delete
      */
     module.dataLayerDelete = async function (req, res, next) {
-        var item;
+        var err,item;
         if (req.params.id && req.params.id != '-1') {
-            try {
-                item = await models.DataLayer.findOne({
-                    where: {
-                        id: req.params.id
-                    }
-                });
-            } catch (ex) {
-                var ee = 1;
-            }
+            // try {
+            //     item = await models.DataLayer.findOne({
+            //         where: {
+            //             id: req.params.id
+            //         }
+            //     });
+            // } catch (ex) {
+            //     var ee = 1;
+            // }
+         
+            var itemId=req.params.id;
+            [err, item] = await util.call(models.DataLayer.findById(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
+       
         }
         if (!item) {
             req.flash('error', {
@@ -1220,12 +1225,23 @@ module.exports = function (postgresWorkspace) {
             return res.redirect('/');
         }
         
-        
-        if (item.ownerUser !== req.user.id) {
+        var isOwner=false;
+        if(item.ownerUser== req.user.id) {
+            isOwner=true;
+        }else if (item.OwnerUser && item.OwnerUser.parent==req.user.id){
+            isOwner=true;
+        }
+  
+        if(!isOwner && !res.locals.identity.isAdministrator  ){
             req.flash('error', { msg: `Access denied.` });
             return res.redirect('/datalayers');
-            
         }
+        
+        // if (item.ownerUser !== req.user.id) {
+        //     req.flash('error', { msg: `Access denied.` });
+        //     return res.redirect('/datalayers');
+            
+        // }
         // delete from workspace
         var details={};
         try{
@@ -2749,6 +2765,7 @@ module.exports = function (postgresWorkspace) {
               var details={};
               try{
                 details= JSON.parse( item.details);
+                details.name= item.name;
               }catch(ex){}
 
               //todo: workspace selection

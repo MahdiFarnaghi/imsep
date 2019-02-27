@@ -124,7 +124,9 @@
                                     
                                     <li>
                                     
-                                    @if(model.identity.id==item.OwnerUser.id){
+                                      @if(model.identity.isAdministrator || ( model.identity.id==item.OwnerUser.id)
+                                      || (item.OwnerUser.parent== model.identity.id )
+                                      ){
                                         <form method="POST" action="/datalayer/@item.id/delete?_method=DELETE">
                                             <button title="Delete" type="submit" style="color:red" class="btn-link  glyphicon glyphicon-remove" onclick="return confirm('Confirm deletion?');"> </button>
                                         </form>

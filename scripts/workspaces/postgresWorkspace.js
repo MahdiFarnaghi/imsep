@@ -2421,7 +2421,7 @@ WHERE ST_Intersects(${rasterField}, ST_Transform(ST_SetSRID(ST_MakePoint(${x}, $
             settings= {};
         }
         var fromDetails = options.details;
-        var outputName = options.outputName || (fromDetails.fileName + '-Slope');
+        var outputName = options.outputName || ( (fromDetails.name || fromDetails.fileName) + '-Slope');
         var tableName = fromDetails.datasetName;
         var oidField = fromDetails.oidField || 'rid';
         var rasterField = fromDetails.rasterField || 'rast';
@@ -2459,6 +2459,7 @@ WHERE ST_Intersects(${rasterField}, ST_Transform(ST_SetSRID(ST_MakePoint(${x}, $
 
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'raster',
@@ -2624,7 +2625,7 @@ SELECT AddRasterConstraints(
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'raster',
-                    description: 'Generated from ' + fromDetails.fileName + errors,
+                    description: 'Generated from ' + (fromDetails.name  || fromDetails.datasetName) + errors,
                     ownerUser: ownerUserId,
                     thumbnail: thumbnail,
                     details: JSON.stringify(outDetails)
@@ -2655,7 +2656,7 @@ SELECT AddRasterConstraints(
         }
         var status = false;
         var fromDetails = options.details;
-        var outputName = options.outputName || (fromDetails.fileName + '-Hillshade');
+        var outputName = options.outputName || ((fromDetails.name || fromDetails.fileName) + '-Hillshade');
         var tableName = fromDetails.datasetName;
         var oidField = fromDetails.oidField || 'rid';
         var rasterField = fromDetails.rasterField || 'rast';
@@ -2707,6 +2708,7 @@ SELECT AddRasterConstraints(
 
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'raster',
@@ -2872,7 +2874,7 @@ SELECT AddRasterConstraints(
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'raster',
-                    description: 'Generated from ' + fromDetails.fileName + errors,
+                    description: 'Generated from ' + (fromDetails.name || fromDetails.fileName) + errors,
                     ownerUser: ownerUserId,
                     thumbnail: thumbnail,
                     details: JSON.stringify(outDetails)
@@ -2910,7 +2912,7 @@ SELECT AddRasterConstraints(
         var sharp = require('sharp');
         var status = false;
         var fromDetails = options.details;
-        var outputName = options.outputName || (fromDetails.fileName + '-Reclass');
+        var outputName = options.outputName || ((fromDetails.name || fromDetails.fileName) + '-Reclass');
         var tableName = fromDetails.datasetName;
         var settings=options.settings;
         var outputDescription= options.outputDescription || settings.outputDescription || '';
@@ -2954,6 +2956,7 @@ SELECT AddRasterConstraints(
 
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'raster',
@@ -3123,7 +3126,7 @@ SELECT AddRasterConstraints(
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'raster',
-                    description: outputDescription || ('Generated from ' + fromDetails.fileName + errors),
+                    description: outputDescription || ('Generated from ' + (fromDetails.name || fromDetails.fileName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: thumbnail,
                     details: JSON.stringify(outDetails)
@@ -3150,7 +3153,7 @@ SELECT AddRasterConstraints(
         var sharp = require('sharp');
         var status = false;
         var fromDetails = options.details;
-        var outputName = options.outputName || (fromDetails.fileName + '-Polygon');
+        var outputName = options.outputName || ((fromDetails.name || fromDetails.fileName) + '-Polygon');
         
         var tableName = fromDetails.datasetName;
         var settings=options.settings;
@@ -3197,6 +3200,7 @@ SELECT AddRasterConstraints(
 
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'vector',
@@ -3260,7 +3264,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
-                    description: outputDescription || ('created from ' + fromDetails.datasetName + errors),
+                    description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
@@ -3384,7 +3388,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
     async makeBuffer(DataLayer, ownerUserId, options) {
         var status = false;
         var fromDetails = options.details;
-        var outputName = options.outputName || (fromDetails.fileName + '-Buffer');
+        var outputName = options.outputName || ((fromDetails.name || fromDetails.fileName)+ '-Buffer');
         var tableName = fromDetails.datasetName;
         var settings=options.settings;
         if(!settings){
@@ -3432,6 +3436,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
         }
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'vector',
@@ -3487,7 +3492,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
-                    description: outputDescription || ('created from ' + fromDetails.datasetName + errors),
+                    description: outputDescription || ('created from ' +(fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
@@ -3522,7 +3527,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
         var fromDetails = options.details;
         var settings= options.settings;
         var toDetails= settings.otherDetails;
-        var outputName = options.outputName || (fromDetails.fileName + '_'+ toDetails.fileName +'-Intersection');
+        var outputName = options.outputName || ((fromDetails.name || fromDetails.fileName) + '_'+ (toDetails.name || toDetails.fileName) +'-Intersection');
         var tableName = fromDetails.datasetName;
        
         var outputDescription= options.outputDescription || settings.outputDescription || '';
@@ -3608,6 +3613,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
         
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'vector',
@@ -3674,7 +3680,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
-                    description: outputDescription || ('created from ' + fromDetails.datasetName + errors),
+                    description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
@@ -3708,7 +3714,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
         var fromDetails = options.details;
         var settings= options.settings;
         var toDetails= settings.otherDetails;
-        var outputName = options.outputName || (fromDetails.fileName + '_'+ toDetails.fileName +'-Identity');
+        var outputName = options.outputName || ((fromDetails.name || fromDetails.fileName) + '_'+ (toDetails.name || toDetails.fileName) +'-Identity');
         var tableName = fromDetails.datasetName;
        
         var outputDescription= options.outputDescription || settings.outputDescription || '';
@@ -3799,6 +3805,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
         
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'vector',
@@ -3898,7 +3905,7 @@ ON  ST_Intersects(${fromGeom},B.geom)  AND ST_Within(${fromGeom},B.geom) = false
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
-                    description: outputDescription || ('created from ' + fromDetails.datasetName + errors),
+                    description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
@@ -3934,7 +3941,7 @@ ON  ST_Intersects(${fromGeom},B.geom)  AND ST_Within(${fromGeom},B.geom) = false
         var settings= options.settings;
         var clipOutside= settings.clipOutside || false;
         var toDetails= settings.otherDetails;
-        var outputName = options.outputName || (fromDetails.fileName + '_ClippedBy_'+ toDetails.fileName );
+        var outputName = options.outputName || ((fromDetails.name || fromDetails.fileName) + '_ClippedBy_'+ (toDetails.name || toDetails.fileName) );
         var tableName = fromDetails.datasetName;
        
         var outputDescription= options.outputDescription || settings.outputDescription || '';
@@ -4002,6 +4009,7 @@ ON  ST_Intersects(${fromGeom},B.geom)  AND ST_Within(${fromGeom},B.geom) = false
         
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'vector',
@@ -4105,7 +4113,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
-                    description: outputDescription || ('created from ' + fromDetails.datasetName + errors),
+                    description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
@@ -4137,7 +4145,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
     async dissolve(DataLayer, ownerUserId, options) {
         var status = false;
         var fromDetails = options.details;
-        var outputName = options.outputName || (fromDetails.fileName + '-Dissolve');
+        var outputName = options.outputName || ((fromDetails.name || fromDetails.fileName) + '-Dissolve');
         var tableName = fromDetails.datasetName;
         var settings=options.settings;
         if(!settings){
@@ -4243,6 +4251,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
         }
         var errors = '';
         var outDetails = {
+            name:outputName,
             datasetName: uniqueTableName,
             workspace: 'postgres',
             datasetType: 'vector',
@@ -4301,7 +4310,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
-                    description: outputDescription || ('created from ' + fromDetails.datasetName + errors),
+                    description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
