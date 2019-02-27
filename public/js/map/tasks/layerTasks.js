@@ -5,7 +5,8 @@ function LayerTasks(app, mapContainer, layer, options) {
     this.layer = layer;
     this.layerPermissions={
         edit:false,
-        view:true
+        view:true,
+        isOwner:false
     };
     
     this.options = options || {};
@@ -27,6 +28,7 @@ function LayerTasks(app, mapContainer, layer, options) {
                 if (data) {
                    self.layerPermissions.edit= data._userHasPermission_Edit;
                    self.layerPermissions.view= data._userHasPermission_View;
+                   self.layerPermissions.isOwner=(data._userIsOwner||data._userIsOwnerParent);
                   // self.layerPermissions._userHasPermission_EditSchema= data._userHasPermission_EditSchema;
                 }
                 self._createTasks();
@@ -60,14 +62,14 @@ LayerTasks.prototype._createTasks = function () {
     }
     if(custom.type === 'ol.layer.Vector'){
         if (custom.dataObj && custom.source === 'ol.source.Vector') {
-            var hasEditPermission=app.identity.isAdministrator || (app.identity.isDataManager && self.layerPermissions.edit);
+            var hasEditPermission=app.identity.isAdministrator || (self.layerPermissions.isOwner) || ((app.identity.isPowerUser || app.identity.isDataManager) && self.layerPermissions.edit) ;
             this._tasks.push( new VectorLayerSelectTask(this.app,this.mapContainer,layer,{hasEditPermission:hasEditPermission}));
 
             if(custom.format === 'ol.format.GeoJSON'){
                 if(hasEditPermission ){
                     this._tasks.push( new VectorLayerEditTask(this.app,this.mapContainer,layer,{hasEditPermission:hasEditPermission}));
                 }
-                if(app.identity.isAdministrator || app.identity.isDataAnalyst){
+                if(app.identity.isAdministrator || app.identity.isPowerUser || app.identity.isDataAnalyst){
                     this._tasks.push( new VectorLayerAnalysisTask(this.app,this.mapContainer,layer,{hasEditPermission:hasEditPermission}));
                 }
             }
@@ -77,7 +79,7 @@ LayerTasks.prototype._createTasks = function () {
     if (custom.dataObj && custom.source === 'ol.source.GeoImage') {
         
         this._tasks.push( new RasterLayerValueTask(this.app,this.mapContainer,layer,{}));
-        if(app.identity.isAdministrator || app.identity.isDataAnalyst){
+        if(app.identity.isAdministrator || app.identity.isPowerUser|| app.identity.isDataAnalyst){
             this._tasks.push( new RasterLayerAnalysisTask(this.app,this.mapContainer,layer,{}));
         }
 

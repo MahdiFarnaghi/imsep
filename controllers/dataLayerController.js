@@ -136,11 +136,13 @@ module.exports = function (postgresWorkspace) {
         if(layer){
             var item= layer.toJSON();
             if(item.ownerUser == req.user.id){
+                item._userIsOwner=true;
                 item._userHasPermission_EditSchema=true;
                 item._userHasPermission_Edit=true;
                 item._userHasPermission_View=true;
                 
             }else if(item.OwnerUser && (item.OwnerUser.parent == req.user.id)){
+                item._userIsOwnerParent=true;
                 item._userHasPermission_EditSchema=true;
                 item._userHasPermission_Edit=true;
                 item._userHasPermission_View=true;
@@ -198,7 +200,7 @@ module.exports = function (postgresWorkspace) {
         //#region getitem
         if (req.params.id && req.params.id == '-1' && dataType=='vector') {
             
-            if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
+            if (!(res.locals.identity.isAdministrator || res.locals.identity.isPowerUser ||  res.locals.identity.isDataManager || res.locals.identity.isDataAnalyst )) {
                 req.flash('error', {
                     msg: 'Access denied'
                 });
@@ -263,7 +265,7 @@ module.exports = function (postgresWorkspace) {
                         }else{
                             item=null;
                         }
-                        if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
+                        if (!(res.locals.identity.isAdministrator || res.locals.identity.isPowerUser||  res.locals.identity.isDataManager )) {
                             item=null;
                         }
                     }
@@ -538,7 +540,7 @@ module.exports = function (postgresWorkspace) {
 
     var owner = req.user;
     if (layerId == -1) {
-        if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
+        if (!(res.locals.identity.isAdministrator || res.locals.identity.isPowerUser ||  res.locals.identity.isDataManager  ||  res.locals.identity.isDataAnalyst)) {
             result.status=false;
             result.message= 'Access denied';
             return res.json(result) ;          
@@ -2069,6 +2071,7 @@ module.exports = function (postgresWorkspace) {
    module.geojsonRowPost = async function (req, res) {
     var item,err;
     var itemId=req.params.id;
+    
     if (req.params.id && req.params.id != '-1') {
         
         [err, item] = await util.call(models.DataLayer.findById(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
@@ -2095,7 +2098,11 @@ module.exports = function (postgresWorkspace) {
           }
           if(!isOwner && !res.locals.identity.isAdministrator  )
           {
-                 
+            // if(!res.locals.identity.isDataManager){ //is applyed in UI
+            //     res.set('Content-Type', 'text/plain');
+            //     res.status(403).end('Access denied');
+            //     return;
+            // }   
             var userHasEditPermission=false;
             var err;
             [err, item] = await util.call(models.DataLayer.findOne({
@@ -2142,6 +2149,7 @@ module.exports = function (postgresWorkspace) {
             if(!userHasEditPermission){
                 res.set('Content-Type', 'text/plain');
                 res.status(403).end('Access denied');
+                return;
             }
           }
           var details={};

@@ -150,7 +150,7 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
         if(event.file && event.file.name){
             layerName=event.file.name;
         }
-        if(app.identity && (app.identity.isAdministrator || app.identity.isDataManager) ){
+        if(app.identity && (app.identity.isAdministrator || app.identity.isPowerUser || app.identity.isDataManager|| app.identity.isDataAnalyst) ){
             var projection= event.projection || map.getView.getProjection();
             var format = new ol.format.GeoJSON({ featureProjection:projection,  dataProjection: 'EPSG:4326' });
             var geojson = format.writeFeatures(event.features);

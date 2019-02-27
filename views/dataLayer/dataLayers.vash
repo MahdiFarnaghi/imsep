@@ -51,7 +51,7 @@
                         
                         <input class="search-box animated-search-box_ form-control" id="tblItems_search" type="search" placeholder="Search..">
                          
-                            @if(model.identity.isAdministrator || model.identity.isDataManager){
+                            @if(model.identity.isAdministrator || model.identity.isPowerUser|| model.identity.isDataManager || model.identity.isDataAnalyst){
                                 <br/>
                                 <div class="form-group">
                                 <a href="/datalayer/-1?dataType=vector" class="btn btn-primary form-control "><span class="glyphicon glyphicon-plus"></span> New Vector layer</a>
@@ -116,7 +116,7 @@
                                     <li>
                                         <i class="fa fa-calendar"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
                                     </li>
-                                    @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || (model.identity.isDataManager && item._userHasPermission_EditSchema)){
+                                    @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || ( (model.identity.isPowerUser || model.identity.isDataManager ||  model.identity.isDataAnalyst) && item._userHasPermission_EditSchema)){
                                      <li>
                                         <a href="/datalayer/@item.id?dataType=@item.dataType"><i class="glyphicon glyphicon-edit"></i></a> 
                                      </li>   

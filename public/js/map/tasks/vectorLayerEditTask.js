@@ -117,11 +117,19 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                         
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                   var msg=errorThrown;
+                    if(xhr.responseJSON){
+                        if(xhr.responseJSON.error){
+                            msg=xhr.responseJSON.error;
+                            errorThrown= msg;
+                        }
+                    }
+
                     if(options.onFailed){
                         options.onFailed(xhr, textStatus, errorThrown);
                     }
                     $.notify({
-                        message: "Failed to apply changes, "+ errorThrown
+                        message: "Failed to apply changes, "+ msg
                     },{
                         type:'danger',
                         z_index:50000,
@@ -197,16 +205,23 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                             });
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                    var msg=errorThrown;
+                    if(xhr.responseJSON){
+                        if(xhr.responseJSON.error){
+                            msg=xhr.responseJSON.error;
+                            errorThrown= msg;
+                        }
+                    }
+
                     if(options.onFailed){
                         options.onFailed(xhr, textStatus, errorThrown);
                     }
-                    var a = 1;
                     $.notify({
-                        message: "Failed to apply, "+ errorThrown
+                        message: "Failed to apply changes, "+ msg
                     },{
                         type:'danger',
                         z_index:50000,
-                        delay:2000,
+                        delay:5000,
                         animate: {
                             enter: 'animated fadeInDown',
                             exit: 'animated fadeOutUp'
@@ -804,6 +819,111 @@ this._toolbar.addControl(editAttribute);
     if (!shapeType || shapeType == 'Polygon' || shapeType == 'MultiPolygon') {
         this._toolbar.addControl(drawPolygon);
     }
+
+
+    var transformShape = new ol.control.Toggle({
+       // html: '<span style="display:block;line-height:28px;background-position:center center" class="editVertexIcon" >&nbsp;</span>',
+       html: '<i class="	glyphicon glyphicon-move" ></i>',
+        className:'myOlbutton24',
+        title: 'Move shape',
+        onToggle: function (toggle) {
+            map.removeInteraction(self.interaction);
+            // self.interactionSelect.getFeatures().clear();
+            map.removeInteraction(self.interactionSelect);
+            if (!toggle) {
+                self.mapContainer.setCurrentTool(null);
+                self.mapContainer.setCurrentEditAction(undefined);
+                return;
+            }
+
+
+
+            mapContainer.setCurrentTool({
+                name: 'edit_transform',
+                cursor:function(map,e){
+                    // var c='url("/css/images/SelectArrow_32_cursor.png")1 1,auto';
+                    // var pixel = map.getEventPixel(e.originalEvent);
+                    // var hit = map.hasFeatureAtPixel(pixel,{
+                    //     layerFilter: function(layer){
+                    //         if(layer===self.layer)
+                    //             return true;
+                    //         else
+                    //             return false;
+                    //     }
+                    //     });
+                    //     if(hit){
+                    //         c='url("/css/images/SelectArrow_bold_pencil_32_cursor.png")1 1,auto'; 
+                    //     }
+                    //     return c;
+                    return '';
+                  },
+                onActivate: function (event) {
+
+                },
+                onDeactivate: function (event) {
+                    map.removeInteraction(self.interaction);
+                    map.removeInteraction(self.interactionSnap);
+                    self.mapContainer.setCurrentEditAction('');
+                    map.removeInteraction(self.interactionSelect);
+                    if (event.newTool && event.newTool.name !== '') {
+
+                    }
+                    transformShape.setActive(false);
+                }
+            });
+            map.addInteraction(self.interactionSelect);
+            self.interaction = new ol.interaction.Transform({
+                features: self.interactionSelect.getFeatures(),
+                addCondition: ol.events.condition.shiftKeyOnly,
+				// filter: function(f,l) { return f.getGeometry().getType()==='Polygon'; },
+				// layers: [vector],
+				hitTolerance: 2,
+				translateFeature: false,//$("#translateFeature").prop('checked'),
+				scale:false,// $("#scale").prop('checked'),
+				rotate:false,// $("#rotate").prop('checked'),
+				keepAspectRatio:true,// $("#keepAspectRatio").prop('checked') ? ol.events.condition.always : undefined,
+				translate:true,// $("#translate").prop('checked'),
+				stretch:false// $("#stretch").prop('checked')
+            });
+            map.addInteraction(self.interaction);
+            self.mapContainer.setCurrentEditAction('transform');
+            map.addInteraction(self.interactionSnap);
+           // dirty = {};
+            for (var i = 0, f; f = self.interactionSelect.getFeatures().item(i); i++) {
+                var feature=f;
+               // self.interaction.getFeatures().push(f);
+                feature.on('change', function (e) {
+                    dirty[e.target.getId()] = true;
+                });
+            }
+            self.interactionSelect.getFeatures().on('add', function (e) {
+               // self.interaction.getFeatures().push(e.target);
+                e.element.on('change', function (e) {
+                    dirty[e.target.getId()] = true;
+                });
+            });
+            self.interactionSelect.getFeatures().on('remove', function (e) {
+                //self.interaction.getFeatures().push(e.target);
+                var f = e.element;
+                if (dirty[f.getId()]) {
+                    delete dirty[f.getId()];
+                    var featureProperties = f.getProperties();
+                    delete featureProperties.boundedBy;
+                    var clone = new ol.Feature(featureProperties);
+                    clone.setId(f.getId());
+                    transactFeature('update', clone);
+                }
+            });
+
+            self.importSelectionFromSelectTask();
+
+        }
+    });
+    this.transformShape = transformShape;
+
+    //this._toolbar.addControl(transformShape);
+
+
 
     var editShape = new ol.control.Toggle({
         html: '<span style="display:block;line-height:28px;background-position:center center" class="editVertexIcon" >&nbsp;</span>',

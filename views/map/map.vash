@@ -302,7 +302,7 @@
                                         <div id="autoSearchLayers_results" class="autocomplete-custom-results">
 
                                         </div>
-                                          @if(model.identity.isAdministrator || model.identity.isDataManager){
+                                          @if(model.identity.isAdministrator || model.identity.isPowerUser || model.identity.isDataManager || model.identity.isDataAnalyst){
                                               <label><p style="padding-left:1em;">Or:</p></label>
                                            <button id="cmdAddGeoJSON" title="Add GeoJSON layer" class="btn-primary form-control ">Add GeoJSON </button>
                                           }
@@ -324,9 +324,11 @@
                                     <div class="panel-body">
                                         <button id="cmdAddNewWMS" title="Add new WMS layer" class="btn-primary form-control ">Add WMS layer</button>
                                         <button id="cmdAddNewWFS" title="Add new WFS layer" class="btn-primary form-control ">Add WFS layer</button>
-                                         @if(model.identity.isAdministrator || model.identity.isDataManager){
+                                        @*
+                                         @if(model.identity.isAdministrator || model.identity.isPowerUser|| model.identity.isDataManager || model.identity.isDataAnalyst ){
                                             <button id="cmdAddNewOSMXML" title="Add new OSM Vector layer" class="btn-primary form-control ">Add OSM Vector layer</button>
-                                         }
+                                         }*@
+                                         <button id="cmdAddNewOSMXML" title="Add new OSM Vector layer" class="btn-primary form-control ">Add OSM Vector layer</button>
                                         @* <button id="cmdWCS" title="Download from Web Coverage Service" class="btn-primary form-control ">Download from WCS</button>*@
                                     </div>
                                 </div>
@@ -401,6 +403,7 @@
 
     <script src="/js/lib/proj4.js"></script>
     <script src="/js/lib/ol.js"></script>
+    <script src="/js/map/custom/ol-ext/Transform.js"></script>
     <script src="/js/map/custom/ol-ext/LayerSwitcher.js"></script>
     <script src="/js/map/custom/ol-ext/Popup.js"></script>
     <script src="/js/map/custom/ol-ext/Control-Bar.js"></script>

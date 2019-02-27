@@ -428,14 +428,14 @@ app.post('/admin/user/:id',
 
     app.get('/datalayer/uploadshapefile',
     [Authenticated, authorize({
-        anyOfRoles: 'administrators,dataManagers'
+        anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
      handleErrors(dataLayerController.uplaodShapefileGet));  
 
    // var uploadFiles= multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*30 } }).array('file');
     app.post('/datalayer/uploadshapefile',
     [Authenticated, authorize({
-        anyOfRoles: 'administrators,dataManagers'
+        anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
   
     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024* (parseFloat(process.env.UPLOAD_SHAPEFILE_MAX_SIZE_MB) || 30 ) } }).array('file'),
@@ -457,7 +457,7 @@ app.post('/admin/user/:id',
 
     app.post('/datalayer/createfromgeojson',
     [Authenticated, authorize({
-        anyOfRoles: 'administrators,dataManagers'
+        anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*(parseFloat(process.env.UPLOAD_GEOJSON_MAX_SIZE_MB) || 10 ) } }).single('file'),
     handleErrors(dataLayerController.createFromGeoJSONPost));
@@ -465,21 +465,21 @@ app.post('/admin/user/:id',
     
     app.post('/datalayer/toShapefile',
     [Authenticated, authorize({
-        anyOfRoles: 'administrators,dataManagers'
+        anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*(parseFloat(process.env.UPLOAD_GEOJSON_MAX_SIZE_MB) || 10 ) } }).single('file'),
     handleErrors(dataLayerController.geoJsonToShapefilePost));
 
     app.get('/datalayer/uploadraster',
     [Authenticated, authorize({
-        anyOfRoles: 'administrators,dataManagers'
+        anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
     handleErrors(dataLayerController.uplaodRasterGet));  
 
   // var uploadFiles= multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*30 } }).array('file');
    app.post('/datalayer/uploadraster',
    [Authenticated, authorize({
-    anyOfRoles: 'administrators,dataManagers'
+    anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
  
    multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*(parseFloat(process.env.UPLOAD_RASTER_MAX_SIZE_MB) || 100 ) } }).array('file'),
@@ -501,11 +501,11 @@ app.post('/admin/user/:id',
 
 
     app.get('/datalayer/:id',
-//    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+//    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers,dataAnalysts'})],
     [Authenticated],
     handleErrors(dataLayerController.dataLayerGet));
     app.post('/datalayer/:id',
-    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers,dataAnalysts'})],
     [Authenticated],
     handleErrors(dataLayerController.dataLayerPost));
     app.get('/datalayer/:id/info',
@@ -513,7 +513,7 @@ app.post('/admin/user/:id',
     handleErrors(dataLayerController.dataLayerInfoGet));
     
     app.delete('/datalayer/:id/delete',
-    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers,dataAnalysts'})],
     [Authenticated],
     handleErrors(dataLayerController.dataLayerDelete));
     
@@ -532,18 +532,19 @@ app.post('/admin/user/:id',
     handleErrors(dataLayerController.rasterGet));
     
     app.get('/datalayer/:id/analysis',
-    [Authenticated, authorize({anyOfRoles: 'administrators,dataAnalysts'})],
+    [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataAnalysts'})],
     handleErrors(dataLayerController.analysisGet));
 
     app.post('/datalayer/:id/geojson/:row',
-    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers,dataAnalysts'})],
+    [Authenticated],
     handleErrors(dataLayerController.geojsonRowPost));
 
     
     
     app.get('/datalayer/:id/thumbnail', validateController.noCache, handleErrors(dataLayerController.thumbnailGet));  
     app.post('/datalayer/:id/thumbnail',
-    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers'})],
+    [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataManagers'})],
     multer({ storage: memorystorage,limits: { fileSize: 1024*1024*4 } }).single('file'),
     handleErrors(dataLayerController.thumbnailPost));  
 

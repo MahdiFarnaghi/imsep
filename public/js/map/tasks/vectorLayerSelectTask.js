@@ -452,7 +452,10 @@ VectorLayerSelectTask.prototype.init = function (dataObj) {
         }
         });
     this.duplicateLayer=duplicateLayer;
-    this._toolbar.addControl(duplicateLayer);
+    
+    if(app.identity.isAdministrator || app.identity.isPowerUser || app.identity.isDataManager || app.identity.isDataAnalyst ){
+        this._toolbar.addControl(duplicateLayer);
+    }
 }
 VectorLayerSelectTask.prototype.OnActivated = function (dataObj) {
     this._activated = true;

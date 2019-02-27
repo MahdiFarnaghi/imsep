@@ -91,7 +91,7 @@ function LayerSourceTab() {
         }
         htm += '<li><i class="fa fa-calendar"></i><span>' +updatedAt + '</span></li>';
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
-          if(layerCustom.dataObj.ownerUser==app.identity.id){
+          if(layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
           
           htm +=' <li style="float: right;">';
           htm+='    <div class=""><button id="cmdupdatethumbnail" type="button" class="btn btn-primary btn-success btn-xs ">Update thumbnail</button></div>';
@@ -199,7 +199,7 @@ function LayerSourceTab() {
         }
         htm += '<li><i class="fa fa-calendar"></i><span>' +updatedAt + '</span></li>';
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
-          if(layerCustom.dataObj.ownerUser==app.identity.id){
+          if(layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
           
           htm +=' <li style="float: right;">';
           htm+='    <div class=""><button id="cmdupdatethumbnail" type="button" class="btn btn-primary btn-success btn-xs">Update thumbnail</button></div>';
