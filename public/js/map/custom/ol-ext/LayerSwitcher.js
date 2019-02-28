@@ -765,6 +765,11 @@ ol.control.LayerSwitcher.prototype.setLoadingStatus_ = function (layer) {
 			thisLayer.layerswitcher_label.removeClass('vector-loading_status-failed');
 
 			thisLayer.layerswitcher_label.addClass('vector-loading_status-' + thisLayer.getSource().get('loading_status'));
+			if(thisLayer.getSource().get('loading_status')=='failed'){
+				thisLayer.layerswitcher_label.attr('title', thisLayer.getSource().get('loading_details'))
+			}else{
+				thisLayer.layerswitcher_label.attr('title', thisLayer.get("title") || thisLayer.get("name"))
+			}
 		}
 	}
 	draw();

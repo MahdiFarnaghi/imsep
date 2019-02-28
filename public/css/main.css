@@ -452,6 +452,13 @@ input[type="checkbox"].input-validation-error {
     background-color: #f7e8ea !important;
 }
 
+.vector-loading_status-started{
+  color:inherit!important;
+  background-image: url(images/loading.gif)!important;
+  background-repeat: no-repeat;
+  padding-left: 2.7em!important;
+  background-position-x: 1.4em;
+}
     .background-position-left{
       background-position: left center;
     }
