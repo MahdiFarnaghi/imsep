@@ -18,7 +18,9 @@ var app = {
 
     //openrouteservice
     routeServiceTokens:[
-            '5b3ce3597851110001cf6248534f1763f9fd495086cc8333c25725fd'
+            '5b3ce3597851110001cf6248534f1763f9fd495086cc8333c25725fd',
+            '5b3ce3597851110001cf624870554ac82bc24e83bca4b3c26ed4ad00',
+            '5b3ce3597851110001cf6248cc2f42bbe67643b4aa56d6cd9eec9075'
     ],
     //overpassApiServer:'https://overpass-api.de/api/interpreter',
     overpassApiServer:'//overpass-api.de/api/interpreter',

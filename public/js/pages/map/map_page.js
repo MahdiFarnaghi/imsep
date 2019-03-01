@@ -94,6 +94,7 @@ var pageTask={
                     app.mapContainer.map.updateSize();
                 },3000);  
             }
+            $('.tab-fixed-height').outerHeight(mapHeight+mousePosition-41);
     },
     init:function(){
         var self=this;
@@ -101,6 +102,7 @@ var pageTask={
         app.mapContainer.create();
         //app.mapContainer.loadFromJson(atob(app.pageData.mapData)); 
         app.mapContainer.loadFromJson(Base64.decode( app.pageData.mapData)); 
+        this.hideTab('tabRoute');
         if(app.mapContainer.mapSettings.preview){
           this.activateTab ('tabLayers');
         }
@@ -456,8 +458,15 @@ var pageTask={
             },
         });
     },
-    activateTab: function(tab){
-        $('.nav-tabs a[href="#' + tab + '"]').tab('show');
+    activateTab: function(tabId){
+        //$('.nav-tabs a[href="#' + tabId + '"]').tab('show');
+        var tab=$('.nav-tabs a[href="#' + this.tabId + '"]');//'show');
+        tab.parent('li').show();
+        tab.tab('show');
+   },
+   hideTab:function(tab){
+    var tab=$('.nav-tabs a[href="#' + tab + '"]');
+    tab.parent('li').hide();
   }
 
 };
@@ -567,9 +576,10 @@ pageTask.create_Layer_AutoSearch=function(){
      })
        
      .data("ui-autocomplete")._renderItem = function (ul, item) {
-        if (item.data &&item.data.updatedAt) {
+        if (item.data &&item.data.updatedAt && !item.data.updatedAt_obj) {
             try {
-                item.data.updatedAt = new Date(item.data.updatedAt);
+               
+                item.data.updatedAt_obj = new Date(item.data.updatedAt);
             } catch (ex) {
             }
         }

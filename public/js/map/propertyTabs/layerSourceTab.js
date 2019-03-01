@@ -81,6 +81,12 @@ function LayerSourceTab() {
         //}
         htm += label + (layerCustom.dataObj.description ? '<br/><small style="white-space: pre;">' + description + '</small>' : '');
         htm += '<div class="list-inline">';
+        if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
+          if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+          
+          htm+=' <a target="_blank" href="/datalayer/'+layerCustom.dataObj.id+'?dataType='+layerCustom.dataObj.dataType+'"><i class="glyphicon glyphicon-edit"></i></a>'; 
+         }
+        }
         //if (layerCustom.dataObj.OwnerUser.userName !== app.identity.name) {
           htm += '    <li><i class="fa fa-user"></i> <span>' + layerCustom.dataObj.OwnerUser.userName + '</span></li>';
         //}
@@ -91,7 +97,7 @@ function LayerSourceTab() {
         }
         htm += '<li><i class="fa fa-calendar"></i><span>' +updatedAt + '</span></li>';
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
-          if(layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+          if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
           
           htm +=' <li style="float: right;">';
           htm+='    <div class=""><button id="cmdupdatethumbnail" type="button" class="btn btn-primary btn-success btn-xs ">Update thumbnail</button></div>';
@@ -189,6 +195,12 @@ function LayerSourceTab() {
         //}
         htm += label + (layerCustom.dataObj.description ? '<br/><small style="white-space: pre;">' + description + '</small>' : '');
         htm += '<div class="list-inline">';
+        if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
+          if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+          
+          htm+=' <a target="_blank" href="/datalayer/'+layerCustom.dataObj.id+'?dataType='+layerCustom.dataObj.dataType+'"><i class="glyphicon glyphicon-edit"></i></a>'; 
+         }
+        }
         //if (layerCustom.dataObj.OwnerUser.userName !== app.identity.name) {
           htm += '    <li><i class="fa fa-user"></i> <span>' + layerCustom.dataObj.OwnerUser.userName + '</span></li>';
         //}
@@ -199,7 +211,7 @@ function LayerSourceTab() {
         }
         htm += '<li><i class="fa fa-calendar"></i><span>' +updatedAt + '</span></li>';
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
-          if(layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+          if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
           
           htm +=' <li style="float: right;">';
           htm+='    <div class=""><button id="cmdupdatethumbnail" type="button" class="btn btn-primary btn-success btn-xs">Update thumbnail</button></div>';

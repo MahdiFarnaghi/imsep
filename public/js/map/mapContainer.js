@@ -329,6 +329,10 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
 this.topToolbar.addControl(identifyTool);
   this.measureTasks= new MeasureTasks(this.app,this,{});
   this.measureTasks.OnActivated();
+ 
+  this.routeTasks= new RouteTasks(this.app,this,{});
+  this.routeTasks.OnActivated();
+  
   if (location.protocol === 'https:') {
     //this.geolocationTasks= new GeolocationTasks(this.app,this,{});
     //this.geolocationTasks.OnActivated();
@@ -449,7 +453,7 @@ this.legend=legend;
           };
       },{
           layerFilter: function(layer){
-            if(layer.get('custom') && layer.get('custom').type=='measure')
+            if(layer.get('custom') && (layer.get('custom').type=='measure' || layer.get('custom').type=='temp' )) 
                 return false;
             else
                 return true;
@@ -578,6 +582,63 @@ MapContainer.prototype.OnActiveLayerChanged=function(){
             }
         }
         this.updateUI();
+
+        var custom= activeLayer.get('custom');
+        if(custom && custom.dataObj && custom.source_schema_updatedAt){
+            var infoUrl='/datalayer/' + custom.dataObj.id+'/info';
+            $.ajax(infoUrl, {
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    if (data) {
+                        if( typeof data.status !=='undefined'){
+                            if(!data.status){
+                                // layer does not exist
+                                var source=activeLayer.getSource();
+                                if(source){
+                                    source.set('loading_details','Source does not exist');
+                                    source.set('loading_status','failed');
+                                }
+                                return;
+                            }
+                        }
+                        if(data.updatedAt !== custom.source_schema_updatedAt){
+                            // source is changed
+                            custom.source_schema_out_of_date=true;
+                            var source=activeLayer.getSource();
+                            if(source){
+                              //  source.set('loading_details','Source definition is out of date.');
+                               // source.set('loading_status','out_of_date');
+                            }
+                            try{
+                                custom.dataObj= data;
+                                LayerHelper.setDetails(activeLayer,JSON.parse(data.details));
+                                custom.source_schema_updatedAt=data.updatedAt;
+                                source.set('loading_details','Source definition is updated.');
+                                source.set('loading_status','out_of_date');
+                                custom.source_schema_out_of_date=false;
+                            }catch(ex){
+                                source.set('loading_details','Source definition is out of date.');
+                                source.set('loading_status','out_of_date');
+                            }
+                        }else{
+                            var source=activeLayer.getSource();
+                            if(source.get('loading_status')=='out_of_date'){
+                                source.set('loading_status','');
+                            }
+                        }
+                    
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                
+                }
+                }).done(function (response) {
+                
+                });
+            }
+
+
     }
 }
 MapContainer.prototype.zoomToLayer = function(layer) {
@@ -921,6 +982,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                           source: 'ol.source.Vector',
                           format: 'ol.format.GeoJSON',
                           shapeType:dataObj.details.shapeType,
+                          source_schema_updatedAt:layerInfo.custom.source_schema_updatedAt,
                           dataObj: dataObj
                       }
                   });
@@ -1046,7 +1108,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                     custom: {
                         type: 'ol.layer.Image',
                         source: 'ol.source.GeoImage',
-                        dataObj: dataObj
+                        dataObj: dataObj,
+                        source_schema_updatedAt:layerInfo.custom.source_schema_updatedAt
                     }
                 });
               var layerTasks= new LayerTasks(this.app,this,newLayer,{});
@@ -1080,6 +1143,7 @@ MapContainer.prototype.addData = function(dataObj) {
                 type: 'ol.layer.Vector',
                 source: 'ol.source.Vector',
                 format: 'ol.format.GeoJSON',
+                source_schema_updatedAt :dataObj.updatedAt,
                 dataObj: dataObj
             }
         }
@@ -1090,6 +1154,7 @@ MapContainer.prototype.addData = function(dataObj) {
             custom: {
                 type: 'ol.layer.Image',
                 source: 'ol.source.GeoImage',
+                source_schema_updatedAt :dataObj.updatedAt,
                 
                 dataObj: dataObj
             }

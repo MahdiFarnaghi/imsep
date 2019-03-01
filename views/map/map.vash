@@ -122,6 +122,11 @@
                 margin-bottom: 20px;
         }
 
+    .tab-fixed-height{
+        overflow-y:auto;
+        overflow-x:hidden;
+
+    }
 </style>
         
     })
@@ -145,16 +150,17 @@
                 </li>
                 <li><a href="#tabLayers" data-toggle="tab">Layers</a>
                 </li>
-                @*
-                <li><a href="#tabSearch" data-toggle="tab">Search</a>
+                
+                <li style="display:none" ><a href="#tabRoute" data-toggle="tab">Route</a>
                 </li>
+                @*
                 <li><a href="#tabOther" data-toggle="tab">Other</a>
                 </li>
                 *@
             </ul>
 
             <div class="tab-content clearfix_">
-                <div class="tab-pane active" id="tabMap">
+                <div class="tab-pane tab-fixed-height active" id="tabMap">
 
                     <form id="frmMap" method="POST" class="form-horizontal" action="/map/@(model.map.id)">
 
@@ -264,7 +270,7 @@
                     </form>
 
                 </div>
-                <div class="tab-pane" id="tabLayers">
+                <div class="tab-pane tab-fixed-height" id="tabLayers">
        
                     <div id="pnlLayerSwitcher" class="panel-group">
                             <div class="panel panel-default collapsible-panel"    >
@@ -359,9 +365,8 @@
                        
                     </div>
                 </div>
-               @* <div class="tab-pane" id="tabSearch">
-                    searching ...
-                </div>
+                <div class="tab-pane tab-fixed-height" id="tabRoute">
+                </div>@*
                 <div class="tab-pane" id="tabOther">
                     others ..
                 </div>
@@ -461,6 +466,7 @@
     
     
     <script src="/js/map/tasks/measureTasks.js"></script>
+    <script src="/js/map/tasks/routeTasks.js"></script>
     <script src="/js/map/tasks/geolocationTasks.js"></script>
     
 

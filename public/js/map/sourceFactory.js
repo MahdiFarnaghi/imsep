@@ -324,16 +324,18 @@ SourceFactory.prototype.createGeoJsonVectorSource = function(dataObj,mapContaine
                                 var dataProjection= format.readProjection(data);
                                 vectorSource.addFeatures(features);
                         }
-                        vectorSource.set('loading_status', 'compelete');
                         vectorSource.set('loading_details', '');
+                        vectorSource.set('loading_status', 'compelete');
+                        
                         vectorSource.dispatchEvent({
                             type: "loading_complete"
                         });
                     }
                 },
                 error: function (xhr, textStatus, errorThrown) {
-                    vectorSource.set('loading_status', 'failed');
                     vectorSource.set('loading_details', errorThrown|| textStatus);
+                    vectorSource.set('loading_status', 'failed');
+                    
                     vectorSource.dispatchEvent({
                         type: "loading_failed",
                         xhr: xhr,
@@ -506,8 +508,9 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
           function(features, dataProjection) {
               if (this instanceof ol.source.Vector) {
                   this.addFeatures(features);
-                  this.set('loading_status', 'compelete');
                   this.set('loading_details', '');
+                  this.set('loading_status', 'compelete');
+                  
                   this.dispatchEvent({
                       type: "loading_complete"
                   });
@@ -515,8 +518,9 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
           },
           function(xhr, statusText,errorThrown) { // failure
               var a = 1;
-              this.set('loading_status', 'failed');
               vectorSource.set('loading_details', errorThrown || textStatus);
+              this.set('loading_status', 'failed');
+              
               this.dispatchEvent({
                   type: "loading_failed",
                   xhr: xhr,

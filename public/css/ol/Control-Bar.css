@@ -292,3 +292,6 @@
 	padding:0.3em!important;
 	white-space: nowrap;
 }
+ .myOlbuttonVertical{
+	 display: inline !important;
+ }

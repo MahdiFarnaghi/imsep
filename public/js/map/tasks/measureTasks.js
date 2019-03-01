@@ -17,7 +17,7 @@ function MeasureTasks(app, mapContainer, options) {
     this.measureTooltip = undefined;
     this.sketch = undefined;
     this.overlays = [];
-    this.routeStopPoints=[];
+    
     this.task=null;
 }
 MeasureTasks.prototype._init = function (dataObj) {
@@ -35,23 +35,7 @@ MeasureTasks.prototype._init = function (dataObj) {
             hiddenInToc: true
         },
         style:function(feature,resolution){ 
-          if(feature.get('isRoute')){
-            return  new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: 'rgba(255, 255, 255, 0.2)'
-                }),
-                stroke: new ol.style.Stroke({
-                    color: 'rgba(237,50,72,0.85)',
-                    width: 5
-                }),
-                image: new ol.style.Circle({
-                    radius: 7,
-                    fill: new ol.style.Fill({
-                        color: '#ff0000'
-                    })
-                })
-            });
-          }else{
+         
             return  new ol.style.Style({
                     fill: new ol.style.Fill({
                         color: 'rgba(255, 255, 255, 0.2)'
@@ -67,7 +51,7 @@ MeasureTasks.prototype._init = function (dataObj) {
                         })
                     })
                 });
-            }
+            
         }
     });
 
@@ -149,16 +133,7 @@ MeasureTasks.prototype._init = function (dataObj) {
 
         self.interaction.on('drawend',
             function (evt) {
-                if(self.task=='route'){
-                    if(evt.feature){
-                        var geom= evt.feature.getGeometry();
-                        var coords = ol.proj.toLonLat(geom.getCoordinates());
-                        self.routeStopPoints.push(coords);
-                        if(self.routeStopPoints.length>=2){
-                            self.findRoute();
-                        }
-                    }
-                }else{
+                
                     self.measureTooltipElement.className = 'tooltip tooltip-static';
                     self.measureTooltip.setOffset([0, -7]);
                     // unset sketch
@@ -169,11 +144,11 @@ MeasureTasks.prototype._init = function (dataObj) {
                     ol.Observable.unByKey(listener);
 
                     self.moveLayerToTop();
-                }
+                
             }, this);
     }
     var activateInteraction = function (type,task) {
-        self.routeStopPoints=[];
+        
         map.removeInteraction(self.interaction);
         addInteraction(type,task);
         self.mapContainer.setCurrentEditAction('draw');
@@ -190,7 +165,7 @@ MeasureTasks.prototype._init = function (dataObj) {
     var measureLength = new ol.control.Toggle({
         //html: '<span style="display:block;line-height:28px;background-position:center center" class="measure_lengthIcon" >&nbsp;</span>',
         html: '<span style="display:block;line-height:28px;background-position:center center" class="measure_length_24_Icon" >&nbsp;</span>',
-        className:'myOlbutton24',
+        className:'myOlbutton24 myOlbuttonVertical',
         title: 'Measure Length',
         onToggle: function (toggle) {
             //console.log(toggle);
@@ -235,7 +210,7 @@ MeasureTasks.prototype._init = function (dataObj) {
     var measureArea = new ol.control.Toggle({
         //html: '<span style="display:block;line-height:28px;background-position:center center" class="measure_areaIcon" >&nbsp;</span>',
         html: '<span style="display:block;line-height:28px;background-position:center center" class="measure_area_24_Icon" >&nbsp;</span>',
-        className:'myOlbutton24',
+        className:'myOlbutton24 myOlbuttonVertical',
         title: 'Measure Area',
         onToggle: function (toggle) {
             //console.log(toggle);
@@ -275,56 +250,12 @@ MeasureTasks.prototype._init = function (dataObj) {
     this.measureArea = measureArea;
     this._subBar.addControl(measureArea);
 
-    var measureRoute = new ol.control.Toggle({
-        //html: '<span style="display:block;line-height:28px;background-position:center center" class="measure_lengthIcon" >&nbsp;</span>',
-        html: '<span style="display:block;line-height:28px;background-position:center center;" class="" ><i class="fa fa-route"></i></span>',
-        className:'myOlbutton24',
-        title: 'Find Route',
-        onToggle: function (toggle) {
-            //console.log(toggle);
-            map.removeInteraction(self.interaction);
-            if (!toggle) {
-                self.mapContainer.setCurrentTool(null);
-                self.removeMapEvents();
-                self.mapContainer.setCurrentEditAction(undefined);
-                return;
-            }
-            mapContainer.setCurrentTool({
-                isMeasureTool: true,
-                name: 'measure_Route',
-                onActivate: function (event) {
-                    if (event.prevTool) {
-
-                    }
-                    measureRoute.setActive(true);
-                    // map.addInteraction(self.interaction);
-                },
-                onDeactivate: function (event) {
-                    if (event.newTool) {
-                        if (!event.newTool.isMeasureTool) {
-                            self.deActivate();
-                        }
-                    } else {
-                        self.deActivate();
-                    }
-                    measureRoute.setActive(false);
-
-                }
-            });
-            activateInteraction('Point','route');
-        }
-        //,
-        // autoActivate: true,
-        // active: true
-    });
-    this.measureRoute = measureRoute;
-    this._subBar.addControl(measureRoute);
-
+  
 
     var clearCmd = new ol.control.Button({
         //html: '<span style="display:block;line-height:28px;background-position:center center" class="deleteIcon" >&nbsp;</span>',
         html: '<span style="display:block;line-height:28px;background-position:center center" class="delete_24_Icon" >&nbsp;</span>',
-        className:'myOlbutton24',
+        className:'myOlbutton24 myOlbuttonVertical',
         title: 'Clear',
         handleClick: function () {
             self.clear();
@@ -336,7 +267,7 @@ MeasureTasks.prototype._init = function (dataObj) {
     this.measureCtrl = new ol.control.Toggle({
         //html: '<span style="display:block;line-height:28px;background-position:center center" class="measureIcon" >&nbsp;</span>',
         html: '<span style="display:block;line-height:28px;background-position:center center" class="measure_24_Icon" >&nbsp;</span>',
-        className:'myOlbutton24',
+        className:'myOlbutton24 ',
         title: "measure",
         // onToggle:function(toggle){
         //     if(!toggle){
@@ -376,7 +307,7 @@ MeasureTasks.prototype.clear = function () {
     }
     this.measureTooltip = null;
     this.overlays = [];
-    this.routeStopPoints=[];
+    
 }
 MeasureTasks.prototype.deActivate = function () {
 
@@ -406,136 +337,7 @@ MeasureTasks.prototype.moveLayerToTop = function () {
     this.map.getLayers().remove(this.layer);
     this.map.getLayers().push(this.layer);
 }
-MeasureTasks.prototype.findRoute = function () {
-    var self=this;
-    if(this.routeStopPoints.length<2)
-    {
-        return;
-    }
-    var coordinateList=[];
-    for(var i=0;i<this.routeStopPoints.length;i++){
-        coordinateList.push(
-            this.routeStopPoints[i].join(',')
-        );
-    }
-    var coordinates= coordinateList.join('|');
-    
-    var api_key = app.routeServiceTokens[Math.floor(Math.random()*app.routeServiceTokens.length)];
-    var url='https://api.openrouteservice.org/directions?api_key='+api_key ;
-    url+= '&coordinates='+encodeURIComponent(coordinates);
-    url+= '&profile=driving-car&format=geojson';
 
-    
-            $.ajax(url, {
-                type: 'GET',
-                dataType: 'json',
-                success: function (data) {
-                    if (data) {
-                        var geojson=data;
-                        var featureProjection='EPSG:3857';
-                        var format = new ol.format.GeoJSON({ featureProjection:featureProjection,  dataProjection:'EPSG:4326'        });
-                        var features;
-                        try{
-                         features= format.readFeatures(geojson);
-                        }catch(ex){
-                            try{
-                             var geojsonObj=JSON.parse(geojson);
-                             features= format.readFeatures(geojsonObj);
-                            }catch(ex2){
-             
-                            }
-                        }
-                        if(features){
-                            for(var j=0;j<features.length;j++){
-                                features[j].set('isRoute',true) ;
-                                self.createRouteTooltip(features[j]);
-                            }
-                            self.source.addFeatures(features);
-                        }
-                    }
-                },
-                error: function (xhr, textStatus, errorThrown) {
-                    var msg= errorThrown || textStatus;
-                    if(xhr.responseJSON){
-                        if(xhr.responseJSON.error && xhr.responseJSON.error.message){
-                            msg= xhr.responseJSON.error.message;
-                        }
-                    }
-                    var a = 1;
-                    $.notify({
-                        message: "Failed to find route, "+ msg
-                    },{
-                        type:'danger',
-                        delay:2000,
-                        animate: {
-                            enter: 'animated fadeInDown',
-                            exit: 'animated fadeOutUp'
-                        }
-                    });
-               
-                  // source.refresh();
-                }
-            }).done(function() {
-               
-               // source.refresh();
-            });
-}
-MeasureTasks.prototype.createRouteTooltip = function (feature) {
-    if(!feature){
-        return;
-    }
-    var geom= feature.getGeometry();
-    if(!geom)
-        return;
-    var element = document.createElement('div');
-    element.className = 'tooltip tooltip-measure';
-    var routeTooltip = new ol.Overlay({
-        element: element,
-        offset: [0, -15],
-        positioning: 'bottom-center'
-    });
-    this.overlays.push(routeTooltip);
-    this.map.addOverlay(routeTooltip);
-    routeTooltip.getElement().parentNode.style.zIndex = this.map.getOverlays().getLength();
-     var html='';
-     var summary= feature.get('summary');
-     if(summary && summary.length){
-        var result= summary[summary.length-1];
-        var distanceStr='';
-        if (result.distance > 1000) {
-            distanceStr = (Math.round(result.distance / 1000 * 100) / 100) +
-                ' ' + 'km';
-        } else {
-            distanceStr = (Math.round(result.distance * 100) / 100) +
-                ' ' + 'm';
-        }
-        html+='Disatace:'+ distanceStr;
-        try{
-            var d = Number(result.duration);
-            var h = Math.floor(d / 3600);
-            var m = Math.floor(d % 3600 / 60);
-            var s = Math.floor(d % 3600 % 60);
-
-            var hDisplay = h > 0 ? h + (h == 1 ? " h" : " h") : "";
-            var mDisplay = m > 0 ? m + (m == 1 ? " m" : " m") : "";
-            var sDisplay = s > 0 ? s + (s == 1 ? " s" : " s") : "";
-            var  durationStr='';
-            if(h>0){
-                  durationStr= hDisplay +','+ mDisplay;
-            }else{
-                durationStr=  mDisplay+',' + sDisplay; 
-            }
-            html+='<br/>Duration:'+ durationStr;
-        }catch(ex){}
-     }
-    //formatLength
-    element.innerHTML=html;
-    var coords=geom.getCoordinates();
-    if(coords && coords.length){
-        routeTooltip.setPosition(coords[coords.length-1]);
-    }
-
-}
 MeasureTasks.prototype.pointerMoveHandler = function (evt) {
     if (evt.dragging) {
         return;
@@ -543,14 +345,6 @@ MeasureTasks.prototype.pointerMoveHandler = function (evt) {
     if (!this.helpTooltip)
         return;
     var helpMsg = 'Click to start drawing';
-    if(this.task==='route'){
-        if(this.routeStopPoints.length==0){
-            helpMsg = 'Origin';
-
-        }else{
-            helpMsg = 'Destination';
-        }
-    }else{
         if (this.sketch) {
             var geom = (this.sketch.getGeometry());
             if (geom instanceof ol.geom.Polygon) {
@@ -559,7 +353,7 @@ MeasureTasks.prototype.pointerMoveHandler = function (evt) {
                 helpMsg = 'Click to continue drawing the line';
             }
         }
-    }
+    
     this.helpTooltipElement.innerHTML = helpMsg;
     this.helpTooltip.setPosition(evt.coordinate);
     this.helpTooltipElement.classList.remove('hidden');
