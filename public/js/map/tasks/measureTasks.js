@@ -56,6 +56,7 @@ MeasureTasks.prototype._init = function (dataObj) {
     });
 
     // move layer to top of map
+    self.moveLayerToTop();
     map.getLayers().on('add', function (e) {
         if (e.element !== self.layer && e.element.get('custom')) {
           if(!e.element.get('custom').keepOnTop){  
