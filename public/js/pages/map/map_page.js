@@ -14,6 +14,43 @@ $(document).ready(function() {
       // $(this).toggleClass("active");
     });
  
+    $("#sidebar").swipe({allowPageScroll:"auto",
+        swipeStatus:function(event, phase, direction, distance, duration, fingers)
+            {
+                if (phase=="move" && direction =="right") {
+                    
+                       $("#sidebar").removeClass("active",
+                       {
+                           duration :300,
+                           complete: function(){
+                               app.mapContainer.map.updateSize();
+                               setTimeout(function(){
+                                   app.mapContainer.map.updateSize();
+                               },500);
+                           }
+                         }
+                   );
+                     return false;
+                }
+                if (phase=="move" && direction =="left") {
+                     
+                     $("#sidebar").addClass("active",
+                        {
+                            duration :300,
+                            complete: function(){
+                                app.mapContainer.map.updateSize();
+                                setTimeout(function(){
+                                    app.mapContainer.map.updateSize();
+                                },500);
+                            }
+                    }
+                    );
+                     return false;
+                }
+                return true;
+            }
+    });
+
     
     $.ajax( {    url: '/users', dataType: 'json', success: function (data) {
                 if(data){

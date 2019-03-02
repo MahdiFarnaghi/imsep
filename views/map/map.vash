@@ -403,6 +403,8 @@
     </script>
     <script src='/bootstrap-popover-picker/js/bootstrap-picker.js' ></script> 
     <script src='/fontawesome-iconpicker/js/fontawesome-iconpicker.min.js' ></script> 
+
+    <script src='/js/lib/touchSwipe/jquery.touchSwipe.min.js' ></script> 
     
     @*<script src="/js/lib/shpwrite.js"></script>*@
 

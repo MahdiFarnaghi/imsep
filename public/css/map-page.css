@@ -38,7 +38,8 @@
 }
 
 #sidebar.active {
-  margin-left: -345px;
+  margin-left: -335px;
+  cursor: pointer;
 }
 
 #sidebar .sidebar-header {
@@ -96,15 +97,18 @@
 ----------------------------------------------------- */
 
 @media (max-width: 768px) {
-  #sidebar {
-    margin-left: -345px;
+  /* #sidebar {
+    
+    margin-left: -335px;
+
   }
   #sidebar.active {
+    
     margin-left: 0;
   }
   #sidebarCollapse span {
     display: none;
-  }
+  } */
 }
 
 .tooltip {
