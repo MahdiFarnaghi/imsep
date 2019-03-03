@@ -293,5 +293,8 @@
 	white-space: nowrap;
 }
  .myOlbuttonVertical{
-	 display: inline !important;
+	 display: block !important;
  }
+ .myOlbuttonVertical button{
+	display: block !important;
+}
