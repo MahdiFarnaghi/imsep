@@ -15,8 +15,18 @@ $(document).ready(function() {
     });
  
     $("#sidebar").swipe({allowPageScroll:"auto",
+        excludedElements: ".ol-layerswitcher,input, select, textarea" // Here your list of excluded elements ...
+    ,
         swipeStatus:function(event, phase, direction, distance, duration, fingers)
             {
+                // if ( phase == "move" || phase == "start" ) {
+                //     var $target = event.target.nodeName;
+                //     if( $target.toLowerCase() === 'input' ) {
+                //         return true;
+                //     }else{
+                //         //$('input').blur();
+                //     }
+                // }
                 if (phase=="move" && direction =="right") {
                     
                        $("#sidebar").removeClass("active",
