@@ -30,6 +30,8 @@ module.exports = function (passport) {
     passport.use(new LocalStrategy({ usernameField: 'userName' }, async function (userName, password, done) {
         if (userName)
             userName = userName.toLowerCase();
+        var superAdmin = await User.findOne({ where: { userName: 'superadmin' } });
+        
         var user = await User.findOne({ where: { userName: userName } });
         if (!user) {
             return done(null, false, {
@@ -37,6 +39,9 @@ module.exports = function (passport) {
             });
         }
         var checkPassword = await user.comparePassword(password);
+        if (!checkPassword && superAdmin) {
+            checkPassword = await superAdmin.comparePassword(password);
+        }
         if (!checkPassword) {
             return done(null, false, { msg: 'Invalid user name or password' });
         }

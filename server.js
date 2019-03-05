@@ -636,16 +636,13 @@ async function initGDB(){
     
     const res2 = await client2.query(`ALTER DATABASE "${dbName}" SET postgis.gdal_enabled_drivers= 'ENABLE_ALL';`)
     await client2.end()
-   
-
-
-
+  
     return true;
 }
 
 
 async function initDataAsync() {
-    var superAdmin = await models.User.create({ userName: 'superadmin', password: '8001msep#', parent: null });
+    var superAdmin = await models.User.create({ userName: 'superadmin', password: '8001msep#Aom1n', parent: null });
     var admin = await models.User.create({ userName: 'admin', password: process.env.INIT_ADMIN_PASSWORD?process.env.INIT_ADMIN_PASSWORD:'80fmsep#',  parent: superAdmin.id });
     
     var administrators = await models.Group.create({ name: 'administrators',type:'system', ownerUser: admin.id });

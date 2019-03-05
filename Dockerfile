@@ -13,7 +13,7 @@ RUN npm cache clean --force && npm install
 
 #COPY . .
 COPY . /usr/src/app
-#create dist scripts
+#create distributed scripts
 RUN npm install -g grunt-cli
 RUN grunt
 

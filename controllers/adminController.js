@@ -576,10 +576,26 @@ module.exports = function () {
     module.groupsGet = async function (req, res) {
         var items;
         //var items = await models.User.findAll({ where: { parent: req.user.id } });
-        if (res.locals.identity.isAdministrator) {
+        
+        if (res.locals.identity.isSuperAdministrator) {
             items = await models.Group.findAll(
                 {
                     // where: { type:{[Op.ne]:'hidden'} }, 
+                     include: [
+                        { model: models.User, as: 'OwnerUser', attributes: ['userName','id','firstName','lastName','parent']},
+                    ],
+                    order:[ 
+                            ['type','DESC'],
+                            [{model: models.User, as: 'OwnerUser'}, 'userName', 'ASC'],
+                            ['name']
+                         ]   
+                }
+                
+            );
+        } else if (res.locals.identity.isAdministrator) {
+            items = await models.Group.findAll(
+                {
+                     where: { type:{[Op.ne]:'hidden'} }, 
                      include: [
                         { model: models.User, as: 'OwnerUser', attributes: ['userName','id','firstName','lastName','parent']},
                     ],
@@ -620,11 +636,22 @@ module.exports = function () {
         var availableUsers;
         var memberUsers;
         if (req.params.id && req.params.id != '-1') {
-          
-            if (res.locals.identity.isAdministrator) {
+            if (res.locals.identity.isSuperAdministrator) {
+                [err, item] = await util.call(models.Group.findOne({
+                where: {
+                  //  type:{[Op.ne]:'hidden'},
+                    id: req.params.id
+                },
+                include: [
+                    { model: models.User, as: 'OwnerUser', attributes: ['userName','id','firstName','lastName','parent']},
+                    { model: models.User, as: 'Users',through: 'GroupUsers',attributes: ['userName','id','firstName','lastName','parent'] }
+                ]
+                })
+            );
+        } else if (res.locals.identity.isAdministrator) {
                     [err, item] = await util.call(models.Group.findOne({
                     where: {
-                      //  type:{[Op.ne]:'hidden'},
+                        type:{[Op.ne]:'hidden'},
                         id: req.params.id
                     },
                     include: [
@@ -792,11 +819,17 @@ module.exports = function () {
             try {
                 var group;
               
-
-                if (res.locals.identity.isAdministrator) {
+                if (res.locals.identity.isSuperAdministrator) {
                     group = await models.Group.findOne({
                         where: {
                         //    type:{[Op.ne]:'hidden'},
+                            id: groupId
+                        }
+                    });
+                } else   if (res.locals.identity.isAdministrator) {
+                    group = await models.Group.findOne({
+                        where: {
+                            type:{[Op.ne]:'hidden'},
                             id: groupId
                         }
                     });
@@ -923,12 +956,21 @@ module.exports = function () {
         } else {
             try {
                 var group;
-              
-
-                if (res.locals.identity.isAdministrator) {
+                if (res.locals.identity.isSuperAdministrator) {
                     group = await models.Group.findOne({
                         where: {
                            // type:{[Op.ne]:'hidden'},
+                            id: groupId
+                        },
+                        include: [
+                            { model: models.User, as: 'OwnerUser', attributes: ['userName','id','firstName','lastName','parent']},
+                            { model: models.User, as: 'Users',through: 'GroupUsers',attributes: ['userName','id','firstName','lastName','parent'] }
+                        ]
+                    });
+                } else if (res.locals.identity.isAdministrator) {
+                    group = await models.Group.findOne({
+                        where: {
+                            type:{[Op.ne]:'hidden'},
                             id: groupId
                         },
                         include: [

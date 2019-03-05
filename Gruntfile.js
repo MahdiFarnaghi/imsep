@@ -13,7 +13,6 @@ module.exports = function(grunt) {
                 ],
           dest: 'public/dist/js/app-<%= pkg.version %>-.js'
         }
-        
       },
       uglify: {
         options: {
