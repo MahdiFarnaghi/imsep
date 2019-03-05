@@ -176,7 +176,13 @@
 
  @html.block('scripts', function(model) {
    
+    
+    @if(process.env.NODE_ENV=='development'){
     <script src="/js/pages/admin/group_page.js"></script>
+   }else{
+       <script src="/dist/js/group_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+
     
    })
 

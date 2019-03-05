@@ -1,6 +1,6 @@
 {
   "name": "imsep",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "start": "node server"
@@ -47,5 +47,11 @@
     "uuid": "^3.3.2",
     "vash": "^0.12.6",
     "winston": "^3.2.1"
+  },
+  "devDependencies": {
+    "grunt": "^1.0.3",
+    "grunt-contrib-concat": "^1.0.1",
+    "grunt-contrib-cssmin": "^3.0.0",
+    "grunt-contrib-uglify": "^4.0.0"
   }
 }

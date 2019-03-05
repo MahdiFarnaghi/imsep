@@ -2,7 +2,7 @@
 FROM niranshahi/pg11node10:latest
 RUN apt-get install gdal-bin
 
-ENV NODE_ENV production
+#ENV NODE_ENV production
 WORKDIR /usr/src/app
 # COPY ["package.json", "package-lock.json*", "npm-shrinkwrap.json*", "./"]
 COPY ["package.json", "package-lock.json*", "./"]
@@ -13,6 +13,10 @@ RUN npm cache clean --force && npm install
 
 #COPY . .
 COPY . /usr/src/app
+#create dist scripts
+RUN npm install -g grunt-cli
+RUN grunt
+
 ENV PORT 1337
 ENV POSTGIS_GDAL_ENABLED_DRIVERS ENABLE_ALL
 EXPOSE 1337

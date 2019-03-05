@@ -398,7 +398,7 @@ RouteTasks.prototype.createRouteTooltip = function (feature) {
         htm+= distanceStr;
         var  durationStr=this.formatDuration(result.duration);
         //htm+='<br/>Duration:'+ durationStr;
-        htm+=' <span style="margin-right:0.2em;" class="route-duration-label fa fa-clock"></span>'+ durationStr;
+        htm+=' <span style="margin-right:0.2em;" class="route-duration-label fa fa-clock-o"></span>'+ durationStr;
        
         // htm='<div class="route-total-info">';
         // htm+=' <i class="'+self.getProfileIcon(self.routeProfile)+'"></i>';
@@ -407,7 +407,7 @@ RouteTasks.prototype.createRouteTooltip = function (feature) {
         // htm+='  <span class="route-distance-value">'+distanceStr+'</span>';
         // htm+=' </div>';
         // htm+='  <div class="route-total-duration">';
-        // htm+='  <span class="route-duration-label fa fa-clock"></span>';
+        // htm+='  <span class="route-duration-label fa fa-clock-o"></span>';
         // htm+='  <span class="route-duration-value">'+durationStr+'</span>';
         // htm+=' </div>';
         // htm+='</div>';
@@ -883,7 +883,7 @@ RouteTasks.prototype.getProfileIcon = function(code) {
      htm+='  <span class="route-distance-value">'+distanceStr+'</span>';
      htm+=' </div>';
      htm+='  <div class="route-total-duration">';
-     htm+='  <span class="route-duration-label fa fa-clock"></span>';
+     htm+='  <span class="route-duration-label fa fa-clock-o"></span>';
      htm+='  <span class="route-duration-value">'+durationStr+'</span>';
      htm+=' </div>';
      htm+='</div>';
@@ -975,7 +975,7 @@ RouteTasks.prototype.getProfileIcon = function(code) {
              htm+='  <span class="route-step-distance-value">'+step_distance+'</span>';
              htm+=' </div>';
              htm+='  <div class="route-step-duration">';
-             htm+='  <span class="route-step-duration-label fa fa-clock"></span>';
+             htm+='  <span class="route-step-duration-label fa fa-clock-o"></span>';
              htm+='  <span class="route-step-duration-value">'+step_duration+'</span>';
              htm+=' </div>';
              htm+='</div>';

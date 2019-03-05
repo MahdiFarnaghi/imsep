@@ -277,8 +277,13 @@
   })
 @html.block('scripts', function(model) {
   
-   <script src="/js/pages/dataLayer/dataLayer_vector_page.js"></script>
-
+  
+@if(process.env.NODE_ENV=='development'){
+    <script src="/js/pages/dataLayer/dataLayer_vector_page.js"></script>
+   }else{
+       <script src="/dist/js/dataLayer_vector_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+   
    })
 })
 

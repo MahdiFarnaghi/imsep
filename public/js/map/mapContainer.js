@@ -2178,7 +2178,7 @@ MapContainer.prototype.addGeoJSON_createDataLayer=function(layerName,info,featur
         var fileName=  layerName ;
         //var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:4326'});
         var format = new ol.format.GeoJSON({ featureProjection:featureProjection,  dataProjection: 'EPSG:' + out_srid});
-        const json = format.writeFeatures(features);
+        var json = format.writeFeatures(features);
         var blob = new Blob([json], {type: "text/json;charset=utf-8"});
       
         var layerInfo= {
@@ -2406,7 +2406,7 @@ MapContainer.prototype.duplicateLayer=function(layer,options){
         source_srid=details.spatialReference.srid;
     }
     var out_srid= options.srid || source_srid || 3857;
-    const source= layer.getSource();
+    var source= layer.getSource();
     
     var features = source.getFeatures();
     
@@ -2424,7 +2424,7 @@ MapContainer.prototype.duplicateLayer=function(layer,options){
       var fileName=  layer.get('title')|| details.shapefileName || details.tableName ;
       //var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:4326'});
       var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:' + out_srid});
-      const json = format.writeFeatures(features);
+      var json = format.writeFeatures(features);
       var blob = new Blob([json], {type: "text/json;charset=utf-8"});
     
       var layerInfo= JSON.parse(JSON.stringify(details));

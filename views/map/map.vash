@@ -10,9 +10,11 @@
         <link rel='stylesheet' href='/css/map-page.css' /> 
         <link rel='stylesheet' href='/css/ol/customStyles/css/fontmaki.css' /> 
         <link rel='stylesheet' href='/css/ol/customStyles/css/fontmaki2.css' /> 
+        @*
         <link rel='stylesheet' href='/bootstrap-popover-picker/css/bootstrap-picker.css' /> 
+       
         <link rel='stylesheet' href='/fontawesome-iconpicker/css/fontawesome-iconpicker.min.css' /> 
-        
+        *@
          
         
         <style>
@@ -401,15 +403,19 @@
     <script>
       app.pageData.mapData='@html.getBase64(model.map)';
     </script>
+    @*
     <script src='/bootstrap-popover-picker/js/bootstrap-picker.js' ></script> 
+    
     <script src='/fontawesome-iconpicker/js/fontawesome-iconpicker.min.js' ></script> 
-
+*@
     <script src='/js/lib/touchSwipe/jquery.touchSwipe.min.js' ></script> 
     
     @*<script src="/js/lib/shpwrite.js"></script>*@
 
     <script src="/js/lib/proj4.js"></script>
     <script src="/js/lib/ol.js"></script>
+@if(process.env.NODE_ENV=='development'){
+    
     <script src="/js/map/custom/ol-ext/Transform.js"></script>
     <script src="/js/map/custom/ol-ext/LayerSwitcher.js"></script>
     <script src="/js/map/custom/ol-ext/Popup.js"></script>
@@ -490,11 +496,17 @@
     <script src="/js/map/propertyTabs/rasterDisplayTab.js"></script>
     <script src="/js/map/objectPropertiesDlg.js"></script>
 
+       
+   }else{
+       <script src="/dist/js/map-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
     
     
-
-    <script src="/js/map/custom/controls/panel.js"></script>
-    <script src="/js/pages/map/map_page.js"></script>
+     @if(process.env.NODE_ENV=='development'){
+     <script src="/js/pages/map/map_page.js"></script>
+     }else{
+       <script src="/dist/js/map_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+     }
     
    })
 })

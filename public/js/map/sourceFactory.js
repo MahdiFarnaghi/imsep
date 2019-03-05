@@ -434,7 +434,7 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
            * @this {VectorSource|import("./VectorTile.js").default}
            */
           function(extent, resolution, projection) {
-              const xhr = new XMLHttpRequest();
+              var xhr = new XMLHttpRequest();
               var me = this;
              
               this.set('loading_status', 'started');
@@ -466,9 +466,9 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
                   // status will be 0 for file:// urls
                  
                   if (!xhr.status || xhr.status >= 200 && xhr.status < 300) {
-                      const type = format.getType();
+                      var type = format.getType();
                       /** @type {Document|Node|Object|string|undefined} */
-                      let source;
+                      var source;
                       if (type == 'json' || type == 'text') {
                           source = xhr.responseText;
                       } else if (type == 'xml') {
