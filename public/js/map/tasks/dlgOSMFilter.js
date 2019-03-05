@@ -9,14 +9,39 @@ function DlgOSMFilter(mapContainer,obj,options) {
       ,(options.title || 'Select OSM Keys')
       ,  mapContainer,obj,options);   
   this.keys=  [{
+        "key": "amenity",
+        "values": ["bar", "bbq", "biergarten", "cafe", "drinking_water", "fast_food", "food_court", "ice_cream", "pub", "restaurant", "college", "kindergarten", "library", "archive", "public_bookcase", "school", "music_school", "driving_school", "language_school", "university", "research_institute", "bicycle_parking", "bicycle_repair_station", "bicycle_rental", "boat_rental", "boat_sharing", "buggy_parking", "bus_station", "car_rental", "car_sharing", "car_wash", "vehicle_inspection", "charging_station", "ferry_terminal", "fuel", "grit_bin", "motorcycle_parking", "parking", "parking_entrance", "parking_space", "taxi", "ticket_validator", "atm", "bank", "bureau_de_change", "baby_hatch", "clinic", "dentist", "doctors", "hospital", "nursing_home", "pharmacy", "social_facility", "veterinary", "arts_centre", "brothel", "casino", "cinema", "community_centre", "fountain", "gambling", "music_venue", "nightclub", "planetarium", "social_centre", "stripclub", "studio", "swingerclub", "theatre", "animal_boarding", "animal_shelter", "baking_oven", "bench", "clock", "courthouse", "coworking_space", "crematorium", "crypt", "dive_centre", "dojo", "embassy", "fire_station", "firepit", "game_feeding", "grave_yard", "gym", "hunting_stand", "internet_cafe", "kitchen", "kneipp_water_cure", "marketplace", "photo_booth", "place_of_worship", "police", "post_box", "post_depot", "post_office", "prison", "public_bath", "public_building", "ranger_station", "recycling", "rescue_station", "rv_storage", "sanitary_dump_station", "sauna", "shelter", "shower", "table", "telephone", "toilets", "townhall", "vending_machine", "waste_basket", "waste_disposal", "waste_transfer_station", "watering_place", "water_point", "user defined"]
+    }, {
+        "key": "boundary",
+        "values": ["aboriginal_lands", "administrative", "historic", "maritime", "marker", "national_park", "political", "postal_code", "protected_area", "religious_administration", "user defined"]
+    }, {
+        "key": "highway",
+        "values": ["motorway", "trunk", "primary", "secondary", "tertiary", "unclassified", "residential", "motorway_link", "trunk_link", "primary_link", "secondary_link", "tertiary_link", "living_street", "service", "pedestrian", "track", "bus_guideway", "escape", "raceway", "road", "footway", "bridleway", "steps", "path"]
+    }, {
+        "key": "landuse",
+        "values": ["commercial", "construction", "industrial", "residential", "retail", "allotments", "basin", "brownfield", "cemetery", "conservation", "depot", "farmland", "farmyard", "forest", "garages", "grass", "greenfield", "greenhouse_horticulture", "landfill", "meadow", "military", "orchard", "pasture", "peat_cutting", "plant_nursery", "port", "quarry", "railway", "recreation_ground", "religious", "reservoir", "salt_pond", "village_green", "vineyard", "user defined"]
+    }, {
+        "key": "leisure",
+        "values": ["adult_gaming_centre", "amusement_arcade", "bandstand", "beach_resort", "bird_hide", "bowling_alley", "common", "dance", "disc_golf_course", "dog_park", "escape_game", "firepit", "fishing", "fitness_centre", "garden", "golf_course", "hackerspace", "horse_riding", "ice_rink", "marina", "miniature_golf", "nature_reserve", "park", "picnic_table", "pitch", "playground", "sauna", "slipway", "sports_centre", "stadium", "summer_camp", "swimming_area", "swimming_pool", "track", "water_park", "wildlife_hide", "user defined"]
+    }, {
+        "key": "man_made",
+        "values": ["adit", "beacon", "breakwater", "bridge", "bunker_silo", "campanile", "chimney", "communications_tower", "crane", "cross", "cutline", "clearcut", "dovecote", "embankment", "dyke",
+    "flagpole", "gasometer", "groyne", "kiln", "lighthouse", "mast", "maypole", "mineshaft", "monitoring_station", "obelisk", "observatory", "offshore_platform", "petroleum_well", "pier", "pipeline", "pumping_station", "reservoir_covered", "silo", "snow_fence", "snow_net", "storage_tank", "street_cabinet", "surveillance", "survey_point", "telescope", "tower", "wastewater_plant", "watermill", "water_tower", "water_well", "water_tap", "water_works", "wildlife_crossing", "windmill", "works", "yes", "user defined"]
+    }, {
+        "key": "natural",
+        "values": ["wood", "tree_row", "tree", "scrub", "heath", "moor", "grassland", "fell", "bare_rock", "scree", "shingle", "sand", "mud", "water", "wetland", "glacier", "bay", "cape", "strait", "beach", "coastline", "spring", "hot_spring", "geyser", "reef", "peak", "hill", "volcano", "valley", "river_terrace", "ridge", "arete", "cliff", "saddle", "rock", "stone", "sinkhole", "cave_entrance", "user defined"]
+    }, {
+        "key": "place",
+        "values": ["country", "state", "region", "province", "district", "county", "municipality", "city", "borough", "suburb", "quarter", "neighbourhood", "city_block", "plot", "town", "village", "hamlet", "isolated_dwelling", "farm", "allotments", "continent", "archipelago", "island", "islet", "square", "locality", "sea", "ocean"]
+    }, {
+        "key": "water",
+        "values": ["lake", "river", "pond", "oxbow", "lagoon", "stream_pool", "basin", "reservoir", "canal", "lock", "fish_pass", "reflecting_pool", "moat", "wastewater"]
+    }, {
         "key": "building",
         "values": ["yes", "house", "residential"]
     }, {
         "key": "source",
         "values": ["BAG", "Bing", "cadastre-dgi-fr source : Direction Générale des Impôts - Cadastre. Mise à jour : 2010", "cadastre-dgi-fr source : Direction Générale des Impôts - Cadastre. Mise à jour : 2011", "cadastre-dgi-fr source : Direction Générale des Impôts - Cadastre. Mise à jour : 2012", "bing", "NRCan-CanVec-10.0", "YahooJapan/ALPSMAP", "cadastre-dgi-fr source : Direction Générale des Finances Publiques - Cadastre. Mise à jour : 2014", "cadastre-dgi-fr source : Direction Générale des Finances Publiques - Cadastre. Mise à jour : 2013"]
-    }, {
-        "key": "highway",
-        "values": ["residential", "service", "track", "unclassified", "footway", "path", "tertiary", "secondary", "crossing", "primary"]
     }, {
         "key": "addr:housenumber",
         "values": ["1", "2", "3", "4", "5", "6", "7", "8", "10", "9"]
@@ -33,9 +58,6 @@ function DlgOSMFilter(mapContainer,obj,options) {
         "key": "addr:postcode",
         "values": []
     }, {
-        "key": "natural",
-        "values": ["tree", "water", "wood", "scrub", "wetland", "coastline", "grassland", "peak", "tree_row", "bare_rock"]
-    }, {
         "key": "addr:country",
         "values": ["DE", "DK", "CZ", "US", "AT", "RU", "SK", "IT", "EE", "CH"]
     }, {
@@ -45,9 +67,6 @@ function DlgOSMFilter(mapContainer,obj,options) {
         "key": "surface",
         "values": ["asphalt", "unpaved", "paved", "ground", "gravel", "concrete", "paving_stones", "dirt", "grass", "compacted"]
     }, {
-        "key": "landuse",
-        "values": ["residential", "farmland", "forest", "grass", "meadow", "farmyard", "orchard", "industrial", "reservoir", "vineyard"]
-    }, {
         "key": "power",
         "values": ["tower", "pole", "line", "generator", "substation", "minor_line"]
     }, {
@@ -56,9 +75,6 @@ function DlgOSMFilter(mapContainer,obj,options) {
     }, {
         "key": "start_date",
         "values": ["1970", "1950", "1972", "1975", "1960", "1980", "1973", "1965", "1974", "1955"]
-    }, {
-        "key": "amenity",
-        "values": ["parking", "place_of_worship", "bench", "school", "restaurant", "fuel", "cafe", "fast_food", "bank", "waste_basket"]
     }, {
         "key": "oneway",
         "values": ["yes", "no"]
@@ -132,12 +148,6 @@ function DlgOSMFilter(mapContainer,obj,options) {
         "key": "tracktype",
         "values": ["grade3", "grade2", "grade4", "grade1", "grade5"]
     }, {
-        "key": "place",
-        "values": ["locality", "village", "hamlet", "isolated_dwelling", "islet", "neighbourhood", "island", "suburb", "plot", "town"]
-    }, {
-        "key": "leisure",
-        "values": ["pitch", "swimming_pool", "park", "garden", "playground", "sports_centre", "nature_reserve", "picnic_table", "track", "common"]
-    }, {
         "key": "addr:suburb",
         "values": []
     }, {
@@ -210,9 +220,6 @@ function DlgOSMFilter(mapContainer,obj,options) {
         "key": "building:ruian:type",
         "values": ["7", "3", "18", "19", "8", "13", "6", "5", "16", "15"]
     }, {
-        "key": "man_made",
-        "values": ["pier", "survey_point", "storage_tank", "tower", "cutline", "silo", "works", "pipeline", "water_well", "water_tower"]
-    }, {
         "key": "addr:province",
         "values": ["Cavite", "Batangas", "Misamis Oriental", "Zambales", "Bataan", "Nova Scotia", "Leyte", "Ilocos Sur", "Abra", "Metro Manila"]
     }, {
@@ -281,12 +288,6 @@ function DlgOSMFilter(mapContainer,obj,options) {
     }, {
         "key": "tunnel",
         "values": ["culvert", "yes", "building_passage", "no"]
-    }, {
-        "key": "water",
-        "values": ["pond", "lake", "intermittent", "reservoir", "river"]
-    }, {
-        "key": "boundary",
-        "values": ["administrative", "protected_area", "postal_code", "landuse"]
     }, {
         "key": "entrance",
         "values": ["yes", "main", "staircase", "home", "service"]
