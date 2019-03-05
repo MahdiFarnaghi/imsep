@@ -38,7 +38,8 @@
 }
 
 #sidebar.active {
-  margin-left: -345px;
+  margin-left: -335px;
+  cursor: pointer;
 }
 
 #sidebar .sidebar-header {
@@ -96,15 +97,18 @@
 ----------------------------------------------------- */
 
 @media (max-width: 768px) {
-  #sidebar {
-    margin-left: -345px;
+  /* #sidebar {
+    
+    margin-left: -335px;
+
   }
   #sidebar.active {
+    
     margin-left: 0;
   }
   #sidebarCollapse span {
     display: none;
-  }
+  } */
 }
 
 .tooltip {
@@ -256,3 +260,137 @@
 .modal-dialog .ui-autocomplete{
  max-height: 10em;
 }
+
+
+
+
+
+
+
+
+
+
+
+span.route-distance-label {
+  /* font-weight: bold; */
+  /* font-size: .9em; */
+}
+
+.route-total-distance {
+  display: inline-flex;
+  padding: 0 0.5em;
+  font-weight: bold;
+  font-size: .9em;
+}
+
+.route-total-duration {
+  display: inline-flex;
+  font-weight: bold;
+  font-size: .9em;
+  padding: 0 0.5em;
+}
+
+span.route-duration-label {
+  /* font-weight: bold; */
+  /* font-size: .9em; */
+  line-height: unset;
+}
+
+span.route-duration-value {
+  padding-left: 0.5em;
+  color: #8a8686;
+}
+
+span.route-distance-value {
+  padding-left: 0.5em;
+  color: #8a8686;
+}
+
+/*step*/
+.route-total-info{
+  border: solid transparent 1px;
+  padding: 0 0.2em;
+  margin: .1em 0;
+}
+.route-total-info:hover {
+  border: solid #bbb5b5 1px;
+  cursor: pointer;
+}
+.route-step-info {
+  border: solid transparent 1px;
+  padding: 0 0.2em;
+  margin: .1em 0;
+}
+.route-step-info:hover {
+  border: solid #bbb5b5 1px;
+  cursor: pointer;
+}
+.route-step-name{
+  display: none;
+}
+.route-step-instruction{
+
+}
+.route-step-instruction .fa {
+  margin-right: 0.5em;
+}
+
+.route-step-distance-label {
+  display: none;
+}
+.route-step-distance {
+  display: inline-flex;
+  padding: 0 0.5em;
+  font-weight: bold;
+  font-size: .9em;
+}
+
+.route-step-duration {
+  display: inline-flex;
+  font-weight: bold;
+  font-size: .9em;
+  padding: 0 0.5em;
+}
+
+span.route-step-duration-label {
+  /* font-weight: bold; */
+  /* font-size: .9em; */
+  line-height: unset;
+}
+
+span.route-step-duration-value {
+  padding-left: 0.5em;
+  color: #8a8686;
+}
+
+span.route-step-distance-value {
+  padding-left: 0.5em;
+  color: #8a8686;
+}
+
+
+.route-profile-selection{
+  margin-bottom: 0.5em;
+}
+.route-profile-selection .route-profile{
+  
+  height: 1.6em;
+    line-height: 1.2em;
+    padding: .2em;
+    cursor: pointer;
+    margin: 0 .05em;
+    min-width: 1.3em;
+    text-align: center;
+    border: solid transparent 1px;
+}
+.route-profile-selection .route-profile:hover{
+  
+  border: solid #bbb5b5 1px;
+}
+
+.route-profile-selection .active{
+  border: solid #bbb5b5 1px;
+  color:blue;
+}
+
+

@@ -49,8 +49,14 @@ ol.source.GeoImage = function(opt_options)
         self.setCrop (self.crop);
 		self.changed();
     }
-    this._image.onerror=function(){
-        self.set('loading_status','failed');
+    this._image.onerror=function(e,v){
+		
+		//var $e = $(this);
+    	//var src = $e.attr("src");
+    	//console.log("Image URL '" + src + "' is invalid.");
+		self.set('loading_status','failed');
+		self.set('loading_details', 'Loading failed');
+		console.log("Image URL '" + this.src + "' is invalid.")
         self.dispatchEvent({
             type: "loading_failed"
         });

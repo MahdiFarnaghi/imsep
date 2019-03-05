@@ -14,6 +14,53 @@ $(document).ready(function() {
       // $(this).toggleClass("active");
     });
  
+    $("#sidebar").swipe({allowPageScroll:"auto",
+        excludedElements: ".ol-layerswitcher,input, select, textarea" // Here your list of excluded elements ...
+    ,
+        swipeStatus:function(event, phase, direction, distance, duration, fingers)
+            {
+                // if ( phase == "move" || phase == "start" ) {
+                //     var $target = event.target.nodeName;
+                //     if( $target.toLowerCase() === 'input' ) {
+                //         return true;
+                //     }else{
+                //         //$('input').blur();
+                //     }
+                // }
+                if (phase=="move" && direction =="right") {
+                    
+                       $("#sidebar").removeClass("active",
+                       {
+                           duration :300,
+                           complete: function(){
+                               app.mapContainer.map.updateSize();
+                               setTimeout(function(){
+                                   app.mapContainer.map.updateSize();
+                               },500);
+                           }
+                         }
+                   );
+                     return false;
+                }
+                if (phase=="move" && direction =="left") {
+                     
+                     $("#sidebar").addClass("active",
+                        {
+                            duration :300,
+                            complete: function(){
+                                app.mapContainer.map.updateSize();
+                                setTimeout(function(){
+                                    app.mapContainer.map.updateSize();
+                                },500);
+                            }
+                    }
+                    );
+                     return false;
+                }
+                return true;
+            }
+    });
+
     
     $.ajax( {    url: '/users', dataType: 'json', success: function (data) {
                 if(data){
@@ -94,6 +141,7 @@ var pageTask={
                     app.mapContainer.map.updateSize();
                 },3000);  
             }
+            $('.tab-fixed-height').outerHeight(mapHeight+mousePosition-41);
     },
     init:function(){
         var self=this;
@@ -101,6 +149,7 @@ var pageTask={
         app.mapContainer.create();
         //app.mapContainer.loadFromJson(atob(app.pageData.mapData)); 
         app.mapContainer.loadFromJson(Base64.decode( app.pageData.mapData)); 
+        this.hideTab('tabRoute');
         if(app.mapContainer.mapSettings.preview){
           this.activateTab ('tabLayers');
         }
@@ -456,8 +505,15 @@ var pageTask={
             },
         });
     },
-    activateTab: function(tab){
-        $('.nav-tabs a[href="#' + tab + '"]').tab('show');
+    activateTab: function(tabId){
+        //$('.nav-tabs a[href="#' + tabId + '"]').tab('show');
+        var tab=$('.nav-tabs a[href="#' + this.tabId + '"]');//'show');
+        tab.parent('li').show();
+        tab.tab('show');
+   },
+   hideTab:function(tab){
+    var tab=$('.nav-tabs a[href="#' + tab + '"]');
+    tab.parent('li').hide();
   }
 
 };
@@ -567,9 +623,10 @@ pageTask.create_Layer_AutoSearch=function(){
      })
        
      .data("ui-autocomplete")._renderItem = function (ul, item) {
-        if (item.data &&item.data.updatedAt) {
+        if (item.data &&item.data.updatedAt && !item.data.updatedAt_obj) {
             try {
-                item.data.updatedAt = new Date(item.data.updatedAt);
+               
+                item.data.updatedAt_obj = new Date(item.data.updatedAt);
             } catch (ex) {
             }
         }

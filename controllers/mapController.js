@@ -753,11 +753,19 @@ module.exports = function () {
         var map;
         if (req.params.id && req.params.id != '-1') {
             try {
-                map = await models.Map.findOne({
+                // map = await models.Map.findOne({
+                //     where: {
+                //         id: req.params.id
+                //     }
+                // });
+
+                 map = await models.Map.findOne({
                     where: {
                         id: req.params.id
-                    }
+                    },
+                    include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]
                 });
+
             } catch (ex) {
                 var ee = 1;
             }
@@ -770,12 +778,24 @@ module.exports = function () {
         }
         
         
-        if (map.ownerUser !== req.user.id) {
+        // if (map.ownerUser !== req.user.id) {
+        //     req.flash('error', { msg: `Access denied.` });
+        //     return res.redirect('/maps');
+            
+        // }
+        
+        var isOwner=false;
+        if(map.ownerUser== req.user.id) {
+            isOwner=true;
+        }else if (map.OwnerUser && map.OwnerUser.parent==req.user.id){
+            isOwner=true;
+        }
+  
+        if(!isOwner && !res.locals.identity.isAdministrator  ){
             req.flash('error', { msg: `Access denied.` });
             return res.redirect('/maps');
-            
         }
-        
+
         try {
             await map.destroy();
         } catch (ex) {

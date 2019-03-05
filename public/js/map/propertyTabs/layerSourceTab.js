@@ -81,6 +81,12 @@ function LayerSourceTab() {
         //}
         htm += label + (layerCustom.dataObj.description ? '<br/><small style="white-space: pre;">' + description + '</small>' : '');
         htm += '<div class="list-inline">';
+        if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
+          if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+          
+          htm+=' <a target="_blank" href="/datalayer/'+layerCustom.dataObj.id+'?dataType='+layerCustom.dataObj.dataType+'"><i class="glyphicon glyphicon-edit"></i></a>'; 
+         }
+        }
         //if (layerCustom.dataObj.OwnerUser.userName !== app.identity.name) {
           htm += '    <li><i class="fa fa-user"></i> <span>' + layerCustom.dataObj.OwnerUser.userName + '</span></li>';
         //}
@@ -91,7 +97,7 @@ function LayerSourceTab() {
         }
         htm += '<li><i class="fa fa-calendar"></i><span>' +updatedAt + '</span></li>';
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
-          if(layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+          if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
           
           htm +=' <li style="float: right;">';
           htm+='    <div class=""><button id="cmdupdatethumbnail" type="button" class="btn btn-primary btn-success btn-xs ">Update thumbnail</button></div>';
@@ -189,6 +195,12 @@ function LayerSourceTab() {
         //}
         htm += label + (layerCustom.dataObj.description ? '<br/><small style="white-space: pre;">' + description + '</small>' : '');
         htm += '<div class="list-inline">';
+        if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
+          if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+          
+          htm+=' <a target="_blank" href="/datalayer/'+layerCustom.dataObj.id+'?dataType='+layerCustom.dataObj.dataType+'"><i class="glyphicon glyphicon-edit"></i></a>'; 
+         }
+        }
         //if (layerCustom.dataObj.OwnerUser.userName !== app.identity.name) {
           htm += '    <li><i class="fa fa-user"></i> <span>' + layerCustom.dataObj.OwnerUser.userName + '</span></li>';
         //}
@@ -199,7 +211,7 @@ function LayerSourceTab() {
         }
         htm += '<li><i class="fa fa-calendar"></i><span>' +updatedAt + '</span></li>';
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
-          if(layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+          if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
           
           htm +=' <li style="float: right;">';
           htm+='    <div class=""><button id="cmdupdatethumbnail" type="button" class="btn btn-primary btn-success btn-xs">Update thumbnail</button></div>';
@@ -444,8 +456,8 @@ function LayerSourceTab() {
     });
     if(sourceType=='GeoJSON'){
       content.find('#shapeType').val(details.shapeType);
-       const source= self.layer.getSource();
-       const features = source.getFeatures();
+       var source= self.layer.getSource();
+       var features = source.getFeatures();
        if(!features.length){
         content.find('#downloadGeoJSON').hide();
         content.find('#downloadShapefile').hide();
@@ -453,7 +465,7 @@ function LayerSourceTab() {
         
        }
       // if( source.getFormat()){
-      //  const json = source.getFormat().writeFeatures(features);
+      //  var json = source.getFormat().writeFeatures(features);
       //  //content.find('#downloadGeoJSON').attr("href", 'data:text/json;charset=utf-8,' + json);
 
       //  content.find('#downloadGeoJSON').click(function(){
@@ -466,13 +478,13 @@ function LayerSourceTab() {
       // }
 
       content.find('#downloadGeoJSON').click(function(){
-               const source= self.layer.getSource();
-              const features = source.getFeatures();
+               var source= self.layer.getSource();
+              var features = source.getFeatures();
               //if( !source.getFormat())
               //  return;
                 var fileName= self.layer.get('title')|| details.shapefileName || details.tableName ;
                var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:4326'});
-               const json = format.writeFeatures(features);
+               var json = format.writeFeatures(features);
                var blob = new Blob([json], {type: "text/json;charset=utf-8"});
                saveAs(blob, fileName +".json");
 
@@ -496,8 +508,8 @@ function LayerSourceTab() {
     }
     if(sourceType=='WFS'){
       content.find('#shapeType').val(layerCustom.shapeType);
-      const source= self.layer.getSource();
-      const features = source.getFeatures();
+      var source= self.layer.getSource();
+      var features = source.getFeatures();
       if(!features.length){
        content.find('#downloadGeoJSON').hide();
        content.find('#downloadGeoShapefile').hide();
@@ -506,17 +518,17 @@ function LayerSourceTab() {
       // var format = new ol.format.GeoJSON({
       //   dataProjection: 'EPSG:4326'
       // });
-      // const source= self.layer.getSource();
-      // const features = source.getFeatures();
-      // const json = format.writeFeatures(features);
+      // var source= self.layer.getSource();
+      // var features = source.getFeatures();
+      // var json = format.writeFeatures(features);
       //   content.find('#downloadGeoJSON').attr("href", 'data:text/json;charset=utf-8,' + json);
 
       content.find('#downloadGeoJSON').click(function(){
-        const source= self.layer.getSource();
-       const features = source.getFeatures();
+        var source= self.layer.getSource();
+       var features = source.getFeatures();
         var fileName= self.layer.get('title')|| details.shapefileName || details.tableName ;
         var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:4326'});
-        const json = format.writeFeatures(features);
+        var json = format.writeFeatures(features);
         var blob = new Blob([json], {type: "text/json;charset=utf-8"});
         saveAs(blob, fileName +".json");
     });
@@ -535,11 +547,11 @@ function LayerSourceTab() {
     });
 
     content.find('#downloadShapefile').click(function(){
-      const source= self.layer.getSource();
-    const features = source.getFeatures();
+      var source= self.layer.getSource();
+    var features = source.getFeatures();
       var fileName= self.layer.get('title')|| details.shapefileName || details.tableName ;
       var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:4326'});
-      const json = format.writeFeatures(features);
+      var json = format.writeFeatures(features);
       var blob = new Blob([json], {type: "text/json;charset=utf-8"});
       var details= LayerHelper.getDetails(self.layer);
       var layerInfo= JSON.parse(JSON.stringify(details));

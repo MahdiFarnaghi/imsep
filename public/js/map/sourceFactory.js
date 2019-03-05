@@ -324,14 +324,18 @@ SourceFactory.prototype.createGeoJsonVectorSource = function(dataObj,mapContaine
                                 var dataProjection= format.readProjection(data);
                                 vectorSource.addFeatures(features);
                         }
+                        vectorSource.set('loading_details', '');
                         vectorSource.set('loading_status', 'compelete');
+                        
                         vectorSource.dispatchEvent({
                             type: "loading_complete"
                         });
                     }
                 },
                 error: function (xhr, textStatus, errorThrown) {
+                    vectorSource.set('loading_details', errorThrown|| textStatus);
                     vectorSource.set('loading_status', 'failed');
+                    
                     vectorSource.dispatchEvent({
                         type: "loading_failed",
                         xhr: xhr,
@@ -430,7 +434,7 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
            * @this {VectorSource|import("./VectorTile.js").default}
            */
           function(extent, resolution, projection) {
-              const xhr = new XMLHttpRequest();
+              var xhr = new XMLHttpRequest();
               var me = this;
              
               this.set('loading_status', 'started');
@@ -462,9 +466,9 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
                   // status will be 0 for file:// urls
                  
                   if (!xhr.status || xhr.status >= 200 && xhr.status < 300) {
-                      const type = format.getType();
+                      var type = format.getType();
                       /** @type {Document|Node|Object|string|undefined} */
-                      let source;
+                      var source;
                       if (type == 'json' || type == 'text') {
                           source = xhr.responseText;
                       } else if (type == 'xml') {
@@ -504,15 +508,19 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
           function(features, dataProjection) {
               if (this instanceof ol.source.Vector) {
                   this.addFeatures(features);
+                  this.set('loading_details', '');
                   this.set('loading_status', 'compelete');
+                  
                   this.dispatchEvent({
                       type: "loading_complete"
                   });
               }
           },
-          function(xhr, statusText) { // failure
+          function(xhr, statusText,errorThrown) { // failure
               var a = 1;
+              vectorSource.set('loading_details', errorThrown || textStatus);
               this.set('loading_status', 'failed');
+              
               this.dispatchEvent({
                   type: "loading_failed",
                   xhr: xhr,

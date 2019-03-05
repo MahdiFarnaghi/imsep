@@ -2,6 +2,8 @@
 //var forceRebuildDatabase = false; // replaced with process.env.DB_REBUILD
 
 //#region require  
+var pjson = require('./package.json');
+//console.log(pjson.version);
 var dotenv = require('dotenv');
 var uuidv4 = require('uuid/v4');
 var debug = require('debug');
@@ -61,6 +63,7 @@ var memorystorage = multer.memoryStorage()
    });
 // Load environment variables from .env file
 dotenv.load();
+process.env.PACKAGE_VERSION=pjson.version;
 global.__basedir = __dirname;
 
 var models = require('./models/index');
@@ -80,12 +83,7 @@ var postgresWorkspace= require('./scripts/workspaces/postgresWorkspace')({
      "user": process.env.GDB_USERNAME?process.env.GDB_USERNAME:"postgres",
      "password": process.env.GDB_PASSWORD?process.env.GDB_PASSWORD: "postgres"
 });
-// var postgresWorkspace= new PostgresWorkspace({
-//       'host': '127.0.0.1',
-//        'database': 'postgis_24_sample',
-//        'user': 'postgres',
-//        'password': 'postgres'
-// })
+
 
 const handleErrors=require('./controllers/util').handleErrors;
 var captchaController = require('./controllers/captchaController');
@@ -180,15 +178,13 @@ app.use(async function (req, res, next) {
     if (res.locals.user) {
         res.locals.identity.name = res.locals.user.userName;
         res.locals.identity.id=res.locals.user.id;
-        //user.isAdministrator = await user.isInGroupAsync('administrators'); // used for menu renderering
+        
         var roles = res.locals.user.BelongsToGroups.map(v => {
             return v.name;
         });
         res.locals.identity.roles = roles;
 
-        //res.locals.user.isAdministrator = (res.locals.user.BelongsToGroups.find((v) => {
-        //    return v.name == 'administrators';
-        //}) != null);
+        
         if( res.locals.identity.name.toLowerCase() ==='admin'
            || res.locals.identity.name.toLowerCase() ==='superadmin'
         ){
@@ -231,42 +227,16 @@ app.post('/proxy',
 
 app.get('/', handleErrors(homeController.index));
 app.get('/help', handleErrors(homeController.help));
-app.get('/contact',
-    // [Authenticated, authorize({
-        
-    //     role: 'administrators',//or 👇
-    //   //  anyOfRoles: 'dataManagers,dataAnalysts',//or 👇
-    //  //   allRoles: 'dataManagers,dataAnalysts',//or 👇
-    //     check: async user => {
-    //         //return await req.user.checkPermissionAsync(models, { permissionName: 'Edit', contentType: 'Users' });
-
-    //         if (await user.isInGroupAsync('dataManagers')
-    //             || await user.isInGroupAsync('dataAnalysts')
-    //         ) {
-    //             return true;
-    //         }
-    //     }
-
-    //  })],
-    handleErrors(contactController.contactGet));
+app.get('/contact',  handleErrors(contactController.contactGet));
 app.post('/contact',handleErrors( contactController.contactPost));
-app.get('/account',
-    [Authenticated],
-    handleErrors( accountController.accountGet));
-app.put('/account',
-    [Authenticated],
-    handleErrors(accountController.accountPut));
+app.get('/account',   [Authenticated],  handleErrors( accountController.accountGet));
+app.put('/account',   [Authenticated],    handleErrors(accountController.accountPut));
 app.get('/account/:id/avatar', validateController.noCache,handleErrors( accountController.avatarGet));    
-app.post('/account/avatar',
-    [Authenticated],
+app.post('/account/avatar',  [Authenticated],
     multer({ storage: memorystorage,limits: { fileSize: 1024*1024*10 } }).single('avatar'),
     handleErrors( accountController.avatarPost));
-app.delete('/account/avatar',
-    [Authenticated],
-    handleErrors(accountController.avatarDelete));    
-app.delete('/account',
-    [Authenticated],
-    handleErrors(accountController.accountDelete));
+app.delete('/account/avatar',   [Authenticated],   handleErrors(accountController.avatarDelete));    
+app.delete('/account', [Authenticated],   handleErrors(accountController.accountDelete));
 app.get('/signup', handleErrors(accountController.signupGet));
 app.post('/signup',handleErrors( accountController.signupPost));
 
@@ -283,9 +253,7 @@ app.get('/verifyemail/', [Authenticated], handleErrors(accountController.verifye
 
 
 app.get('/logout', handleErrors(accountController.logout));
-app.get('/unlink/:provider',
-    [Authenticated],
-    handleErrors(accountController.unlink));
+app.get('/unlink/:provider',   [Authenticated],    handleErrors(accountController.unlink));
 app.get('/auth/google', passport.authenticate('google', { scope: 'profile email' }));
 //app.get('/auth/google/callback', passport.authenticate('google', { successRedirect: '/', failureRedirect: '/login' }));
 app.get('/auth/google/callback', passport.authenticate('google', { failureRedirect: '/login' }), function (req, res) {
@@ -294,13 +262,8 @@ app.get('/auth/google/callback', passport.authenticate('google', { failureRedire
 }); 
 
 
-app.get('/users',
-    [Authenticated],
-    handleErrors(adminController.allUsersGet));    
-    
-
-app.get('/admin/users',
-    [Authenticated, authorize({
+app.get('/users',   [Authenticated],  handleErrors(adminController.allUsersGet));    
+app.get('/admin/users',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Users'
@@ -309,31 +272,26 @@ app.get('/admin/users',
 
 
 
-app.put('/admin/user/:id/setpassword',
-    [Authenticated, authorize({
+app.put('/admin/user/:id/setpassword',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Users'
     })],
     handleErrors(adminController.resetUserPasswordPut));
-app.delete('/admin/user/:id/delete',
-    [Authenticated, authorize({
+app.delete('/admin/user/:id/delete',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Users'
     })],
     handleErrors(adminController.deleteUserDelete));
 
-app.get('/admin/user/:id',
-    
-    [Authenticated, authorize({
+app.get('/admin/user/:id',   [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Users'
     })],
     handleErrors(adminController.userGet));
-app.post('/admin/user/:id',
-    [Authenticated, authorize({
+app.post('/admin/user/:id',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Users'
@@ -341,104 +299,67 @@ app.post('/admin/user/:id',
     handleErrors(adminController.userPost));
 
 
-    app.get('/groups',
-    [Authenticated],
-    handleErrors(adminController.allGroupsGet));   
+    app.get('/groups',  [Authenticated], handleErrors(adminController.allGroupsGet));   
 
-    app.get('/admin/groups',
-    [Authenticated, authorize({
+    app.get('/admin/groups',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Groups'
     })],
     handleErrors(adminController.groupsGet));
     
-    app.get('/admin/group/:id',
-    [Authenticated, authorize({
+    app.get('/admin/group/:id',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Groups'
     })],
     handleErrors(adminController.groupGet));
 
-    app.post('/admin/group/:id',
-    [Authenticated, authorize({
+    app.post('/admin/group/:id',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Groups'
     })],
     handleErrors(adminController.groupPost));
 
-    app.post('/admin/group/:id/members',
-    [Authenticated, authorize({
+    app.post('/admin/group/:id/members',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Groups'
     })],
     handleErrors(adminController.groupMembersPost));
 
-    app.delete('/admin/group/:id/delete',
-    [Authenticated, authorize({
+    app.delete('/admin/group/:id/delete', [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
         permissionName: 'Edit', contentType: 'Groups'
     })],
     handleErrors(adminController.deleteGroupDelete));
 
-    app.get('/maps',
-    [Authenticated ],
-    handleErrors(mapController.mapsGet));
+    app.get('/maps',   [Authenticated ],  handleErrors(mapController.mapsGet));
 
-    app.get('/map/:id',
-    // authorize(),
-    [Authenticated
-    //     , authorize({
-    //     role: 'administrators',//or 👇
-    //     anyOfRoles: 'dataManagers,dataAnalysts'//,//or 👇
-    //  //   allRoles: 'dataManagers,dataAnalysts',//or 👇
-    //     // check: async user => {
-    //     //     //return await req.user.checkPermissionAsync(models, { permissionName: 'Edit', contentType: 'Users' });
-
-    //     //     if (await user.isInGroupAsync('dataManagers')
-    //     //         || await user.isInGroupAsync('dataAnalysts')
-    //     //     ) {
-    //     //         return true;
-    //     //     }
-    //     // }
-    //  })
-    ],
-    handleErrors(mapController.mapGet));
+    app.get('/map/:id',   [Authenticated  ],  handleErrors(mapController.mapGet));
     
-    app.post('/map/:id',
-    [Authenticated   ],
-    handleErrors(mapController.mapPost));
-    app.delete('/map/:id/delete',
-    [Authenticated   ],
-    handleErrors(mapController.mapDelete));
+    app.post('/map/:id',   [Authenticated   ],    handleErrors(mapController.mapPost));
+    app.delete('/map/:id/delete',    [Authenticated   ],    handleErrors(mapController.mapDelete));
 
     app.get('/map/:id/thumbnail', validateController.noCache, handleErrors(mapController.thumbnailGet));  
-    app.post('/map/:id/thumbnail',
-        [Authenticated ],
+    app.post('/map/:id/thumbnail',    [Authenticated ],
         multer({ storage: memorystorage,limits: { fileSize: 1024*1024*10 } }).single('file'),
         handleErrors(mapController.thumbnailPost));  
 
-    app.get('/datalayers',
-    [Authenticated ],
-    handleErrors(dataLayerController.dataLayersGet));
+    app.get('/datalayers',   [Authenticated ],   handleErrors(dataLayerController.dataLayersGet));
 
-    app.get('/datalayer/uploadshapefile',
-    [Authenticated, authorize({
+    app.get('/datalayer/uploadshapefile',  [Authenticated, authorize({
         anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
      handleErrors(dataLayerController.uplaodShapefileGet));  
 
    // var uploadFiles= multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*30 } }).array('file');
-    app.post('/datalayer/uploadshapefile',
-    [Authenticated, authorize({
+    app.post('/datalayer/uploadshapefile', [Authenticated, authorize({
         anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
-  
-    multer({ storage: uploadFolder,limits: { fileSize: 1024*1024* (parseFloat(process.env.UPLOAD_SHAPEFILE_MAX_SIZE_MB) || 30 ) } }).array('file'),
+     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024* (parseFloat(process.env.UPLOAD_SHAPEFILE_MAX_SIZE_MB) || 30 ) } }).array('file'),
 
     //  function (req, res,next) {
     //      uploadFiles(req, res, function (err) {
@@ -455,30 +376,26 @@ app.post('/admin/user/:id',
     // },
     handleErrors(dataLayerController.uplaodShapefilePost));
 
-    app.post('/datalayer/createfromgeojson',
-    [Authenticated, authorize({
+    app.post('/datalayer/createfromgeojson', [Authenticated, authorize({
         anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*(parseFloat(process.env.UPLOAD_GEOJSON_MAX_SIZE_MB) || 10 ) } }).single('file'),
     handleErrors(dataLayerController.createFromGeoJSONPost));
 
     
-    app.post('/datalayer/toShapefile',
-    [Authenticated, authorize({
+    app.post('/datalayer/toShapefile',  [Authenticated, authorize({
         anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*(parseFloat(process.env.UPLOAD_GEOJSON_MAX_SIZE_MB) || 10 ) } }).single('file'),
     handleErrors(dataLayerController.geoJsonToShapefilePost));
 
-    app.get('/datalayer/uploadraster',
-    [Authenticated, authorize({
+    app.get('/datalayer/uploadraster',   [Authenticated, authorize({
         anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
     handleErrors(dataLayerController.uplaodRasterGet));  
 
   // var uploadFiles= multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*30 } }).array('file');
-   app.post('/datalayer/uploadraster',
-   [Authenticated, authorize({
+   app.post('/datalayer/uploadraster',  [Authenticated, authorize({
     anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
  
@@ -500,51 +417,29 @@ app.post('/admin/user/:id',
    handleErrors(dataLayerController.uplaodRasterPost));
 
 
-    app.get('/datalayer/:id',
-//    [Authenticated, authorize({anyOfRoles: 'administrators,dataManagers,dataAnalysts'})],
-    [Authenticated],
-    handleErrors(dataLayerController.dataLayerGet));
-    app.post('/datalayer/:id',
-    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers,dataAnalysts'})],
-    [Authenticated],
-    handleErrors(dataLayerController.dataLayerPost));
-    app.get('/datalayer/:id/info',
-    [Authenticated], //Todo: check data permission
-    handleErrors(dataLayerController.dataLayerInfoGet));
+    app.get('/datalayer/:id',  [Authenticated],  handleErrors(dataLayerController.dataLayerGet));
+    app.post('/datalayer/:id',    [Authenticated],    handleErrors(dataLayerController.dataLayerPost));
+    app.get('/datalayer/:id/info',   [Authenticated],   handleErrors(dataLayerController.dataLayerInfoGet));
     
-    app.delete('/datalayer/:id/delete',
-    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers,dataAnalysts'})],
-    [Authenticated],
-    handleErrors(dataLayerController.dataLayerDelete));
+    app.delete('/datalayer/:id/delete',   [Authenticated],   handleErrors(dataLayerController.dataLayerDelete));
     
 
-    app.get('/datalayer/:id/geojson',
-    [Authenticated], //Todo: check data permission
-    handleErrors(dataLayerController.geojsonGet));
+    app.get('/datalayer/:id/geojson',  [Authenticated],   handleErrors(dataLayerController.geojsonGet));
 
     
-    app.get('/datalayer/:id/vectorextent',
-    [Authenticated], //Todo: check data permission
-    handleErrors(dataLayerController.vectorextentGet));
+    app.get('/datalayer/:id/vectorextent',   [Authenticated],   handleErrors(dataLayerController.vectorextentGet));
 
-    app.get('/datalayer/:id/raster',
-    [Authenticated], //Todo: check data permission
-    handleErrors(dataLayerController.rasterGet));
+    app.get('/datalayer/:id/raster',   [Authenticated],  handleErrors(dataLayerController.rasterGet));
     
-    app.get('/datalayer/:id/analysis',
-    [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataAnalysts'})],
+    app.get('/datalayer/:id/analysis',   [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataAnalysts'})],
     handleErrors(dataLayerController.analysisGet));
 
-    app.post('/datalayer/:id/geojson/:row',
-    //[Authenticated, authorize({anyOfRoles: 'administrators,dataManagers,dataAnalysts'})],
-    [Authenticated],
-    handleErrors(dataLayerController.geojsonRowPost));
+    app.post('/datalayer/:id/geojson/:row',    [Authenticated],   handleErrors(dataLayerController.geojsonRowPost));
 
     
     
     app.get('/datalayer/:id/thumbnail', validateController.noCache, handleErrors(dataLayerController.thumbnailGet));  
-    app.post('/datalayer/:id/thumbnail',
-    [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataManagers'})],
+    app.post('/datalayer/:id/thumbnail',    [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataManagers'})],
     multer({ storage: memorystorage,limits: { fileSize: 1024*1024*4 } }).single('file'),
     handleErrors(dataLayerController.thumbnailPost));  
 

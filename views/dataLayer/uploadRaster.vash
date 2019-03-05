@@ -72,8 +72,12 @@
 <!--<script src="/bootstrap-fileinput/js/locales/LANG.js"></script>-->
 *@
 
-   <script src="/js/pages/dataLayer/uploadRaster_page.js"></script>
-
+   @if(process.env.NODE_ENV=='development'){
+    <script src="/js/pages/dataLayer/uploadRaster_page.js"></script>
+   }else{
+       <script src="/dist/js/uploadRaster_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+   
    })
 })
 

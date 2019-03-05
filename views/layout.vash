@@ -10,7 +10,8 @@
     <link rel='stylesheet' href='/bootstrap3-dialog/css/bootstrap-dialog.min.css' />
     <link rel='stylesheet' href='/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css' />
      
-    <link rel='stylesheet' href='/css/fontawesome.min.css' />
+    <link rel='stylesheet' href='/fontawesome/css/all.min.css' />
+    <link rel='stylesheet' href='/fontawesome/css/v4-shims.min.css' />
      @*<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">*@
 
     <link rel='stylesheet' href='/css/jquery-ui-themes-1.12.1/themes/base/jquery-ui.min.css' />
@@ -103,8 +104,13 @@
     <script src="/js/lib/jquery_validate/jquery.validate.js"></script>
     <script src="/js/lib/jquery_validate/jquery.validate.unobtrusive.js"></script>
     <script src="/js/lib/jquery_validate/jquery.validate.unobtrusive.bootstrap.js"></script>
+   @if(process.env.NODE_ENV=='development'){
     <script src="/js/main.js"></script>
     <script src="/js/app.js"></script>
+   }else{
+       <script src="/dist/js/app-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+    
     <script>
         app.setIdentity(atob('@html.getBase64(model.identity)'));
         app.BING_MAPS_KEY='@process.env.BING_MAPS_KEY';

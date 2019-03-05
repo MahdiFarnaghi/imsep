@@ -10,9 +10,11 @@
         <link rel='stylesheet' href='/css/map-page.css' /> 
         <link rel='stylesheet' href='/css/ol/customStyles/css/fontmaki.css' /> 
         <link rel='stylesheet' href='/css/ol/customStyles/css/fontmaki2.css' /> 
+        @*
         <link rel='stylesheet' href='/bootstrap-popover-picker/css/bootstrap-picker.css' /> 
+       
         <link rel='stylesheet' href='/fontawesome-iconpicker/css/fontawesome-iconpicker.min.css' /> 
-        
+        *@
          
         
         <style>
@@ -122,6 +124,11 @@
                 margin-bottom: 20px;
         }
 
+    .tab-fixed-height{
+        overflow-y:auto;
+        overflow-x:hidden;
+
+    }
 </style>
         
     })
@@ -145,16 +152,17 @@
                 </li>
                 <li><a href="#tabLayers" data-toggle="tab">Layers</a>
                 </li>
-                @*
-                <li><a href="#tabSearch" data-toggle="tab">Search</a>
+                
+                <li style="display:none" ><a href="#tabRoute" data-toggle="tab">Route</a>
                 </li>
+                @*
                 <li><a href="#tabOther" data-toggle="tab">Other</a>
                 </li>
                 *@
             </ul>
 
             <div class="tab-content clearfix_">
-                <div class="tab-pane active" id="tabMap">
+                <div class="tab-pane tab-fixed-height active" id="tabMap">
 
                     <form id="frmMap" method="POST" class="form-horizontal" action="/map/@(model.map.id)">
 
@@ -264,7 +272,7 @@
                     </form>
 
                 </div>
-                <div class="tab-pane" id="tabLayers">
+                <div class="tab-pane tab-fixed-height" id="tabLayers">
        
                     <div id="pnlLayerSwitcher" class="panel-group">
                             <div class="panel panel-default collapsible-panel"    >
@@ -359,9 +367,8 @@
                        
                     </div>
                 </div>
-               @* <div class="tab-pane" id="tabSearch">
-                    searching ...
-                </div>
+                <div class="tab-pane tab-fixed-height" id="tabRoute">
+                </div>@*
                 <div class="tab-pane" id="tabOther">
                     others ..
                 </div>
@@ -396,13 +403,19 @@
     <script>
       app.pageData.mapData='@html.getBase64(model.map)';
     </script>
+    @*
     <script src='/bootstrap-popover-picker/js/bootstrap-picker.js' ></script> 
+    
     <script src='/fontawesome-iconpicker/js/fontawesome-iconpicker.min.js' ></script> 
+*@
+    <script src='/js/lib/touchSwipe/jquery.touchSwipe.min.js' ></script> 
     
     @*<script src="/js/lib/shpwrite.js"></script>*@
 
     <script src="/js/lib/proj4.js"></script>
     <script src="/js/lib/ol.js"></script>
+@if(process.env.NODE_ENV=='development'){
+    
     <script src="/js/map/custom/ol-ext/Transform.js"></script>
     <script src="/js/map/custom/ol-ext/LayerSwitcher.js"></script>
     <script src="/js/map/custom/ol-ext/Popup.js"></script>
@@ -461,6 +474,7 @@
     
     
     <script src="/js/map/tasks/measureTasks.js"></script>
+    <script src="/js/map/tasks/routeTasks.js"></script>
     <script src="/js/map/tasks/geolocationTasks.js"></script>
     
 
@@ -482,11 +496,17 @@
     <script src="/js/map/propertyTabs/rasterDisplayTab.js"></script>
     <script src="/js/map/objectPropertiesDlg.js"></script>
 
+       
+   }else{
+       <script src="/dist/js/map-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
     
     
-
-    <script src="/js/map/custom/controls/panel.js"></script>
-    <script src="/js/pages/map/map_page.js"></script>
+     @if(process.env.NODE_ENV=='development'){
+     <script src="/js/pages/map/map_page.js"></script>
+     }else{
+       <script src="/dist/js/map_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+     }
     
    })
 })

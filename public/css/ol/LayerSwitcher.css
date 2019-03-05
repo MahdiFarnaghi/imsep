@@ -508,7 +508,9 @@ li.layerswitcher-active-layer{
 	color:red;
 }
 
-
+.vector-loading_status-out_of_date{
+	color:orange;
+}
 .ol-layerswitcher .layerup2{
 	width: 1em;
     background-color: transparent;

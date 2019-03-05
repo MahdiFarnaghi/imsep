@@ -588,11 +588,11 @@ function StyleImageTab() {
           //     "<strong class='ui-state-highlight'>$&</strong>");
        }
        
-       var htm = '';
-       htm += '<i style="font-size:1.5em;" class="fa '+ item.data.key+'" title="'+ item.value+'"></i>';
+       var htm = '<div class="autocomplete-custom-item ">';
+       htm += '<i style="font-size:1.5em;" class="  fa '+ item.data.key+'" title="'+ item.value+'"></i>';
       
        htm += label + (item.data.description ? '<pre class="nostyle" style="display:inline;"><br/><small style="">' + description + '</small></pre>' : '');
-   
+       htm += '</div>'; 
        return $("<li></li>").append(htm).appendTo(ul);
       
    };
