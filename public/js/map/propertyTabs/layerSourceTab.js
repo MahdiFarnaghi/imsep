@@ -95,7 +95,7 @@ function LayerSourceTab() {
           updatedAt = (new Date(updatedAt)).toUTCString();
         } catch (ex) {
         }
-        htm += '<li><i class="fa fa-calendar"></i><span>' +updatedAt + '</span></li>';
+        htm += '<li><i class="fa fa-calendar fa-calendar-o"></i><span class="convertTolocalDateTime">' +updatedAt + '</span></li>';
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
           if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
           
@@ -209,7 +209,7 @@ function LayerSourceTab() {
           updatedAt = (new Date(updatedAt)).toUTCString();
         } catch (ex) {
         }
-        htm += '<li><i class="fa fa-calendar"></i><span>' +updatedAt + '</span></li>';
+        htm += '<li><i class="fa fa-calendar fa-calendar-o"></i><span class="convertTolocalDateTime">' +updatedAt + '</span></li>';
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
           if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
           

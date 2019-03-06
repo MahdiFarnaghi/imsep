@@ -156,12 +156,29 @@ $(function () {
 		var val=$(this).text();
 		var date = new Date(val);
 		var str=date.toString();
-		str=date.toLocaleString('en', { timeZone: 'UTC' });
+		str=date.toLocaleString();
+		//str=date.toLocaleString('en', { timeZone: 'UTC' });
 		//str=date.toLocaleString('en', { timeZone: 'Asia/Tehran' });
 		//str=date.toLocaleString('en', { timeZone: 'Europe/Stockholm' });
 		//str=date.toLocaleString('en', { timeZone: 'Asia/Bishkek' });
-
+		var title=$(this).attr('title');
+		if(!title){
+			title='';
+		}
+		title= title+' ('+date.toLocaleString('en', { timeZone: 'UTC' })+' GMT)';
+		$(this).attr('title',title);
 		$(this).text(str);
+
+		// var val=$(this).text();
+		// var date = new Date(val);
+		
+		// var title=$(this).attr('title');
+		// if(!title){
+		// 	title='';
+		// }
+		// title= title+' ('+date.toLocaleString()+')';
+		// $(this).attr('title',title);
+		
 	});
 
 	 $('div[data-notify="true"]').each(function( index ) {

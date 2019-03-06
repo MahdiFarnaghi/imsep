@@ -104,7 +104,7 @@
                         
                     </li>
                     <li>
-                        <i class="fa fa-calendar" title="Last modified at"></i><span title="Last modified at" class="convertTolocalDateTime" >@item.updatedAt.toUTCString()</span>
+                        <i class="fa fa-calendar fa-calendar-o" title="Last modified at"></i><span title="Last modified at" class="convertTolocalDateTime" >@item.updatedAt.toUTCString()</span>
                     </li>
                    @* <li>
                         <a title="Edit" href="/map/@item.id"><i class="glyphicon glyphicon-edit"></i></a> 

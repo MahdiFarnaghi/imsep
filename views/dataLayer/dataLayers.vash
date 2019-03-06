@@ -114,7 +114,7 @@
                                         
                                     </li>
                                     <li>
-                                        <i class="fa fa-calendar"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
+                                        <i class="fa fa-calendar fa-calendar-o"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
                                     </li>
                                     @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || ( (model.identity.isPowerUser || model.identity.isDataManager ||  model.identity.isDataAnalyst) && item._userHasPermission_EditSchema)){
                                      <li>
