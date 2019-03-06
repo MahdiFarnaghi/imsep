@@ -582,8 +582,10 @@ MapContainer.prototype.OnActiveLayerChanged=function(){
             }
         }
         this.updateUI();
-
-        var custom= activeLayer.get('custom');
+        var custom;
+        if(activeLayer){
+          custom= activeLayer.get('custom');
+        }
         if(custom && custom.dataObj && custom.source_schema_updatedAt){
             var infoUrl='/datalayer/' + custom.dataObj.id+'/info';
             $.ajax(infoUrl, {
