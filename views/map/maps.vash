@@ -95,6 +95,9 @@
                 <p style="white-space: pre;" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
                 <ul class="list-inline">
                     <li>
+                        <i class="fa fa-calendar fa-calendar-o" title="Last modified at"></i><span title="Last modified at" class="convertTolocalDateTime" >@item.updatedAt.toUTCString()</span>
+                    </li>
+                    <li>
                         <i class="fa fa-user" title="Owner"></i>
                          @if(model.identity.id==item.OwnerUser.id){
                               <b> <span title="Owner" >@item.OwnerUser.userName</span></b>
@@ -103,9 +106,7 @@
                           }
                         
                     </li>
-                    <li>
-                        <i class="fa fa-calendar fa-calendar-o" title="Last modified at"></i><span title="Last modified at" class="convertTolocalDateTime" >@item.updatedAt.toUTCString()</span>
-                    </li>
+                   
                    @* <li>
                         <a title="Edit" href="/map/@item.id"><i class="glyphicon glyphicon-edit"></i></a> 
                     </li>*@

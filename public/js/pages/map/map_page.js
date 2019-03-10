@@ -15,7 +15,7 @@ $(document).ready(function() {
     });
  
     $("#sidebar").swipe({allowPageScroll:"auto",
-        excludedElements: ".ol-layerswitcher,input, select, textarea" // Here your list of excluded elements ...
+        excludedElements: ".ol-layerswitcher,input, select, textarea,.input-group-addon" // Here your list of excluded elements ...
     ,
         swipeStatus:function(event, phase, direction, distance, duration, fingers)
             {

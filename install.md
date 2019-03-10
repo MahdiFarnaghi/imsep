@@ -7,12 +7,31 @@
     * vscode-icons
     * Bracket Pair Colorizer
 
-
 3. Clone GIT Repository 
-## Executing's Configuration
-* Database connection settings are located in [config/dbConfig.js](config/dbConfig.js)
-* ENV Settings are in [.env](.env)
+## Executing's Parameters
+* All the usable executing/environment parameters are in [.env](.env) file
 ## Debug
+* Use "Server/Chrome" configuration in [launch.json](.vscode/launch.json)
+## Docker
+* To build image:
+
+    `docker build -t imsep .`
+
+* Using Docker Compose:
+    
+    `docker-compose  -f docker-compose.yml up --build`
+
+     `docker-compose  -f docker-compose_local.yml up --build`
+
+* Debug: 
+
+    Create containters with the following command:
+
+     `docker-compose  -f docker-compose_local.debug.yml up`
+
+     then start debuging  with the "Docker/Chrome1338" configuration
+
+
 
 
 

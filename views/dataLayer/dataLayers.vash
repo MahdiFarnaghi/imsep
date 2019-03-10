@@ -105,6 +105,9 @@
                             
                                 <ul class="list-inline">
                                     <li>
+                                        <i class="fa fa-calendar fa-calendar-o"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
+                                    </li>
+                                    <li>
                                         <i class="fa fa-user" title="Owner" ></i> 
                                         @if(model.identity.id==item.OwnerUser.id){
                                             <b> <span title="Owner" >@item.OwnerUser.userName</span></b>
@@ -113,9 +116,7 @@
                                         }
                                         
                                     </li>
-                                    <li>
-                                        <i class="fa fa-calendar fa-calendar-o"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
-                                    </li>
+                                    
                                     @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || ( (model.identity.isPowerUser || model.identity.isDataManager ||  model.identity.isDataAnalyst) && item._userHasPermission_EditSchema)){
                                      <li>
                                         <a href="/datalayer/@item.id?dataType=@item.dataType"><i class="glyphicon glyphicon-edit"></i></a> 

@@ -645,8 +645,13 @@ RouteTasks.prototype.drawStopPoints=function(){
         lat=lat.toFixed(4);
     }catch(ex){}
     var strValue= lon +','+lat;
-    htm+='<div class="form-group" style="    margin-bottom: 5px;">';
+    htm+='<div class="form-group route-stop_item" style="    margin-bottom: 5px;">';
+    
     htm+='    <div class="input-group" >';
+    htm+='        <span class="input-group-addon route-stop-move-handler" >';
+    htm+='        <span style="cursor:pointer" class="glyphicon glyphicon-move"></span>';
+    //htm+='          <button type="button" class="route-stop-move-handler-icon btn btn-xs btn-info	"  title="Drag to reorder"  style="" ><span class="glyphicon glyphicon-move"></span> </button>';
+    htm+='        </span>';
     htm+='        <span class="input-group-addon" >';
     htm+='          <button type="button" class="route-stop-pick btn btn-xs btn-info	"  title="Pick from map"  style="" ><span class="glyphicon glyphicon-map-marker"></span> </button>';
     htm+='        </span>';
@@ -701,7 +706,28 @@ RouteTasks.prototype.drawStopPoints=function(){
         
       });
 
-      
+      ////https://github.com/farhadi/html5sortable
+    //   $(this._stopsPanel).sortable({
+    //     items:'.route-stop_item',
+    //     handle:'.route-stop-move-handler',
+    //     forcePlaceholderSize: true 
+    //   });
+    //   $(this._stopsPanel).sortable().bind('sortupdate', function(e, ui) {
+    //     //ui.item contains the current dragged element.
+    //     //Triggered when the user stopped sorting and the DOM position has changed.
+    //     self.performTask();
+    // });
+
+    //https://github.com/SortableJS/Sortable
+    var sortable =new Sortable(this._stopsPanel[0], {
+        draggable:'.route-stop_item',
+        handle: '.route-stop-move-handler', // handle's class
+        animation: 150,
+        direction:'vertical',
+        onUpdate: function (evt) {
+            self.performTask();
+        },
+    });
 
       self.performTask();
   }
