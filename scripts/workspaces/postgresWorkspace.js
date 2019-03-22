@@ -4466,6 +4466,39 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 result.valid = false;
             }
         }
+        //CREATE
+        if (queryText.includes("create"))
+        {
+            if (Regex_IsMatch(queryText, (/\bcreate\b/)))
+            {
+                str.push("Forbidden word 'Create' found in query.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("grant"))
+        {
+            if (Regex_IsMatch(queryText, (/\bgrant\b/)))
+            {
+                str.push("Forbidden word 'grant' found in query.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("revoke"))
+        {
+            if (Regex_IsMatch(queryText, (/\brevoke\b/)))
+            {
+                str.push("Forbidden word 'revoke' found in query.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("alter"))
+        {
+            if (Regex_IsMatch(queryText, (/\balter\b/)))
+            {
+                str.push("Forbidden word 'alter' found in query.");
+                result.valid = false;
+            }
+        }
         if (queryText.includes("update"))
         {
             if (Regex_IsMatch(queryText, (/update\s*table/)))
