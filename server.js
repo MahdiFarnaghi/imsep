@@ -82,7 +82,15 @@ var postgresWorkspace= require('./scripts/workspaces/postgresWorkspace')({
      "database": process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb",
      "user": process.env.GDB_USERNAME?process.env.GDB_USERNAME:"postgres",
      "password": process.env.GDB_PASSWORD?process.env.GDB_PASSWORD: "postgres"
-});
+},{
+    //readonly connection
+     "host": process.env.GDB_HOSTNAME?process.env.GDB_HOSTNAME:"127.0.0.1",
+     "port":process.env.GDB_PORT?process.env.GDB_PORT:"5432",
+     "database": process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb",
+     "user": process.env.GDB_READONLY_USERNAME?process.env.GDB_READONLY_USERNAME:"imsep_gdb_reader",
+     "password": process.env.GDB_READONLY_USERNAME_PASSWORD?process.env.GDB_READONLY_USERNAME_PASSWORD:"imsep_gdb_reader_pass"
+}
+);
 
 
 const handleErrors=require('./controllers/util').handleErrors;
@@ -522,8 +530,17 @@ app.set('port', process.env.PORT || 3000);
         }
         try {
                 
+            await createGDBreadonlyUser();
+        } catch (ex) {
+            //continue
+            var a = 1;
+        }
+        
+        try {
+                
             await initGDB();
         } catch (ex) {
+            //continue
             var a = 1;
         }
     }
@@ -615,6 +632,69 @@ async function createGDB(){
    
 
 
+
+    return true;
+}
+async function createGDBreadonlyUser(){
+
+    //to remove role
+   /*
+   ALTER USER imsep_gdb_reader
+	NOLOGIN
+	NOINHERIT;
+REASSIGN owned by imsep_gdb_reader to postgres;
+REVOKE ALL PRIVILEGES ON ALL TABLES IN SCHEMA public FROM imsep_gdb_reader;
+REVOKE ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public FROM imsep_gdb_reader;
+REVOKE ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public FROM imsep_gdb_reader;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON TABLES  from imsep_gdb_reader;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON SEQUENCES  from imsep_gdb_reader;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL PRIVILEGES ON FUNCTIONS  from imsep_gdb_reader;
+revoke USAGE ON SCHEMA public from imsep_gdb_reader;
+revoke CONNECT ON DATABASE imsep_gdb  from  imsep_gdb_reader;
+drop role imsep_gdb_reader;
+   
+   */
+
+
+    const { Client } = require('pg')
+    const dbName=process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb";
+    const userName=process.env.GDB_READONLY_USERNAME?process.env.GDB_READONLY_USERNAME:"imsep_gdb_reader";
+    const userPass=process.env.GDB_READONLY_USERNAME_PASSWORD?process.env.GDB_READONLY_USERNAME_PASSWORD:"imsep_gdb_reader_pass";
+    var params={
+        "host": process.env.GDB_HOSTNAME?process.env.GDB_HOSTNAME:"127.0.0.1",
+        "port":process.env.GDB_PORT?process.env.GDB_PORT:"5432",
+        //"database": process.env.GDB_DATABASE?process.env.GDB_DATABASE:"imsep_gdb",
+        "database":"postgres",
+        "user": process.env.GDB_USERNAME?process.env.GDB_USERNAME:"postgres",
+        "password": process.env.GDB_PASSWORD?process.env.GDB_PASSWORD: "postgres"
+      }
+    const client = new Client(params)
+    
+    try{
+    await client.connect()
+    }catch(ex){
+        var a=1;
+        return false;
+    }
+    var q=`CREATE ROLE ${userName} LOGIN PASSWORD '${userPass}';
+    GRANT CONNECT ON DATABASE ${dbName}  to  ${userName};
+    `;
+    const res = await client.query(q)
+    await client.end()
+
+    params.database=dbName;
+    const client2 = new Client(params)
+    
+    await client2.connect()
+    var q2=`
+    GRANT USAGE ON SCHEMA public TO ${userName};
+    GRANT SELECT ON ALL TABLES IN SCHEMA public TO ${userName};
+    GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO ${userName};
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ${userName};
+    ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON SEQUENCES TO ${userName}; `;
+    const res2 = await client2.query(q2)
+    await client2.end()
+   
 
     return true;
 }

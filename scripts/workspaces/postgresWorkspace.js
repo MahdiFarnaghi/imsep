@@ -9,16 +9,28 @@ const uuidv4 = require('uuid/v4');
 const fs = require('fs');
 
 class PostgresWorkspace {
-    constructor(connectionSettings) {
-        this._pools = {
-            'default': new Pool(connectionSettings)
+    constructor(connectionSettings,readonlyConnectionString) {
+        try{
+            this._pools = {
+                'default': new Pool(connectionSettings)
+            }
+        }catch(ex){}
+        if(readonlyConnectionString){
+            this.readonlyConnectionString=readonlyConnectionString;
+            try{
+                this._pools['readonly']= new Pool(readonlyConnectionString);
+            }catch(ex){}
         }
         this.models = models;
         this.connectionSettings = connectionSettings;
     }
     getPool(key) {
         //todo: generate pools for each unique connection
-        return this._pools['default'];
+        var pool=this._pools[key];
+        if(!pool){
+            pool= this._pools['default'];    
+        }
+        return pool;
     }
     async query(options, connection) {
         if (!connection)
@@ -878,6 +890,10 @@ class PostgresWorkspace {
         var selectFrom;
         var whereStr = ''
         if (where) {
+           var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
         selectFrom=`${tableName} as a ${whereStr}`;
@@ -1050,7 +1066,7 @@ class PostgresWorkspace {
             }
         var results = await this.query({
             text: queryText
-        });
+        },'readonly');
         if (results) {
             if(onlyIds){
                 return results.rows;
@@ -1067,6 +1083,10 @@ class PostgresWorkspace {
         var where = options.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
 
@@ -2078,6 +2098,10 @@ class PostgresWorkspace {
         var where = options.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
         var queryText = '';
@@ -2268,6 +2292,10 @@ class PostgresWorkspace {
         var where = options.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
 
@@ -2452,6 +2480,10 @@ WHERE ST_Intersects(${rasterField}, ST_Transform(ST_SetSRID(ST_MakePoint(${x}, $
         var where = options.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
 
@@ -2701,6 +2733,10 @@ SELECT AddRasterConstraints(
         var where = options.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
 
@@ -2949,6 +2985,10 @@ SELECT AddRasterConstraints(
         var where = options.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
 
@@ -3189,6 +3229,10 @@ SELECT AddRasterConstraints(
         var where = options.where || settings.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
         var outputWhere = options.outputWhere || settings.outputWhere || '';
@@ -3303,6 +3347,10 @@ var createVectorResult= await this.createVectorTable(outDetails);
         var where = options.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
         var queryText = '';
@@ -3420,6 +3468,10 @@ var createVectorResult= await this.createVectorTable(outDetails);
         var where = options.where || '';
         var whereStr = ''
         if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
             whereStr = ` WHERE ${where}`;
         }
         var distance= settings.distance || 0;
@@ -4339,11 +4391,264 @@ var createVectorResult= await this.createVectorTable(outDetails);
         }
 
     }
+     checkSQlExpression(queryText)
+    {
+        var Regex_IsMatch=function(text,regpattern){
+            //return (new RegExp(pattern)).test(text);
+            return regpattern.test(text);
+        }
+        var result={};
+        result.valid=true;
+        result.message = "";
+         var str = [];
+        if (!queryText)
+        {
+            return result;
+        }
+        queryText=''+queryText;
+        queryText = queryText.toLowerCase();
+        if (queryText.includes(";"))
+        {
+            str.push("Unsupported  ';' character.");
+            result.valid = false;
+        }
+        if (queryText.includes("--"))
+        {
+            str.push("Unsupported use of '--' characters.");
+            result.valid = false;
+        }
+        if (queryText.includes("/*"))
+        {
+            str.push("Unsupported use of '/*' characters.");
+            result.valid = false;
+        }
+        if (queryText.includes("*/"))
+        {
+            str.push("Unsupported use of '*/' characters.");
+            result.valid = false;
+        }
+
+        //todo: regex 
+        if (queryText.includes("char"))
+        {
+            if (Regex_IsMatch( queryText,(/\schar\s*\(/)))
+            {
+                str.push("Unsupported use of 'Char' function.");
+                result.valid = false;
+            }
+            
+        }
+        
+        //if (queryText.includes("chr"))
+        //{
+        //    str.push("Unsupported use of 'char' characters");
+        //    result.valid = false;
+        //}
+        //if (queryText.includes("0x"))
+        //{
+        //    str.push("Unsupported use of '0x' characters");
+        //    result.valid = false;
+        //}
+       
+        if (queryText.includes("concat"))
+        {
+            if (Regex_IsMatch(queryText, (/concat\s*\(/)))
+            {
+                str.push("Unsupported use of 'CONCAT' command.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("drop"))
+        {
+            if (Regex_IsMatch(queryText, (/drop\s*table/)))
+            {
+                str.push("Unsupported use of 'Drop Table' command.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("update"))
+        {
+            if (Regex_IsMatch(queryText, (/update\s*table/)))
+            {
+                str.push("Unsupported use of 'Update Table' command.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("insert"))
+        {
+            if (Regex_IsMatch(queryText, (/insert\s*into/)))
+            {
+                str.push("Unsupported use of 'Insert Into' command.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("select"))
+        {
+            if (Regex_IsMatch(queryText, (/select\s/)))
+            {
+                str.push("Forbidden word 'Select' found in query.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("delete"))
+        {
+            if (Regex_IsMatch(queryText, (/delete\s/)))
+            {
+                str.push("Forbidden word 'Delete' found in query.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("exec"))
+        {
+            if (Regex_IsMatch(queryText, (/exec\s/)))
+            {
+                str.push("Forbidden word 'Exec' found in query.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("shutdown"))
+        {
+          //  if (Regex_IsMatch(queryText, (/shutdown\s/)))
+          //  {
+                str.push("Forbidden word 'Shutdown' found in query.");
+                result.valid = false;
+         //   }
+        }
+        if (queryText.includes("syscolumns"))
+        {
+           // if (Regex_IsMatch(queryText, (/syscolumns\s/)))
+          //  {
+                str.push("Forbidden word 'syscolumns' found in query.");
+                result.valid = false;
+          //  }
+        }
+        if (queryText.includes("sysobjects"))
+        {
+            //if (Regex_IsMatch(queryText, (/sysobjects/)))
+           // {
+                str.push("Forbidden word 'sysobjects' found in query.");
+                result.valid = false;
+           // }
+        }
+        
+          if (queryText.includes("waitfor"))
+        {
+            if (Regex_IsMatch(queryText, (/waitfor\s*delay/)))
+            {
+                str.push("Forbidden word 'waitfor delay' found in query.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("sleep"))
+        {
+            if (Regex_IsMatch(queryText, (/sleep\s*\(/)))
+            {
+                str.push("Forbidden word 'Sleep' found in query.");
+                result.valid = false;
+            }
+        }
+        
+    if (queryText.includes("benchmark"))
+        {
+            if (Regex_IsMatch(queryText, (/benchmark\s*\(/)))
+            {
+                str.push("Unsupported use of 'benchmark' command.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("version"))
+        {
+            if (Regex_IsMatch(queryText, (/version\s*\(/)))
+            {
+                str.push("Unsupported use of 'version' command.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("union all") || queryText.includes("union select"))
+        {
+           // if (Regex_IsMatch(queryText, (/version\s*\(/)))
+            {
+                str.push("Unsupported use of 'union' command.");
+                result.valid = false;
+            }
+        }
+        if (queryText.includes("information_schema"))
+        {
+           // if (Regex_IsMatch(queryText, (/version\s*\(/)))
+          //  {
+                str.push("Forbidden word 'information_schema' found in query");
+                result.valid = false;
+           // }
+        }
+        
+        if (!this.isBalanced_parenthesis(queryText))
+        {
+            str.push("Unclosed parenthesis found.");
+            result.valid = false;
+        }
+
+        result.message = str.join('');
+        return result;
+    }
+    isBalanced_parenthesis(inputStr) {
+  //      var tokens = [ ['{','}'] , ['[',']'] , ['(',')'] ];
+        var tokens = [ ['(',')'] ];
+
+        if (inputStr === null) { return true; }
+        var isParanthesis=function (char) {
+           // var str = '{}[]()';
+           var str = '()';
+            if (str.indexOf(char) > -1) {
+              return true;
+            } else {
+              return false;
+            }
+          };
+        var isOpenParenthesis=function(parenthesisChar) {
+            for (var j = 0; j < tokens.length; j++) {
+              if (tokens[j][0] === parenthesisChar) {
+                return true;
+              }
+            }
+            return false;
+          };
+        var matches=function(topOfStack, closedParenthesis) {
+            for (var k = 0; k < tokens.length; k++) {
+              if (tokens[k][0] === topOfStack && 
+                  tokens[k][1] === closedParenthesis) {
+                return true;
+              }
+            }
+            return false;
+          };
+
+          var expression = inputStr.split('');
+          var stack = [];
+        
+          for (var i = 0; i < expression.length; i++) {
+            if (isParanthesis(expression[i])) {
+              if (isOpenParenthesis(expression[i])) {
+                stack.push(expression[i]);
+              } else {
+                if (stack.length === 0) {
+                  return (false);
+                }
+                var top = stack.pop(); // pop off the top element from stack
+                if (!matches(top, expression[i])) {
+                  return (false);
+                }
+              }
+            }
+          }
+        
+          var returnValue = stack.length === 0 ? true : false;
+          return (returnValue);
+        }
 };
-module.exports = function(connectionSettings) {
+module.exports = function(connectionSettings,readonlyConnectionString) {
     var module = {};
 
     //module.exports = new PostgresWorkspace(connectionSettings);
     //return module;
-    return new PostgresWorkspace(connectionSettings);
+    return new PostgresWorkspace(connectionSettings,readonlyConnectionString);
 }
