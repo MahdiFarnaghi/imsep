@@ -4464,6 +4464,10 @@ var createVectorResult= await this.createVectorTable(outDetails);
             {
                 str.push("Unsupported use of 'Drop Table' command.");
                 result.valid = false;
+            }else if (Regex_IsMatch(queryText, (/\bdrop\b/)))
+            {
+                str.push("Forbidden word 'Drop' found in query.");
+                result.valid = false;
             }
         }
         //CREATE

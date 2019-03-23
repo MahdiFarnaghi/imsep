@@ -188,7 +188,8 @@ passport.use(new RememberMeStrategy(
                 });
                 if(user){
                     try{
-                        allUsers.setUsers(user);
+                        //allUsers.setUsers(user);
+                        allUsers.addUser(user);
                     }catch(ex){
     
                     }
