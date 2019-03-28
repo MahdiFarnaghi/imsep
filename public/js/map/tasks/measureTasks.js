@@ -368,7 +368,7 @@ MeasureTasks.prototype.mouseoutHandler = function () {
 MeasureTasks.prototype.formatLength = function (line) {
     var length = ol.sphere.getLength(line);
     var output;
-    if (length > 100) {
+    if (length > 1000) {
         output = (Math.round(length / 1000 * 100) / 100) +
             ' ' + 'km';
     } else {
@@ -382,7 +382,7 @@ MeasureTasks.prototype.formatLength = function (line) {
 MeasureTasks.prototype.formatArea = function (polygon) {
     var area = ol.sphere.getArea(polygon);
     var output;
-    if (area > 10000) {
+    if (area > 1000000) {
         output = (Math.round(area / 1000000 * 100) / 100) +
             ' ' + 'km<sup>2</sup>';
     } else {

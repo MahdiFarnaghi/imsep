@@ -492,6 +492,7 @@ this.legend=legend;
           content += '</thead>';
           content += '<tbody>';
           var properties = feature.getProperties();
+          var geom = feature.getGeometry();
           if(fields){
             for(var i=0;i< fields.length;i++){
                 var fld= fields[i];
@@ -531,10 +532,41 @@ this.legend=legend;
             }
           }
           
+         if (geom instanceof ol.geom.Polygon || geom instanceof ol.geom.MultiPolygon) {
+            var shapeArea = MapContainer.formatArea(geom);
+            content += '<tr>';
+            content += '<td><i class="text-info">';
+            content += 'ShapeArea' ;
+            content += '</i></td>';
+            content += '<td>';
+            content += shapeArea;
+            content += '</td>';
+            content += '</tr>';
+            var shapeLength = MapContainer.formatLength(geom);
+            content += '<tr>';
+            content += '<td><i class="text-info">';
+            content += 'ShapeLength' ;
+            content += '</i></td>';
+            content += '<td>';
+            content += shapeLength;
+            content += '</td>';
+            content += '</tr>';
+        } else if (geom instanceof ol.geom.LineString) {
+            var shapeLength = MapContainer.formatLength(geom);
+            content += '<tr>';
+            content += '<td><i class="text-info">';
+            content += 'ShapeLength' ;
+            content += '</i></td>';
+            content += '<td>';
+            content += shapeLength;
+            content += '</td>';
+            content += '</tr>';
+        }
+          
           content += '</tbody>';
           content += '</table>';
 
-          var geom = feature.getGeometry();
+        
           var labelPoint = geom.getFirstCoordinate();
           if (geom.getCenter)
               labelPoint = geom.getCenter();
@@ -547,7 +579,32 @@ this.legend=legend;
       }
   });
 }
+MapContainer.formatLength = function (line) {
+    var length = ol.sphere.getLength(line);
+    var output;
+    if (length > 1000) {
+        output = (Math.round(length / 1000 * 100) / 100) +
+            ' ' + 'km';
+    } else {
+        output = (Math.round(length * 100) / 100) +
+            ' ' + 'm';
+    }
+    return output;
+};
 
+
+MapContainer.formatArea = function (polygon) {
+    var area = ol.sphere.getArea(polygon);
+    var output;
+    if (area > 1000000) {
+        output = (Math.round(area / 1000000 * 100) / 100) +
+            ' ' + 'km<sup>2</sup>';
+    } else {
+        output = (Math.round(area * 100) / 100) +
+            ' ' + 'm<sup>2</sup>';
+    }
+    return output;
+};
 MapContainer.prototype.showLayerProperties=function(layer,activeTabIndex){
     var self=this;
     var layerPropertiesDlg = new ObjectPropertiesDlg(self, layer, {

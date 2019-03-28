@@ -3518,7 +3518,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
 
         //var fromGeom=`ST_Buffer( ST_Transform (${geom}, ${srid}) , ${distance}) as geom`;
         //var fromGeom=`ST_Buffer( ${geom} , ${distance}) as geom`;
-        var fromGeom0=`ST_Buffer( ST_Transform (${geom}, 4326)::geography , ${distance})::geometry`;
+        var fromGeom0=`ST_Buffer( ST_Transform (${geom}, 4326)::geography , ${distance}, 16)::geometry`;
         var fromGeom=`ST_Transform (${fromGeom0}, ${srid}) as geom`;
         var queryText = `
         INSERT INTO ${tbl}(${shapeField} ${fieldNamesExpr})
