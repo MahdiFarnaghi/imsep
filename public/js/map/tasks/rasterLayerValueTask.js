@@ -54,13 +54,14 @@ RasterLayerValueTask.prototype.init = function (dataObj) {
                     if (data) {
                         try{
                                 var content = "";
-                                content += '<table class="table table-condensed">';
+                                content += '<table class="table table-striped table-condensed">';
                                 content += '<thead>';
                                 if(layer && layer.get('title')){
-                                  content += '<tr><th>' + layer.get('title')+'</th></tr>';    
+                                    content += '<tr><th colspan="2" style=" white-space: nowrap;overflow-x: hidden; max-width: 260px;text-overflow: ellipsis;">' + layer.get('title')+'</th></tr>';      
                                 }else{
                                   content += '<tr><th>Field</th><th>Value</th></tr>';
                                 }
+
                                 content += '</thead>';
                                 content += '<tbody>';
                                 

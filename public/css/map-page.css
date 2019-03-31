@@ -394,3 +394,6 @@ span.route-step-distance-value {
 }
 
 
+.table-striped>tbody>tr:nth-of-type(odd) {
+  background-color: #f3f3f3;
+}
