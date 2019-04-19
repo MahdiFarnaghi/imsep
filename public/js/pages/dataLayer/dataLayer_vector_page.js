@@ -195,7 +195,10 @@ var pageTask={
           type: field.type,
           length:field.length,
           default:field.default,
-          notNull:field.notNull
+          notNull:field.notNull,
+          isExpression:field.isExpression,
+          expression:field.expression
+
         }
       }
     }
@@ -230,6 +233,8 @@ var pageTask={
           field.scale= evt.field.scale;
           field.default= evt.field.default;
           field.notNull=evt.field.notNull;
+          field.isExpression=evt.field.isExpression;
+          field.expression=evt.field.expression;
           if(field._action.origField){
             if(field.name === field._action.origField.name
               && field.alias == field._action.origField.alias
@@ -238,11 +243,15 @@ var pageTask={
               && field.scale == field._action.origField.scale
               && field.default == field._action.origField.default
               && field.notNull == field._action.origField.notNull
+              && field.expression == field._action.origField.expression
               ){
                 field._action.modified=false;
               }
           }
           if(addField){
+            if(field.expression){
+              field.isExpression=true;
+            }
             fields.push (field);          
           }
         me.fillFieldList();
@@ -317,7 +326,81 @@ var pageTask={
                 self.fillUI(JSON.parse(data.item.details));
               }catch(ex){}
             }
-            window.location.href=location.protocol + '//' + location.host + '/datalayers';
+            //window.location.href=location.protocol + '//' + location.host + '/datalayers';
+            //#region validating
+            var url = '/datalayer/' + data.id + '/geojson';
+            var settings=encodeURIComponent(JSON.stringify({filter:{},validate:true}));
+            var loadUrl=url +'?settings='+settings;
+
+            var processNotify= $.notify({
+                message: '<i class="wait-icon-with-padding">Validating ...</i><br />'
+            },{
+                type:'info',
+                delay:0,
+                z_index:50000,
+                animate: {
+                    enter: 'animated fadeInDown',
+                    exit: 'animated fadeOutUp'
+                }
+            });
+
+
+            $.ajax(loadUrl, {
+                type: 'GET',
+                dataType: 'json',
+                success: function (data) {
+                    if (data) {
+                       if(data.status){
+                            $.notify({
+                                message:  data.rowCount + " row(s) are returned successfully."
+                            },{
+                                type:'success',
+                                delay:3000,
+                                z_index:50000,
+                                animate: {
+                                    enter: 'animated fadeInDown',
+                                    exit: 'animated fadeOutUp'
+                                }
+                            }); 
+                            setTimeout(function(){
+                              window.location.href=location.protocol + '//' + location.host + '/datalayers';
+                            },2000);
+                            
+                       }else{
+                            $.notify({
+                                message:"Validation failed <br />Error:"+ data.message + '<br/> Check fields\' expressions'
+                            },{
+                                type:'danger',
+                                delay:5000,
+                                z_index:50000,
+                                animate: {
+                                    enter: 'animated fadeInDown',
+                                    exit: 'animated fadeOutUp'
+                                }
+                            }); 
+                       } 
+                        
+                    }
+                    processNotify.close();
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    $.notify({
+                        message: ""+ errorThrown+"<br/>Failed to complete task"
+                    },{
+                        type:'danger',
+                        delay:3000,
+                        z_index:50000,
+                        animate: {
+                            enter: 'animated fadeInDown',
+                            exit: 'animated fadeOutUp'
+                        }
+                    }); 
+                    processNotify.close();
+                }
+            }).done(function (response) {
+                 processNotify.close();
+            });
+            //#endregion validating
           }else{
             var msg=data.errors || data.error|| data.message || "Failed to save Data Layer";
             msg=msg+'';
@@ -448,6 +531,8 @@ EditFieldDlg.prototype.initFrom=function(){
   $content.find('#scale').val(typeof me.field.scale==='undefined'?'':me.field.scale);
   //$content.find('#default').val(typeof me.field.default==='undefined'?'':me.field.default);
   $content.find('#default').val(me.field.default);
+  $content.find('#expression').val(me.field.expression);
+  
   
  }
 EditFieldDlg.prototype.updateUI=function(){
@@ -456,7 +541,10 @@ EditFieldDlg.prototype.updateUI=function(){
   var $type= $content.find('#type');
   var selType=$type.val();
   $content.find('#typeTip').html(me.fieldTypeTips[selType]);
-  
+  var isNew =false;
+  if(this.field && this.field._action && this.field._action.isNew){
+    isNew=true;
+  }
   if(selType=='varchar'|| selType=='numeric')
   {
      // $content.find('.form-group:has(#length)').show();
@@ -472,6 +560,14 @@ EditFieldDlg.prototype.updateUI=function(){
     }else{
       //$content.find('.form-group:has(#scale)').hide();
       $content.find('.form-group').has('#scale').hide();
+    }
+
+    if((this.field && this.field.isExpression) || isNew){
+      $content.find('.form-group').has('#expression').show();
+      $content.find('.form-group').has('#default').hide();
+    }else{
+      $content.find('.form-group').has('#expression').hide();
+     
     }
  }
 EditFieldDlg.prototype.create=function(){
@@ -511,6 +607,7 @@ EditFieldDlg.prototype.apply=function(){
     //scale:_scale,
     //default: $form.find('#default').val(),
     notNull:me.field.notNull
+    ,isExpression:me.field.isExpression
   };  
   if($form.find('#alias').val())
     editField.alias=$form.find('#alias').val();
@@ -524,6 +621,9 @@ EditFieldDlg.prototype.apply=function(){
   if(!(selType=='varchar'|| selType=='numeric'))
     editField.length='';
   
+  editField.expression=$form.find('#expression').val();
+    
+
   if(this.onValidate)
   {
     var arg={

@@ -306,80 +306,83 @@ class PostgresWorkspace {
                 _fields.push(fld);
                 continue;
             }
-            if (fld._action.isNew) {
-                fieldExpression += 'ADD COLUMN "' + fld.name + '" ' + fld.type;
-                if ((fld.type == 'varchar' || fld.type == 'numeric') && fld.length > 0) {
-                    if (fld.type == 'numeric' && typeof fld.scale !== 'undefined') {
-                        fieldExpression += '(' + fld.length + ',' + fld.scale + ')';
-                    } else {
-                        fieldExpression += '(' + fld.length + ')';
-                    }
-                }
-                if (fld.notNull) {
-                    fieldExpression += ' NOT NULL ';
-                }
-                if (typeof fld.default != 'undefined') {
-                    if (fld.type == 'varchar' || fld.type == 'timestamp with time zone' || fld.type == 'date') {
-                        if ((!fld.default && !fld.notNull) || fld.default) {
-                            fieldExpression += ' DEFAULT \'' + fld.default+'\'';
-                        }
-                    } else {
-                        fieldExpression += ' DEFAULT ' + fld.default;
-                    }
-                }
+            if(!fld.isExpression){
 
-            } else if (fld._action.delete) {
-                fieldExpression += 'DROP COLUMN IF EXISTS "' + fld.name + '" ';
-
-            } else if (fld._action.modified && fld._action.origField) {
-                var origFld = fld._action.origField;
-                origFld.name = origFld.name.toLowerCase();
-                var origName = origFld.name;
-                if (origName !== fld.name) {
-                    renameExpression = `ALTER TABLE public."${tbl}"   RENAME COLUMN "${origName}" TO "${fld.name}";`;
-                }
-
-                if (origFld.type !== fld.type || origFld.length !== fld.length) {
-                    var newFieldType = fld.type;
+            
+                if (fld._action.isNew) {
+                    fieldExpression += 'ADD COLUMN "' + fld.name + '" ' + fld.type;
                     if ((fld.type == 'varchar' || fld.type == 'numeric') && fld.length > 0) {
                         if (fld.type == 'numeric' && typeof fld.scale !== 'undefined') {
-                            newFieldType += '(' + fld.length + ',' + fld.scale + ')';
+                            fieldExpression += '(' + fld.length + ',' + fld.scale + ')';
                         } else {
-                            newFieldType += '(' + fld.length + ')';
+                            fieldExpression += '(' + fld.length + ')';
                         }
-
-                    }
-                    fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET DATA TYPE ' + newFieldType;
-                    fieldExpression += ' USING ("' + origFld.name + '"::' + fld.type + ')';
-
-                }
-                if (origFld.default !== fld.default) {
-                    if (fieldExpression) {
-                        fieldExpression += ',';
-                    }
-
-                    if (typeof fld.default != 'undefined') {
-                        if (fld.type == 'varchar' || fld.type == 'timestamp with time zone' || fld.type == 'date') {
-                            fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET  DEFAULT \'' + fld.default+'\'';
-                        } else {
-                            fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET  DEFAULT ' + fld.default;
-                        }
-                    } else {
-                        fieldExpression += 'ALTER COLUMN "' + origFld.name + '" DROP  DEFAULT ';
-                    }
-                }
-                if (origFld.notNull !== fld.notNull) {
-                    if (fieldExpression) {
-                        fieldExpression += ',';
                     }
                     if (fld.notNull) {
-                        fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET NOT NULL ';
-                    } else {
-                        fieldExpression += 'ALTER COLUMN "' + origFld.name + '" DROP NOT NULL ';
+                        fieldExpression += ' NOT NULL ';
+                    }
+                    if (typeof fld.default != 'undefined') {
+                        if (fld.type == 'varchar' || fld.type == 'timestamp with time zone' || fld.type == 'date') {
+                            if ((!fld.default && !fld.notNull) || fld.default) {
+                                fieldExpression += ' DEFAULT \'' + fld.default+'\'';
+                            }
+                        } else {
+                            fieldExpression += ' DEFAULT ' + fld.default;
+                        }
+                    }
+
+                } else if (fld._action.delete) {
+                    fieldExpression += 'DROP COLUMN IF EXISTS "' + fld.name + '" ';
+
+                } else if (fld._action.modified && fld._action.origField) {
+                    var origFld = fld._action.origField;
+                    origFld.name = origFld.name.toLowerCase();
+                    var origName = origFld.name;
+                    if (origName !== fld.name) {
+                        renameExpression = `ALTER TABLE public."${tbl}"   RENAME COLUMN "${origName}" TO "${fld.name}";`;
+                    }
+
+                    if (origFld.type !== fld.type || origFld.length !== fld.length) {
+                        var newFieldType = fld.type;
+                        if ((fld.type == 'varchar' || fld.type == 'numeric') && fld.length > 0) {
+                            if (fld.type == 'numeric' && typeof fld.scale !== 'undefined') {
+                                newFieldType += '(' + fld.length + ',' + fld.scale + ')';
+                            } else {
+                                newFieldType += '(' + fld.length + ')';
+                            }
+
+                        }
+                        fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET DATA TYPE ' + newFieldType;
+                        fieldExpression += ' USING ("' + origFld.name + '"::' + fld.type + ')';
+
+                    }
+                    if (origFld.default !== fld.default) {
+                        if (fieldExpression) {
+                            fieldExpression += ',';
+                        }
+
+                        if (typeof fld.default != 'undefined') {
+                            if (fld.type == 'varchar' || fld.type == 'timestamp with time zone' || fld.type == 'date') {
+                                fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET  DEFAULT \'' + fld.default+'\'';
+                            } else {
+                                fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET  DEFAULT ' + fld.default;
+                            }
+                        } else {
+                            fieldExpression += 'ALTER COLUMN "' + origFld.name + '" DROP  DEFAULT ';
+                        }
+                    }
+                    if (origFld.notNull !== fld.notNull) {
+                        if (fieldExpression) {
+                            fieldExpression += ',';
+                        }
+                        if (fld.notNull) {
+                            fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET NOT NULL ';
+                        } else {
+                            fieldExpression += 'ALTER COLUMN "' + origFld.name + '" DROP NOT NULL ';
+                        }
                     }
                 }
             }
-
             if (!fld._action.delete) {
                 _fields.push(fld);
             }
@@ -488,8 +491,10 @@ class PostgresWorkspace {
         if (layerInfo.fields) {
             for (var i = 0; i < layerInfo.fields.length; i++) {
                 layerInfo.fields[i].name = layerInfo.fields[i].name.toLowerCase();
-                fieldNames.push(layerInfo.fields[i].name);
-                fieldNames_safe.push('"' + layerInfo.fields[i].name + '"');
+                if(!layerInfo.fields[i].isExpression){
+                    fieldNames.push(layerInfo.fields[i].name);
+                    fieldNames_safe.push('"' + layerInfo.fields[i].name + '"');
+                }
             }
         }
 
@@ -672,9 +677,12 @@ class PostgresWorkspace {
         var fieldNames_safe = [];
         if (layerInfo.fields) {
             for (var i = 0; i < layerInfo.fields.length; i++) {
-                layerInfo.fields[i].name = layerInfo.fields[i].name.toLowerCase();
-                fieldNames.push(layerInfo.fields[i].name);
-                fieldNames_safe.push('"' + layerInfo.fields[i].name + '"');
+                
+               layerInfo.fields[i].name = layerInfo.fields[i].name.toLowerCase();
+               if(!layerInfo.fields[i].isExpression){                    
+                    fieldNames.push(layerInfo.fields[i].name);
+                    fieldNames_safe.push('"' + layerInfo.fields[i].name + '"');
+                }
             }
         }
         var gid_value = -1;
@@ -887,7 +895,15 @@ class PostgresWorkspace {
         var onlyIds= options.onlyIds || false;
         var where= filter.expression;
         var srid= options.srid || 3857;
+        var fields=options.fields || [];
+
         var selectFrom;
+        var limitExpr='';
+        var recordsLimit=filter.recordsLimit;
+        var all_recordsLimit=50000;
+        if(recordsLimit && recordsLimit>0){
+            all_recordsLimit=recordsLimit;
+        }
         var whereStr = ''
         if (where) {
            var checkSQlExpression_res= this.checkSQlExpression(where);
@@ -897,7 +913,32 @@ class PostgresWorkspace {
             whereStr = ` WHERE ${where}`;
         }
         selectFrom=`${tableName} as a ${whereStr}`;
+        var selectFields='*';
+        if (fields && fields.length) {
+            var fieldNames=[];
+            fieldNames.push(oidField);
+            if(shapeField){
+                fieldNames.push(shapeField);
+            }
 
+            for (var i = 0; i < fields.length; i++) {
+                
+                if(fields[i].isExpression ){
+                    if(typeof fields[i].expression==='undefined' || (fields[i].expression +'').trim()===''){
+                        fields[i].expression='NULL';
+                    }
+                    var checkFieldSQlExpression_res= this.checkSQlExpression(fields[i].expression);
+                    if(!checkFieldSQlExpression_res.valid){
+                        throw new Error(fields[i].name + ' field\'s expression Error.'+ checkFieldSQlExpression_res.message);
+                    }
+
+                    fieldNames.push('(((' + fields[i].expression + '))) AS "'+fields[i].name.toLowerCase() + '"' );
+                }else{
+                    fieldNames.push('"' + fields[i].name.toLowerCase() + '"');
+                }
+            }
+            selectFields = fieldNames.join(',');
+        }
        // selectFrom=`(SELECT a.* FROM ${selectFrom}) as j`;
         if(filter.spatialFilter){
             if( filter.spatialFilter.searchArea && filter.spatialFilter.searchArea.geometry && !filter.spatialFilter.byFeaturesOfLayerItem_details ){
@@ -918,8 +959,8 @@ class PostgresWorkspace {
                 //var spatialWhere=`${spatialOperator}(${shapeField}, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(searchAreaGeometry)}'),${searchAreaSrid}),${srid}))`;
                 //ST_CollectionHomogenize
                 var orderByExpr='';
-                var limitExpr='';
-                var recordsLimit=filter.recordsLimit;
+                // var limitExpr='';
+                // var recordsLimit=filter.recordsLimit;
                 
                 if(spatialOperator=='ST_Nearest'){
                     spatialOperator='ST_DWithin';
@@ -947,7 +988,9 @@ class PostgresWorkspace {
                     whereStr = ` WHERE ${where}`;
                 }
                 //selectFrom=`${tableName}${whereStr} ${orderByExpr} ${limitExpr}`;
-                selectFrom=`(SELECT * FROM ${tableName} ${whereStr} ${orderByExpr} ${limitExpr}) as j`;
+                selectFrom=`(SELECT ${selectFields} FROM ${tableName} ${whereStr} ${orderByExpr} ${limitExpr}) as j`;
+                selectFields='*';
+
             }else if (filter.spatialFilter.byFeaturesOfLayerItem_details){
                 var details_r=filter.spatialFilter.byFeaturesOfLayerItem_details;
                 var tableName_r = details_r.datasetName;
@@ -968,7 +1011,8 @@ class PostgresWorkspace {
                 
                // var spatialWhere=`${spatialOperator}(A.${shapeField}, ST_Transform(${searchGeom},${srid}))`;
                
-                var baseSelect=`(SELECT * FROM ${tableName} ${whereStr})`;
+                var baseSelect=`(SELECT ${selectFields} FROM ${tableName} ${whereStr})`;
+                selectFields='*';
 
                // selectFrom=`(SELECT DISTINCT ON (A.${oidField}) A.* FROM  ${baseSelect} as A, ${tableName_r} as B WHERE ${spatialWhere}) as j `;
 
@@ -983,8 +1027,8 @@ class PostgresWorkspace {
                     spatialCondition=`${spatialOperator}(ST_Transform (A.${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
                 }
                 var orderByExpr='';
-                var limitExpr='';
-                var recordsLimit=filter.recordsLimit;
+                // var limitExpr='';
+                // var recordsLimit=filter.recordsLimit;
                 
                 
                 if(spatialOperator=='ST_Nearest'){
@@ -1059,8 +1103,8 @@ class PostgresWorkspace {
                 'properties', to_jsonb(inputs) - '${oidField}' - '${shapeField}'
                 ) AS feature
                 FROM (
-                SELECT * FROM ${selectFrom} 
-                LIMIT 50000
+                SELECT ${selectFields} FROM ${selectFrom} 
+                LIMIT ${all_recordsLimit}
                 ) inputs
             ) features;`
             }

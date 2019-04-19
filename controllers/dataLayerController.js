@@ -1930,7 +1930,8 @@ module.exports = function (postgresWorkspace) {
                         shapeField:shapeField,
                         filter:filter,
                         onlyIds:onlyIds,
-                        srid:srid
+                        srid:srid,
+                        fields:details.fields
                     });
                     if(validate){
                         var rowCount=0;
