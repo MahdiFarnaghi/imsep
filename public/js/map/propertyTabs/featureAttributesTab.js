@@ -59,6 +59,10 @@ function FeatureAttributesTab() {
       var fld= fields[i];
       var fldKey='field_'+i;
       var fldType=fld.type.toLowerCase();
+      if(fld.isExpression){
+        //continue;
+      
+      }
     //   'varchar':'variable-length character string, up to defined Length',
     // 'boolean':'Boolean values like;true|false,yes|no,1|0',
     // smallint: '2 bytes small integer, range:	-32768 to +32767',
@@ -70,8 +74,13 @@ function FeatureAttributesTab() {
     // 'date':'4 bytes date (no time of day)',
     // 'timestamp with time zone':'8 bytes	both date and time with time zone, example:2018-08-28 12:22:01.673<span class="label label-info">+04:30</span>',
     // 'bytea':'BLOB, Binary Large OBject'
-
-      if(fldType=='varchar'){
+    if(fld.isExpression){
+      //continue;
+      htm+='  <div class="form-group">';
+      htm+='    <label class="" >'+  (fld.alias || fld.name)+ '</label>';
+      htm+='    <p class="form-control-static">'+  properties[fld.name]+'</p>';
+      htm+='  </div>';
+    }else if(fldType=='varchar'){
           htm+=this.getTextInput(fld,properties,fldKey);
       }else if (fldType=='date' ){
           htm+=this.getDateInput(fld,properties,fldKey);
@@ -146,6 +155,9 @@ function FeatureAttributesTab() {
         var fldKey= 'field_'+i;
         var fldType=fld.type.toLowerCase();
         var cmp= $form.find('#'+ fldKey);
+        if(cmp.length==0){
+          continue;
+        }
         var v= cmp.val();
         if(fldType=='varchar'){
           properties[fld.name]= v;

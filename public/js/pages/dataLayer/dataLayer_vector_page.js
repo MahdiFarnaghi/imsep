@@ -81,6 +81,54 @@ var pageTask={
     if(!details.isNew)  {
       shapeType.prop('disabled', true);
     }
+    var htm='';
+    if(details.spatialReference){
+     // htm+='<div class="form-group">';
+      htm+='  <label class="col-sm-12" for="">Spatial reference:</label>';
+      
+      if(details.spatialReference.srid && !details.spatialReference.alias){
+        if(details.spatialReference.srid==3857 || details.spatialReference.srid=='3857'){
+          details.spatialReference.alias='Google Maps Global Mercator';
+        }
+        if(details.spatialReference.srid==4326 || details.spatialReference.srid=='4326'){
+          details.spatialReference.alias='WGS 84';
+        }
+      }
+      
+      if(details.spatialReference.name){
+        htm+='<div class="row">';
+        htm+='  <label class="col-sm-offset-1 col-sm-3" >Name:</label>';  
+        
+        if(details.spatialReference.alias)
+            htm+='  <label class="col-sm-8" >'+details.spatialReference.name+ ' ('+ details.spatialReference.alias+') </label>';  
+          else
+            htm+='  <label class="col-sm-8" >'+details.spatialReference.name+ ' </label>';    
+        htm+='</div>';
+      }
+      if(details.spatialReference.srid){
+        htm+='<div class="row">';
+        htm+='  <label class="col-sm-offset-1 col-sm-3" >SRID:</label>';  
+        htm+='  <label class="col-sm-8" >'+details.spatialReference.srid+' </label>';  
+        htm+='</div>';
+      }
+      // if(details.spatialReference.proj4){
+      //   htm+='<div class="row">';
+      //   htm+='  <label class="col-sm-offset-1 col-sm-3" >PROJ4:</label>';  
+      //   htm+='  <label class="col-sm-8" >'+details.spatialReference.proj4+' </label>';  
+      //   htm+='</div>';
+      // }
+      // if(details.spatialReference.wkt){
+      //   htm+='<div class="row">';
+      //   htm+='  <label class="col-sm-offset-1 col-sm-3" >WKT:</label>';  
+      //   htm+='  <label class="col-sm-8" >'+details.spatialReference.wkt+' </label>';  
+      //   htm+='</div>';
+      // }
+      
+    //  htm+='</div>';
+    }
+
+    $('#spatialreferenceInfo').html(htm);
+
     this.fillFieldList();
   },
    fillFieldList:function(){
@@ -203,8 +251,11 @@ var pageTask={
       }
     }
     field._action.index=index;
+    var shapeType=$('#shapeType').val();
     var editFieldDlg= new EditFieldDlg({
       field:field,
+      shapeType:shapeType,
+      details:me.details,
       onValidate:function(evt){
         var exists = false;
         for(var i=0;i< fields.length;i++){
@@ -456,6 +507,8 @@ function EditFieldDlg(options) {
 
     this.options = options || {};
    this.field= this.options.field;
+   this.parent_shapeType=this.options.shapeType;
+   this.parent_details= this.options.details ||{};   
    if(typeof this.field.type==='undefined'){
      this.field.type='varchar';
      this.field.length=20;
@@ -531,9 +584,47 @@ EditFieldDlg.prototype.initFrom=function(){
   $content.find('#scale').val(typeof me.field.scale==='undefined'?'':me.field.scale);
   //$content.find('#default').val(typeof me.field.default==='undefined'?'':me.field.default);
   $content.find('#default').val(me.field.default);
+  
+ var srid;
+ if(me.parent_details && me.parent_details.spatialReference) {
+   srid= me.parent_details.spatialReference.srid;
+ }
+ var expressionOptions='';
+ if(me.parent_shapeType=='MultiPolygon' || me.parent_shapeType=='Polygon'){
+    
+    if(srid== 4326){
+      expressionOptions+='<option value="ST_Area(geom::geography)" > Area</option>';
+      expressionOptions+='<option value="ST_Perimeter(geom::geography)" > Perimeter</option>';
+    }else{
+      expressionOptions+='<option value="ST_Area(geom)" > Area</option>';
+      expressionOptions+='<option value="ST_Perimeter(geom)" > Perimeter</option>';
+    }
+    //expressionOptions+='<option value="ST_AsText(ST_Centroid(geom))" > Centroid</option>';
+    expressionOptions+='<option value="ST_X(ST_Centroid(geom))" > Centroid.X</option>';
+    expressionOptions+='<option value="ST_Y(ST_Centroid(geom))" > Centroid.Y</option>';
+ }
+ if(me.parent_shapeType=='MultiLineString' || me.parent_shapeType=='LineString'){
+    if(srid== 4326){
+      expressionOptions+='<option value="ST_Length(geom::geography)" > Length</option>';
+    }else{
+      expressionOptions+='<option value="ST_Length(geom)" > Length</option>';
+    }
+    //expressionOptions+='<option value="ST_AsText(ST_Centroid(geom))" > Centroid</option>';
+    expressionOptions+='<option value="ST_X(ST_Centroid(geom))" > Centroid.X</option>';
+    expressionOptions+='<option value="ST_Y(ST_Centroid(geom))" > Centroid.Y</option>';
+ }
+ if(me.parent_shapeType=='Point'){
+    expressionOptions+='<option value="ST_X(geom)" > X</option>';
+    expressionOptions+='<option value="ST_Y(geom)" > Y</option>';
+ }
+   //ST_Centroid 
+  
+
+  $content.find('#expression').append(expressionOptions);
   $content.find('#expression').val(me.field.expression);
-  
-  
+  $content.find('#expression').change(function(){
+    $content.find('#type').val('real');
+  })
  }
 EditFieldDlg.prototype.updateUI=function(){
   var me= this;
@@ -562,12 +653,28 @@ EditFieldDlg.prototype.updateUI=function(){
       $content.find('.form-group').has('#scale').hide();
     }
 
-    if((this.field && this.field.isExpression) || isNew){
+    if((this.field && this.field.isExpression)){
       $content.find('.form-group').has('#expression').show();
       $content.find('.form-group').has('#default').hide();
-    }else{
+      $content.find('.form-group').has('#type').hide();
+      $content.find('.form-group').has('#typeTip').hide();
+      $content.find('.form-group').has('#length').hide();
+
+      
+    }else if (isNew)
+    {
+      $content.find('.form-group').has('#expression').show();
+      $content.find('.form-group').has('#default').show();
+      $content.find('.form-group').has('#type').show();
+      $content.find('.form-group').has('#typeTip').show();
+      $content.find('.form-group').has('#length').show();
+    }else //if (isNew)
+    {
       $content.find('.form-group').has('#expression').hide();
-     
+      $content.find('.form-group').has('#default').show();
+      $content.find('.form-group').has('#type').show();
+      $content.find('.form-group').has('#typeTip').show();
+      $content.find('.form-group').has('#length').show();
     }
  }
 EditFieldDlg.prototype.create=function(){

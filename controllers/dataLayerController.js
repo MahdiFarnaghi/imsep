@@ -2833,6 +2833,22 @@ module.exports = function (postgresWorkspace) {
                     }
                     return res.json(result);
                     
+                }else  if(request==='clipraster'){
+                    
+                    var result=await postgresWorkspace.createRaster_Clip(models.DataLayer, req.user.id,{
+                        details:details,
+                        outputName: settings.outputName || (item.name+'-Clipped'),
+                        settings:settings,
+                        where:''
+                        ,out_srid:out_srid,
+                    });
+                    if(!result){
+                        res.set('Content-Type', 'text/plain');
+                        res.status(404).end('Not found');
+                        return;
+                    }
+                    return res.json(result);
+                    
                 }else if(request==='reclass'){
                     
                     var result=await postgresWorkspace.createRaster_Reclass(models.DataLayer, req.user.id,{

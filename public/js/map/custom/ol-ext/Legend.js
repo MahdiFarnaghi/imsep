@@ -103,14 +103,14 @@ ol.control.Legend.prototype.getLength = function() {
 };
 /** Refresh the legend
  */
-ol.control.Legend.prototype.refresh = function() {
+ol.control.Legend.prototype.refresh0 = function() {
   var self = this;
   var table = this._tableElement
   table.innerHTML = '';
   var width = this.get('size')[0] + 2*this.get('margin');
   var height = this.get('size')[1] + 2*this.get('margin');
   // Add a new row
-  function addRow(str, title, r, i){
+  function addRow(str, title, r, i,imageData){
     var row = document.createElement('li');
     row.style.height = height + 'px';
     row.addEventListener('click', function() {
@@ -121,6 +121,11 @@ ol.control.Legend.prototype.refresh = function() {
     });
     var col = document.createElement('div');
     row.appendChild(col);
+    if(imageData){
+      var img = document.createElement('img');
+      img.src= imageData;
+      col.appendChild(img);
+    }
     col.style.height = height + 'px';
     col = document.createElement('div');
     if (title) {
@@ -131,7 +136,8 @@ ol.control.Legend.prototype.refresh = function() {
     col.innerHTML = str || '';
     row.appendChild(col);
     table.appendChild(row);
-  }
+  };
+
   if (this.get('title')) {
     addRow(this.get('title'), true, {}, -1);
   }
@@ -141,12 +147,103 @@ ol.control.Legend.prototype.refresh = function() {
   this._imgElement.innerHTML = '';
   this._imgElement.appendChild(canvas);
   this._imgElement.style.height = (this._rows.length+1)*height + 'px';
+
+
+
+  var size = this.get('size');
+  var widthImg = size[0] + 2*this.get('margin');
+  var heightImg = size[1] + 2*this.get('margin');
+  var canvasImg;
+  var ratio = ol.has.DEVICE_PIXEL_RATIO;
+  
+  //  canvasImg = document.createElement('canvas');
+  //   canvasImg.width = widthImg * ratio;
+  //   canvasImg.height = heightImg * ratio;
+  
+
+
   for (var i=0, r; r = this._rows[i]; i++) {
+  // var imageData= this.getStyleImageData(r, canvasImg,i+(this.get('title')?1:0));
+
+    //addRow(r.title, false, r, i,imageData);
     addRow(r.title, false, r, i);
     canvas = this.getStyleImage(r, canvas, i+(this.get('title')?1:0));
   };
 };
+ol.control.Legend.prototype.refresh = function() {
+  var self = this;
+  var table = this._tableElement
+  table.innerHTML = '';
+  var width = this.get('size')[0] + 2*this.get('margin');
+  var height = this.get('size')[1] + 2*this.get('margin');
+  // Add a new row
+  function addRow(str, title, r, i,imageData){
+    var row = document.createElement('li');
+    row.style.height = height + 'px';
+    row.addEventListener('click', function() {
+      self.dispatchEvent({ type:'select', title: str, row: r, index: i });
+    });
+    row.addEventListener('dblclick', function() {
+      self.dispatchEvent({ type:'dblclick', title: str, row: r, index: i });
+    });
+    var col = document.createElement('div');
+    row.appendChild(col);
+    if(imageData){
+      var img = document.createElement('img');
+      img.src= imageData;
+      img.style.width = width + 'px';
+      col.appendChild(img);
+    }
+    col.style.height = height + 'px';
+    col = document.createElement('div');
+    if (title) {
+      row.className = 'ol-title';
+    } else {
+      if(!imageData){
+        col.style.paddingLeft = width + 'px';
+      }else{
+        col.style.paddingLeft =  '8px';
+      }
+    }
+    col.innerHTML = str || '';
+    row.appendChild(col);
+    table.appendChild(row);
+  };
 
+  if (this.get('title')) {
+    addRow(this.get('title'), true, {}, -1);
+  }
+  var canvas = document.createElement('canvas');
+  canvas.width = 5*width;
+  canvas.height = (this._rows.length+1) * height * ol.has.DEVICE_PIXEL_RATIO;
+  this._imgElement.innerHTML = '';
+  this._imgElement.appendChild(canvas);
+  this._imgElement.style.height = (this._rows.length+1)*height + 'px';
+
+
+
+  var size = this.get('size');
+  var widthImg = size[0] + 2*this.get('margin');
+  var heightImg = size[1] + 2*this.get('margin');
+  var canvasImg;
+  var ratio = ol.has.DEVICE_PIXEL_RATIO;
+  
+   canvasImg = document.createElement('canvas');
+    canvasImg.width = widthImg * ratio;
+    canvasImg.height = heightImg * ratio;
+  
+
+
+  for (var i=0, r; r = this._rows[i]; i++) {
+    var imageData=r.imgSrc;
+    if(!imageData){
+      imageData= this.getStyleImageData(r, canvasImg,i+(this.get('title')?1:0));
+    }
+    
+    addRow(r.title, false, r, i,imageData);
+    
+  };
+};
 ol.control.Legend.prototype.getVisible = function() {
   return !this.element.classList.contains('ol-collapsed');
 };
@@ -275,4 +372,99 @@ ol.control.Legend.prototype.getStyleImage = function(options, theCanvas, row) {
   }
   ctx.restore();
   return canvas;
+};
+
+ol.control.Legend.prototype.getStyleImageData = function(options,canvas,  row) {
+  options = options || {};
+  var size = this.get('size');
+  var width = size[0] + 2*this.get('margin');
+  var height = size[1] + 2*this.get('margin');
+//  var canvas;
+  var ratio = ol.has.DEVICE_PIXEL_RATIO;
+  if (!canvas) {
+    canvas = document.createElement('canvas');
+    canvas.width = width * ratio;
+    canvas.height = height * ratio;
+  }
+  var ctx = canvas.getContext('2d');
+  ctx.save();
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  var vectorContext = ol.render.toContext(ctx);
+  var typeGeom = options.typeGeom;
+  var style;
+  var feature = options.feature;
+  if (!feature && options.properties && typeGeom) {
+    feature = new ol.Feature(new ol.geom[typeGeom]([0,0]));
+    feature.setProperties(options.properties);
+  }
+  if (feature) {
+    style = feature.getStyle();
+    if (!style) {
+      style = typeof(this._style) === 'function' ? this._style(feature) : this._style || [];
+    }
+    typeGeom = feature.getGeometry().getType();
+  } else {
+    style = options.style;
+  }
+  if (!(style instanceof Array)) style = [style];
+  var cx = width/2;
+  if(options.leftOffset){
+    cx=cx+ options.leftOffset;
+  }
+  var cy = height/2;
+  var sx = size[0]/2;
+  var sy = size[1]/2;
+  var i, s;
+  // Get point offset
+  if (typeGeom === 'Point') {
+    var extent = null;
+    for (i=0; s= style[i]; i++) {
+      var img = s.getImage();
+      if (img && img.getAnchor) {
+        var anchor = img.getAnchor();
+        var size = img.getSize();
+        var dx = anchor[0] - size[0];
+        var dy = anchor[1] - size[1];
+        if (!extent) {
+          extent = [dx, dy, dx+size[0], dy+size[1]];
+        } else {
+          ol.extent.extend(extent, [dx, dy, dx+size[0], dy+size[1]]);
+        }
+      }
+    }
+    if (extent) {
+      cx = cx + (extent[2] + extent[0])/2;
+      cy = cy + (extent[3] + extent[1])/2;
+    }
+  }
+  // Draw image
+ // cy += (theCanvas ? row*height : 0);
+ cy+=0;
+
+  for (i=0; s= style[i]; i++) {
+    vectorContext.setStyle(s);
+    switch (typeGeom) {
+      case ol.geom.Point:
+      case 'Point':
+        vectorContext.drawGeometry(new ol.geom.Point([cx, cy]));
+        break;
+      case ol.geom.LineString:
+      case 'LineString':
+       // ctx.save();
+       //   ctx.rect(this.get('margin') * ratio, 0, size[0] *  ratio, canvas.height);
+       //   ctx.clip();
+          vectorContext.drawGeometry(new ol.geom.LineString([[cx-sx, cy], [cx+sx, cy]]));
+       // ctx.restore();
+        break;
+      case ol.geom.Polygon:
+      case 'Polygon':
+        vectorContext.drawGeometry(new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]));
+        break;
+    }
+  }
+  ctx.restore();
+  var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");  // here is the most important part because if you dont replace you will get a DOM 18 exception.
+
+  return image;
 };

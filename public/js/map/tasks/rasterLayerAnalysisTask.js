@@ -230,6 +230,78 @@ RasterLayerAnalysisTask.prototype.init = function (dataObj) {
     });
     this._toolbar.addControl(this._hillshade);
 
+    this._clip=new ol.control.TextButton({
+        //html: '<span style="display:block;line-height:28px;background-position:center center" class="deleteIcon" >&nbsp;</span>',
+       // html: '<span style="display:block;line-height:28px;background-position:center center;color:#F44336;" class="" ><i class="fa fa-times"></i></span>',
+        html:'Clip',
+        className:'myOlTextButton24',
+        title: "Clip raster layer",
+        handleClick: function () {
+            var details= LayerHelper.getDetails(self.layer);
+            
+
+            var dlg = new DlgRasterClip(mapContainer, self.layer, {
+                title:'Clip',
+                onapply:function(dlg,data){
+                    
+                    var settings=encodeURIComponent(JSON.stringify(data));
+                   
+                    
+                    var url = '/datalayer/' + layerCustom.dataObj.id + '/analysis?request=clipRaster&srid='+mapProjectionCode+'&settings='+settings;
+                    var processNotify= $.notify({
+                        message: '<i class="wait-icon-with-padding">The processing is running in the background</i><br /> Generating raster slope...'
+                    },{
+                        type:'info',
+                        delay:0,
+                        animate: {
+                            enter: 'animated fadeInDown',
+                            exit: 'animated fadeOutUp'
+                        }
+                    });
+                    $.ajax(url, {
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (data) {
+                            
+                            if (data && data.id) {
+                                $.notify({
+                                    message: "New data layer is generated"
+                                },{
+                                    type:'success',
+                                    delay:2000,
+                                    animate: {
+                                        enter: 'animated fadeInDown',
+                                        exit: 'animated fadeOutUp'
+                                    }
+                                }); 
+                                mapContainer.addLayerById(data.id);
+                            }
+                            processNotify.close();
+                        },
+                        error: function (xhr, textStatus, errorThrown) {
+                            
+                            $.notify({
+                                message: ""+ errorThrown+"<br/>Failed to complete task"
+                            },{
+                                type:'danger',
+                                delay:2000,
+                                animate: {
+                                    enter: 'animated fadeInDown',
+                                    exit: 'animated fadeOutUp'
+                                }
+                            }); 
+                            processNotify.close();
+                        }
+                    }).done(function (response) {
+                        processNotify.close();
+                    });
+                }
+        
+              }).show();
+        }
+    });
+    this._toolbar.addControl(this._clip);
+
 
     
     this._classify=new ol.control.TextButton({

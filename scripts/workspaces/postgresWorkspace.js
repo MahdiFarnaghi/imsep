@@ -298,6 +298,7 @@ class PostgresWorkspace {
         var fieldExpressions = [];
         var renameExpressions = [];
         var _fields = []
+        var isModified = false;
         for (var i = 0; i < fields.length; i++) {
             var fld = fields[i];
             var fieldExpression = '';
@@ -385,6 +386,8 @@ class PostgresWorkspace {
             }
             if (!fld._action.delete) {
                 _fields.push(fld);
+            }else{
+                isModified=true;
             }
 
             if (fieldExpression)
@@ -398,7 +401,7 @@ class PostgresWorkspace {
         var renamesExpression = renameExpressions.join();
         var alterTemplate = `ALTER TABLE public."${tbl}"  ${fieldsExpression} ;`;
 
-        var isModified = false;
+       
         var toAlter = (fieldsExpression || renamesExpression);
         if (fieldsExpression) {
             try {
@@ -407,6 +410,7 @@ class PostgresWorkspace {
             } catch (ex) {
                 //throw ex;
                 errors += 'Failed to modify Table ' + tbl + '. Error:' + ex.message;
+                isModified=false;
             }
         }
         if ((isModified || (!fieldsExpression)) && renamesExpression) {
@@ -2988,6 +2992,222 @@ SELECT AddRasterConstraints(
         }
         return map[pixelType];
     }
+    async createRaster_Clip(DataLayer, ownerUserId, options) {
+        var sharp = require('sharp');
+        var status = false;
+        var settings= options.settings;
+        if(!settings){
+            settings= {};
+        }
+        var fromDetails = options.details;
+        var outputName = options.outputName || ( (fromDetails.name || fromDetails.fileName) + '-Clipped');
+        var tableName = fromDetails.datasetName;
+        var oidField = fromDetails.oidField || 'rid';
+        var rasterField = fromDetails.rasterField || 'rast';
+        var srid = options.out_srid || fromDetails.spatialReference.srid;
+        var clipArea = settings.clipArea;
+        var clipAreaSrid=settings.clipAreaSrid;
+        if(!clipArea){
+            throw new Error('Clip area is not defined');
+        }
+        var history=fromDetails.history;
+        if(!history){
+            history=[];
+        }
+        history.push({
+             task:'clip',
+             settings:{
+               
+                outputName:options.outputName,
+                clipArea:clipArea,
+                clipAreaSrid:clipAreaSrid,
+                out_srid:options.out_srid
+             }
+         });
+         var clipAreaGeometry= clipArea.geometry;
+         var clipAreaSrid=clipAreaSrid || 3857;
+                     
+        var clipGeom=`ST_SetSRID(ST_CollectionHomogenize(ST_GeomFromGeoJSON('${JSON.stringify(clipAreaGeometry)}')),${clipAreaSrid})`;
+       
+
+        if (srid == '4326' || srid == 4326) {
+            srid = 4326;
+            scale = 111120;
+        }
+        var where = options.where || '';
+        var whereStr = ''
+        if (where) {
+            var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
+            whereStr = ` WHERE ${where}`;
+        }
+
+        var uniqueTableName = 'rst_' + uuidv4().replace(new RegExp('-', 'g'), '');
+
+        var errors = '';
+        var outDetails = {
+            name:outputName,
+            datasetName: uniqueTableName,
+            workspace: 'postgres',
+            datasetType: 'raster',
+            rasterType:fromDetails.rasterType,
+            fileType: fromDetails.fileType,
+            schema: undefined,
+            rasterField: rasterField,
+            oidField: oidField,
+            display:fromDetails.display,
+            spatialReference: {
+                srid: srid
+            },
+            history:history
+        };
+        var tbl = outDetails.datasetName;
+        var fromTbl = fromDetails.datasetName;
+
+        var queryText = ` DROP TABLE if exists public."${tbl}";
+            
+CREATE TABLE public."${tbl}"(
+    ${oidField} SERIAL primary key, ${rasterField} raster
+    );
+INSERT INTO ${tbl}(${rasterField})
+SELECT ST_Clip(
+    ST_Transform(
+        ST_Union(
+            ${rasterField}
+         )
+        ,${srid},'Bilinear')
+    ,  ST_Buffer( ST_Transform(${clipGeom},${srid}),0) )
+FROM ${fromTbl} ${whereStr}; 
+
+SELECT AddRasterConstraints(
+    '${tbl}'::name,  
+    '${rasterField}'::name  
+  );
+  
+  CREATE INDEX ${tbl}_gist_idx
+  ON ${tbl}
+  USING GIST(ST_ConvexHull(${rasterField}));`;
+        try {
+            var results = await this.query({
+                text: queryText
+            });
+            if (results) {
+                //var result= results.rows[0];
+                status = true;
+            } else {
+                status = false;
+            }
+        } catch (ex) {
+            status = false;
+            errors += '<br/>' + ex.message;
+        }
+
+        if (status) {
+
+            var thumbnail = null;
+           
+            var bandStats;
+            var srid = outDetails.spatialReference.srid || 3857;
+            try {
+                bandStats = await this.getRasterBandSummaryStats({
+                    tableName: outDetails.datasetName,
+                    oidField: outDetails.oidField,
+                    rasterField: outDetails.rasterField,
+                    band: 1
+                });
+                if (bandStats) {
+                    minimum = bandStats.min;
+                    maximum = bandStats.max;
+                    noDataValue = bandStats.nodatavalue
+                }
+
+            } catch (ex) {}
+            try {
+                outDetails.metadata_4326 = await this.getRasterMetadata({
+                    tableName: outDetails.datasetName,
+                    oidField: outDetails.oidField,
+                    rasterField: outDetails.rasterField,
+                    srid: 4326
+                });
+                outDetails.metadata_3857 = await this.getRasterMetadata({
+                    tableName: outDetails.datasetName,
+                    oidField: outDetails.oidField,
+                    rasterField: outDetails.rasterField,
+                    srid: 3857
+                });
+                var extInfo;
+                if (srid == 4326) {
+                    extInfo = outDetails.metadata_4326;
+                } else if (srid == 3857) {
+                    extInfo = outDetails.metadata_3857;
+                } else {
+                    extInfo = await this.getRasterMetadata({
+                        tableName: outDetails.datasetName,
+                        oidField: outDetails.oidField,
+                        rasterField: outDetails.rasterField,
+                        srid: srid
+                    });
+                }
+                outDetails.rasterWidth = extInfo.width;
+                outDetails.rasterHeight = extInfo.height;
+            } catch (ex) {}
+            outDetails.numberOfBands = fromDetails.numberOfBands || 1;
+            outDetails.bands=fromDetails.bands;
+            try {
+
+               var display=fromDetails.display;
+                outDetails.display = display;
+
+                var resultThumbnail = await this.getRasterAsPng({
+                    tableName: outDetails.datasetName,
+                    oidField: outDetails.oidField,
+                    rasterField: outDetails.rasterField,
+                    srid: srid,
+                    bands: outDetails.bands,
+                    display: display
+                });
+                thumbnail = await sharp(resultThumbnail.output)
+                    .resize(160,100,{
+                        fit: sharp.fit.inside
+                    })
+                    .png()
+                    .toBuffer();
+            } catch (ex) {
+                var a = 1;
+            }
+
+
+
+
+            try {
+                var newLayer = await DataLayer.create({
+                    name: outputName,
+                    dataType: 'raster',
+                    description: 'Generated from ' + (fromDetails.name  || fromDetails.datasetName) + errors,
+                    ownerUser: ownerUserId,
+                    thumbnail: thumbnail,
+                    details: JSON.stringify(outDetails)
+                });
+                return {
+                    status: status,
+                    id: newLayer.id
+                }
+            } catch (ex) {
+                status = false;
+                errors += '<br/>' + ex.message;
+            }
+
+            return {
+                status: false,
+                errors: errors
+            }
+
+        }
+
+    }
+
     async createRaster_Reclass(DataLayer, ownerUserId, options) {
         var sharp = require('sharp');
         var status = false;

@@ -78,8 +78,14 @@ function RasterDisplayTab() {
 
       
         htm+='<div class="form-group">';
-        htm+='  <label class="col-sm-3" for="colorMapType">Color map:</label>';
+        htm+='<div class="form-group">';
+        htm+='  <label class="col-sm-offset-1_ col-sm-12 checkbox">';
         htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#layerProperties_rasterDisplay">?</a>'  ;
+        htm+='   <input type="checkbox" id="displayInLegend" name="displayInLegend" ' +((LayerHelper.getDisplayInLegend(this.layer))? 'checked="checked"':'')  +' value="" /> Show in legend';
+        htm+='</label>';
+        htm+='</div>';
+        htm+='  <label class="col-sm-3" for="colorMapType">Color map:</label>';
+        //htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#layerProperties_rasterDisplay">?</a>'  ;
         htm+='    <select class="form-control " id="colorMapType"  >';
         htm+='                          <option value="grayscale" '+((display.colorMap=='grayscale')?'selected="selected"':'')+' >Grayscale</option>';
         htm+='                          <option value="pseudocolor" '+((display.colorMap=='pseudocolor')?'selected="selected"':'')+'>Pseudocolor</option>';
@@ -162,6 +168,7 @@ function RasterDisplayTab() {
       LayerHelper.setRasterDisplay(self.layer,self.display);
       var geoImageSource = self.parentDialog.mapContainer.sorceFactory.createGeoImageSource(layerCustom.dataObj,self.parentDialog.mapContainer);
       self.layer.set('source',geoImageSource );
+      LayerHelper.setDisplayInLegend(self.layer,content.find('#displayInLegend').prop("checked"));
     });
    
   }

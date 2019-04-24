@@ -82,8 +82,8 @@ DlgVectorSearch.prototype.createUI=function(){
           }catch(ex){}
         }
         var geomArray=[];
-        if(self.layer){
-            var features = self.layer.getSource().getFeatures();
+        if(self.drawlayer){
+            var features = self.drawlayer.getSource().getFeatures();
             for(var i=0;i< features.length;i++){
               geomArray.push( features[i].getGeometry());
             }
@@ -612,8 +612,8 @@ DlgVectorSearch.prototype.createSpatialPanelUI=function(isActive){
       }catch(ex){}
     }
     var geomArray=[];
-    if(self.layer){
-        var features = self.layer.getSource().getFeatures();
+    if(self.drawlayer){
+        var features = self.drawlayer.getSource().getFeatures();
         for(var i=0;i< features.length;i++){
           geomArray.push( features[i].getGeometry());
         }
@@ -704,8 +704,8 @@ DlgVectorSearch.prototype.createSpatialPanelUI_actions=function(content){
   content.find('#drawLine').click(function(){self.drawShape('line'); });
 
   content.find('#clearShapes').click(function(){
-    if(self.layer){
-      self.layer.getSource().clear();
+    if(self.drawlayer){
+      self.drawlayer.getSource().clear();
   
     }
     self.tabSpatialContent.find('#applySpatialFilter').prop('checked',false);
@@ -725,25 +725,25 @@ DlgVectorSearch.prototype.createSpatialPanelUI_actions=function(content){
 }
 DlgVectorSearch.prototype.moveLayerToTop = function () {
   var map = this.mapContainer.map;
-  map.getLayers().remove(this.layer);
-  map.getLayers().push(this.layer);
+  map.getLayers().remove(this.drawlayer);
+  map.getLayers().push(this.drawlayer);
 }
 DlgVectorSearch.prototype.closed=function(){
   var map = this.mapContainer.map;
-   map.getLayers().remove(this.layer);
+   map.getLayers().remove(this.drawlayer);
    if(this.onLayerAddEventKey){
     ol.Observable.unByKey(this.onLayerAddEventKey);
    }
 }
-DlgVectorSearch.prototype.createLayer=function(){
+DlgVectorSearch.prototype.createDrawLayer=function(){
   var mapContainer = this.mapContainer;
   var map = mapContainer.map;
   var self=this;
-  if(!this.source){
-    this.source = new ol.source.Vector();
+  if(!this.drawsource){
+    this.drawsource = new ol.source.Vector();
   }
-    this.layer = new ol.layer.Vector({
-        source: this.source,
+    this.drawlayer = new ol.layer.Vector({
+        source: this.drawsource,
         custom: {
             type: 'drawing',
             keepOnTop:true,
@@ -768,7 +768,7 @@ DlgVectorSearch.prototype.createLayer=function(){
         // })
     });
   self.onLayerAddEventKey=  map.getLayers().on('add', function (e) {
-      if (e.element !== self.layer && e.element.get('custom')) {
+      if (e.element !== self.drawlayer && e.element.get('custom')) {
         if(!e.element.get('custom').keepOnTop){  
             
                   self.moveLayerToTop();
@@ -789,15 +789,15 @@ DlgVectorSearch.prototype.addShape=function(shape){
   var view = map.getView();
   var mapProjectionCode = view.getProjection().getCode();
   var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:3857'});
-  if(!this.layer){
-   this.createLayer();
+  if(!this.drawlayer){
+   this.createDrawLayer();
   }
   var features= format.readFeatures(shape, {
     featureProjection: mapProjectionCode
   });
 
-this.layer.getSource().addFeatures(features);
-this.layer.changed();
+this.drawlayer.getSource().addFeatures(features);
+this.drawlayer.changed();
 this.moveLayerToTop();
 }
 DlgVectorSearch.prototype.drawShape=function(shapeType){
@@ -808,8 +808,8 @@ DlgVectorSearch.prototype.drawShape=function(shapeType){
   var mapContainer = this.mapContainer;
   var map = mapContainer.map;
  
-  if(!self.layer){
-   self.createLayer();
+  if(!self.drawlayer){
+   self.createDrawLayer();
   }
 
   self.interaction = undefined;
@@ -830,7 +830,7 @@ DlgVectorSearch.prototype.drawShape=function(shapeType){
         }
         
         self.interaction = new ol.interaction.Draw({
-            source: self.source,
+            source: self.drawsource,
             type: type,
             geometryFunction:geometryFunction
         });

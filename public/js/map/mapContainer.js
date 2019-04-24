@@ -399,6 +399,11 @@ this.legend=legend;
  map.on('moveend', function() {self.refreshLegend()});
 
 
+ var scaleLineControl = new ol.control.CanvasScaleLine();
+    map.addControl(scaleLineControl);
+    this.scaleLineControl=scaleLineControl;
+
+
 
   var mapElement = map.getTarget();
   mapElement = typeof mapElement === "string" ? $("#" + mapElement) : $(mapElement);
@@ -453,7 +458,7 @@ this.legend=legend;
           };
       },{
           layerFilter: function(layer){
-            if(layer.get('custom') && (layer.get('custom').type=='measure' || layer.get('custom').type=='temp' )) 
+            if(layer.get('custom') && (layer.get('custom').type=='measure' || layer.get('custom').type=='temp' || layer.get('custom').hiddenInToc )) 
                 return false;
             else
                 return true;
@@ -463,6 +468,7 @@ this.legend=legend;
       if (featureAt && featureAt.feature) {
         var fieldsDic={};
         var fields=null;
+        var anyData=false;
         if(featureAt.layer){
             fields= LayerHelper.getFields(featureAt.layer);
             if(fields){
@@ -493,7 +499,9 @@ this.legend=legend;
           content += '<tbody>';
           var properties = feature.getProperties();
           var geom = feature.getGeometry();
+          
           if(fields){
+            anyData=true;
             for(var i=0;i< fields.length;i++){
                 var fld= fields[i];
                 var fldName=fld.name;
@@ -506,6 +514,7 @@ this.legend=legend;
                     visible= !fld.hidden;
                 }
                 if(visible){
+                   
                     var key= fldName;
                     content += '<tr>';
                     content += '<td>';
@@ -520,6 +529,7 @@ this.legend=legend;
           }else{
             for (var key in properties) {
                 if (key !== 'geometry') {
+                    anyData=true;
                     content += '<tr>';
                     content += '<td>';
                     content +=  fieldsDic[key] || key;
@@ -531,38 +541,38 @@ this.legend=legend;
                 }
             }
           }
-          
-         if (geom instanceof ol.geom.Polygon || geom instanceof ol.geom.MultiPolygon) {
-            var shapeArea = MapContainer.formatArea(geom);
-            content += '<tr>';
-            content += '<td><i class="text-info">';
-            content += 'ShapeArea' ;
-            content += '</i></td>';
-            content += '<td>';
-            content += shapeArea;
-            content += '</td>';
-            content += '</tr>';
-            var shapeLength = MapContainer.formatLength(geom);
-            content += '<tr>';
-            content += '<td><i class="text-info">';
-            content += 'ShapeLength' ;
-            content += '</i></td>';
-            content += '<td>';
-            content += shapeLength;
-            content += '</td>';
-            content += '</tr>';
-        } else if (geom instanceof ol.geom.LineString) {
-            var shapeLength = MapContainer.formatLength(geom);
-            content += '<tr>';
-            content += '<td><i class="text-info">';
-            content += 'ShapeLength' ;
-            content += '</i></td>';
-            content += '<td>';
-            content += shapeLength;
-            content += '</td>';
-            content += '</tr>';
-        }
-          
+         if(false){ 
+            if (geom instanceof ol.geom.Polygon || geom instanceof ol.geom.MultiPolygon) {
+                var shapeArea = MapContainer.formatArea(geom);
+                content += '<tr>';
+                content += '<td><i class="text-info">';
+                content += 'ShapeArea' ;
+                content += '</i></td>';
+                content += '<td>';
+                content += shapeArea;
+                content += '</td>';
+                content += '</tr>';
+                var shapeLength = MapContainer.formatLength(geom);
+                content += '<tr>';
+                content += '<td><i class="text-info">';
+                content += 'ShapeLength' ;
+                content += '</i></td>';
+                content += '<td>';
+                content += shapeLength;
+                content += '</td>';
+                content += '</tr>';
+            } else if (geom instanceof ol.geom.LineString) {
+                var shapeLength = MapContainer.formatLength(geom);
+                content += '<tr>';
+                content += '<td><i class="text-info">';
+                content += 'ShapeLength' ;
+                content += '</i></td>';
+                content += '<td>';
+                content += shapeLength;
+                content += '</td>';
+                content += '</tr>';
+            }
+          }
           content += '</tbody>';
           content += '</table>';
 
@@ -574,8 +584,10 @@ this.legend=legend;
               labelPoint = ol.extent.getCenter(geom.getExtent());
           }
           //popup.show(labelPoint, content); 
-          popup.show(coordinate, content);
-          popup.getElement().parentNode.style.zIndex= 500 + map.getOverlays().getLength();
+          if(anyData){
+            popup.show(coordinate, content);
+            popup.getElement().parentNode.style.zIndex= 500 + map.getOverlays().getLength();
+          }
       }
   });
 }
@@ -940,7 +952,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                     baseLayer: layerInfo.custom.baseLayer,
                     type: 'ol.layer.Tile',
                     source: 'ol.source.WMS',
-                    dataObj: dataObj
+                    dataObj: dataObj,
+                    displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:false
                 }
             });
             var layerTasks= new LayerTasks(this.app,this,newLayer,{});
@@ -959,7 +972,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                 baseLayer: layerInfo.custom.baseLayer,
                 type: 'ol.layer.Tile',
                 source: 'ol.source.OSM',
-                dataObj: layerInfo.custom.dataObj
+                dataObj: layerInfo.custom.dataObj,
+                displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:false
             }
         });
         var layerTasks= new LayerTasks(this.app,this,newLayer,{});
@@ -978,7 +992,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                 source: 'ol.source.BingMaps',
                 key: layerInfo.custom.key,
                 imagerySet: layerInfo.custom.imagerySet,
-                dataObj: layerInfo.custom.dataObj
+                dataObj: layerInfo.custom.dataObj,
+                displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:false
             }
         });
         var layerTasks= new LayerTasks(this.app,this,newLayer,{});
@@ -996,7 +1011,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                 type: 'ol.layer.Tile',
                 source: 'ol.source.XYZ',
                 params: layerInfo.custom.params,
-                dataObj: layerInfo.custom.dataObj
+                dataObj: layerInfo.custom.dataObj,
+                displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:false
             }
         });
         var layerTasks= new LayerTasks(this.app,this,newLayer,{});
@@ -1042,7 +1058,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                           format: 'ol.format.GeoJSON',
                           shapeType:dataObj.details.shapeType,
                           source_schema_updatedAt:layerInfo.custom.source_schema_updatedAt,
-                          dataObj: dataObj
+                          dataObj: dataObj,
+                          displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:true
                       }
                   });
                   newLayer.setStyle(renderer.findStyleFunction(newLayer));
@@ -1089,7 +1106,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                         source: 'ol.source.Vector',
                         format: 'ol.format.WFS',
                         shapeType:dataObj.details.shapeType,
-                        dataObj: dataObj
+                        dataObj: dataObj,
+                        displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:true
                     }
                 });
                 newLayer.setStyle(renderer.findStyleFunction(newLayer));
@@ -1136,7 +1154,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                         source: 'ol.source.Vector',
                         format: 'ol.format.OSMXML',
                         shapeType:dataObj.details.shapeType,
-                        dataObj: dataObj
+                        dataObj: dataObj,
+                        displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:true
                     }
                 });
                 newLayer.setStyle(renderer.findStyleFunction(newLayer));
@@ -1168,7 +1187,8 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                         type: 'ol.layer.Image',
                         source: 'ol.source.GeoImage',
                         dataObj: dataObj,
-                        source_schema_updatedAt:layerInfo.custom.source_schema_updatedAt
+                        source_schema_updatedAt:layerInfo.custom.source_schema_updatedAt,
+                        displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:false
                     }
                 });
               var layerTasks= new LayerTasks(this.app,this,newLayer,{});
@@ -1203,7 +1223,8 @@ MapContainer.prototype.addData = function(dataObj) {
                 source: 'ol.source.Vector',
                 format: 'ol.format.GeoJSON',
                 source_schema_updatedAt :dataObj.updatedAt,
-                dataObj: dataObj
+                dataObj: dataObj,
+                displayInLegend:true
             }
         }
         newLayer= this.addLayer(layerInfo); 
@@ -1215,7 +1236,8 @@ MapContainer.prototype.addData = function(dataObj) {
                 source: 'ol.source.GeoImage',
                 source_schema_updatedAt :dataObj.updatedAt,
                 
-                dataObj: dataObj
+                dataObj: dataObj,
+                displayInLegend:true
             }
         }
         newLayer= this.addLayer(layerInfo); 
@@ -1229,7 +1251,8 @@ MapContainer.prototype.addData = function(dataObj) {
                 params:dataObj.params,
                 dataObj: {
                     details:dataObj.details
-                }
+                },
+                displayInLegend:false
             }
         };
         if (dataObj.type == 'BingMaps') {
@@ -2348,14 +2371,17 @@ MapContainer.prototype.refreshLegend_immediate=function(){
         if(!custom){
             continue;
         }
-        if(custom.type === 'ol.layer.Vector'){
-            
-            this.refresh_addLayer(layer);
+        if(custom.displayInLegend){
+            if(custom.type === 'ol.layer.Vector'){
+                this.refreshLegend_addVectorLayer(layer);
+            }else if (custom.type === 'ol.layer.Image' && custom.source==='ol.source.GeoImage'){
+                this.refreshLegend_addRasterLayer(layer);  
+            }
         }
     }
   
 }
-MapContainer.prototype.refresh_addLayer=function(layer){
+MapContainer.prototype.refreshLegend_addVectorLayer=function(layer){
     var legend=this.legend;
     var shapeType= LayerHelper.getShapeType( layer);
     var renderer= LayerHelper.getRenderer( layer);
@@ -2449,7 +2475,91 @@ if(i==items.length-1 && !toValue){
     }
 
 }
+MapContainer.prototype.refreshLegend_addRasterLayer=function(layer){
+    var legend=this.legend;
+    var id= LayerHelper.getDatasetId(layer);
+    if(!id){
+        return;
+    }  
+  
+    
+    legend.addRow({ 
+      title: layer.get('title'), 
+      imgSrc:'/datalayer/' + id + '/thumbnail',
+      data:{
+        layer:layer,
+        imgSrc:'/datalayer/' + id + '/thumbnail'
+          }
+      });
+//     if(renderer.name=='uniqueValueRenderer'){
+//         var items=renderer.getUniqueValueInfos();
+//         var i=0;
+//         legend.addRow({ 
+//             title: renderer.field, 
+//             style: undefined,
+//             leftOffset:10,
+//             data:{
+//                 layer:layer
+//             }
+//             });
+//         for(var key in items){
+//           var item= items[key];
+//           var style= StyleFactory.cloneStyle(item['style']);
+//           legend.addRow({ 
+//             title: item['value'], 
+//             typeGeom: shapeType,
+//             style: style,
+//             leftOffset:10,
+//             data:{
+//                 layer:layer,
+//                 style:item['style']
+//             }
+//             });
 
+//           i++;
+//         }
+
+//     }else if(renderer.name=='rangeValueRenderer'){
+//         var items=renderer.getRangeValueInfos();
+        
+//         legend.addRow({ 
+//             title: renderer.field, 
+//             style: undefined,
+//             leftOffset:10,
+//             data:{
+//                 layer:layer
+//             }
+//             });
+//         for(var i=0;i<items.length;i++){
+//           var item= items[i];
+//           var fromValue= item['minValue'] || '';
+//           var toValue= item['maxValue'] || '';
+//           var caption=fromValue +' - '+toValue
+// if(i==0 && !fromValue){
+//     caption= '< '+toValue;
+// }
+// if(i==items.length-1 && !toValue){
+//     caption='>= ' +fromValue;
+// }
+//         var style= StyleFactory.cloneStyle(item['style']);
+
+//           legend.addRow({ 
+//             title: caption, 
+//             typeGeom: shapeType,
+//             style:style ,
+//             leftOffset:10,
+//             data:{
+//                 layer:layer,
+//                 style:item['style']
+//             }
+//             });
+
+        
+//         }
+
+//     }
+
+}
 MapContainer.prototype.duplicateLayer=function(layer,options){
     if(!layer){
         return;

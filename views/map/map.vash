@@ -129,6 +129,14 @@
         overflow-x:hidden;
 
     }
+    @@media print {
+         .ol-legend {
+             display: block; 
+        }
+        .ol-legend .ol-closebox{
+            display:none!important;
+        }
+    }
 </style>
         
     })
@@ -427,6 +435,7 @@
     <script src="/js/map/custom/ol-ext/FontAwesomeDef.js"></script>
     <script src="/js/map/custom/ol-ext/GeoImage.js"></script>
     <script src="/js/map/custom/ol-ext/Legend.js"></script>
+    <script src="/js/map/custom/ol-ext/CanvasScaleLine.js"></script>
     
     
     <script src="/js/map/LayerHelper.js"></script>
@@ -470,6 +479,8 @@
     <script src="/js/map/tasks/dlgHillshade.js"></script>
     <script src="/js/map/tasks/dlgRasterClassify.js"></script>
     <script src="/js/map/tasks/dlgRasterPointBasedFloodArea.js"></script>
+    <script src="/js/map/tasks/dlgRasterClip.js"></script>
+    
     
     
     

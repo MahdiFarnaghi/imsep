@@ -238,7 +238,7 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
         }
     };
     self.transactFeature=transactFeature;
-    var defaultSelectionStyle=new ol.style.Style({
+    var defaultSelectionStyle= new ol.style.Style({
         stroke: new ol.style.Stroke({
             color: '#FF2828',
             width:2
@@ -257,7 +257,15 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
         hitTolerance:5,
         layers: [vector],
         style: function(f,r){
-            return defaultSelectionStyle;
+            return [
+                defaultSelectionStyle
+                ,
+                new ol.style.Style({
+                    image: new ol.style.RegularShape({ radius: 4, points:4, fill: new ol.style.Fill({ color: '#f00' }) }),
+                    geometry: new ol.geom.MultiPoint([f.getGeometry().getFirstCoordinate(),f.getGeometry().getLastCoordinate()])
+                  })
+                ]
+                ;
             // if(!vector.get('renderer')){
             //     return defaultSelectionStyle;
             // }

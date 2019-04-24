@@ -75,8 +75,15 @@ function LayerStyleTab() {
     var htm='<div><form id="'+ self.tabId+'_form" class="modal-body form-horizontal">'; 
 
     htm+='<div class="form-group">';
-    htm+='  <label class="col-sm-3" for="rendererType">Display type:</label>';
+    htm+='  <label class="col-sm-offset-1_ col-sm-12 checkbox">';
     htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#layerProperties_style">?</a>'  ;
+    htm+='   <input type="checkbox" id="displayInLegend" name="displayInLegend" ' +((LayerHelper.getDisplayInLegend(this.layer))? 'checked="checked"':'')  +' value="" /> Show in legend';
+    htm+='</label>';
+    htm+='</div>';
+
+    htm+='<div class="form-group">';
+    htm+='  <label class="col-sm-3" for="rendererType">Display type:</label>';
+    //htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#layerProperties_style">?</a>'  ;
     htm+='    <select class="form-control " id="rendererType" >';
     htm+='                          <option value="simpleRenderer" '+((renderer.name=='simpleRenderer')?'selected="selected"':'')+' >Simple</option>';
     htm+='                          <option value="uniqueValueRenderer" '+((renderer.name=='uniqueValueRenderer')?'selected="selected"':'')+'>Unique values</option>';
@@ -113,7 +120,6 @@ function LayerStyleTab() {
     self.populateRendererPanel();
     
     
-
     var $form = $(content.find('#'+self.tabId +'_form'));
 
             
@@ -154,6 +160,8 @@ function LayerStyleTab() {
         //self.layer.set('featureLabeler',featureLabeler);
         LayerHelper.setRenderer(self.layer,self.renderer);
       }
+
+      LayerHelper.setDisplayInLegend(self.layer,content.find('#displayInLegend').prop("checked"));
     });
   }
   LayerStyleTab.prototype.populateRendererPanel=function(){

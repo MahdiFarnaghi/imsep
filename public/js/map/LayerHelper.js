@@ -1,4 +1,11 @@
 var LayerHelper={
+    getDatasetId:function(layer){
+        var layerCustom= layer.get('custom');
+        if(layerCustom && layerCustom.dataObj){
+           return layerCustom.dataObj.id;
+        }else
+         return undefined;
+     },
     getDetails:function(layer){
        var layerCustom= layer.get('custom');
        if(layerCustom && layerCustom.dataObj){
@@ -70,11 +77,26 @@ var LayerHelper={
          layerCustom['shapeType']=shapetype;
          details.shapeType=shapetype;
      },
+     getDisplayInLegend:function(layer){
+        var layerCustom= layer.get('custom');
+        if(layerCustom && typeof layerCustom['displayInLegend'] !==undefined)
+         {
+             return layerCustom['displayInLegend'];
+         }
+        
+        return false;
+     },
+     setDisplayInLegend:function(layer,displayInLegend){
+        var layerCustom= layer.get('custom');
+        if(layerCustom){
+         layerCustom['displayInLegend']=displayInLegend;
+        }
+     },
      getRenderer:function(layer){
         var renderer= layer.get('renderer');
         if(renderer)
             return renderer;
-        var layerCustom= layer.get('custom');
+        var layerCustom= layer.get('c');
         
         
         if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.details ){
