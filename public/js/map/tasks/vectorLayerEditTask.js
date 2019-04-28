@@ -615,7 +615,7 @@ this._toolbar.addControl(editAttribute);
                 geometryFunction: function(coordinates, geometry) {
                     if (geometry) geometry.setCoordinates(coordinates);
                     else geometry = new ol.geom.LineString(coordinates);
-                   
+                    this.nbpts = geometry.getCoordinates().length;
                     return geometry;
                     }
             });
@@ -692,6 +692,23 @@ this._toolbar.addControl(editAttribute);
         //         })
         //     ]
         // })
+        ,bar: new ol.control.Bar({
+            controls: [new ol.control.TextButton({
+                    html: 'Undo', //'<i class="fa fa-mail-reply"></i>',
+                    title: "Undo last point",
+                    handleClick: function() {
+                        if (self.interaction.nbpts > 1) self.interaction.removeLastPoint();
+                    }
+                }),
+                new ol.control.TextButton({
+                    html: 'Finish',
+                    title: "Finish",
+                    handleClick: function() { // Prevent null objects on finishDrawing
+                        if (self.interaction.nbpts > 2) self.interaction.finishDrawing();
+                    }
+                })
+            ]
+        })
     });
     this.drawLine = drawLine;
     if (!shapeType || shapeType == 'Line' || shapeType == 'Polyline' || shapeType == 'MultiLineString') {
@@ -741,6 +758,7 @@ this._toolbar.addControl(editAttribute);
                 type: 'Polygon',
                 source: vector.getSource(),
                 geometryFunction: function(coordinates, geometry) {
+                    this.nbpts = coordinates[0].length;
                     if (geometry) geometry.setCoordinates([coordinates[0].concat([coordinates[0][0]])]);
                     else geometry = new ol.geom.Polygon(coordinates);
                    
@@ -803,25 +821,25 @@ this._toolbar.addControl(editAttribute);
         //         return geometry;
         //     }
         // })
-        // ,
-        // // Options bar ssociated with the control
-        // bar: new ol.control.Bar({
-        //     controls: [new ol.control.TextButton({
-        //             html: 'undo', //'<i class="fa fa-mail-reply"></i>',
-        //             title: "undo last point",
-        //             handleClick: function() {
-        //                 if (drawPolygon.getInteraction().nbpts > 1) drawPolygon.getInteraction().removeLastPoint();
-        //             }
-        //         }),
-        //         new ol.control.TextButton({
-        //             html: 'finish',
-        //             title: "finish",
-        //             handleClick: function() { // Prevent null objects on finishDrawing
-        //                 if (drawPolygon.getInteraction().nbpts > 3) drawPolygon.getInteraction().finishDrawing();
-        //             }
-        //         })
-        //     ]
-        // })
+        ,
+        // Options bar ssociated with the control
+        bar: new ol.control.Bar({
+            controls: [new ol.control.TextButton({
+                    html: 'Undo', //'<i class="fa fa-mail-reply"></i>',
+                    title: "Undo last point",
+                    handleClick: function() {
+                        if (self.interaction.nbpts > 1) self.interaction.removeLastPoint();
+                    }
+                }),
+                new ol.control.TextButton({
+                    html: 'Finish',
+                    title: "Finish",
+                    handleClick: function() { // Prevent null objects on finishDrawing
+                        if (self.interaction.nbpts > 3) self.interaction.finishDrawing();
+                    }
+                })
+            ]
+        })
     });
     this.drawPolygon = drawPolygon;
     if (!shapeType || shapeType == 'Polygon' || shapeType == 'MultiPolygon') {
