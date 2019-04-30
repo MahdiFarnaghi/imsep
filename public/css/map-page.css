@@ -245,7 +245,9 @@
     height: 2em;
     width: 142px;
 }
-
+.colorpicker-element .input-group-addon i.raster-color {
+  width: 40px;
+}
 #style_sampleContainer{
   position: absolute;
     top: 1em;

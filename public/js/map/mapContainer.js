@@ -391,7 +391,18 @@ var legend = new ol.control.Legend({
 
     }
     if(e.row && e.row.data && e.row.data.layer){
-        self.showLayerProperties(e.row.data.layer,1);
+
+       var custom= e.row.data.layer.get('custom');
+       var activeTab=1;
+        if(custom && custom.displayInLegend){
+            if(custom.type === 'ol.layer.Vector'){
+                activeTab=1;
+            }else if (custom.type === 'ol.layer.Image' && custom.source==='ol.source.GeoImage'){
+                activeTab=3;
+            }
+        }
+
+        self.showLayerProperties(e.row.data.layer,activeTab);
     }
   });
 this.legend=legend;
@@ -2481,16 +2492,52 @@ MapContainer.prototype.refreshLegend_addRasterLayer=function(layer){
     if(!id){
         return;
     }  
-  
-    
+    var details= LayerHelper.getDetails(layer);
+    var display=details.display;
+    var showColorMap=false;
+    var customColorMap=undefined;
+    if(display && display.displayType=='colorMap' && display.colorMap=='custom' && display.customColorMap && display.customColorMap.length){
+        showColorMap=true;
+        customColorMap= display.customColorMap;
+    }
+
     legend.addRow({ 
-      title: layer.get('title'), 
-      imgSrc:'/datalayer/' + id + '/thumbnail',
-      data:{
+    title: layer.get('title'), 
+    imgSrc:'/datalayer/' + id + '/thumbnail',
+    data:{
         layer:layer,
         imgSrc:'/datalayer/' + id + '/thumbnail'
-          }
-      });
+        }
+    });
+
+    if(!showColorMap){
+        return;
+    }
+
+    if(customColorMap){
+        for(var i=0;i<customColorMap.length;i++){
+            var item= customColorMap[i];
+            var caption= item.caption;
+            if(typeof caption==='undefined' || caption===''){
+                caption= item.value;
+            }
+            var color='rgba('+item.r + ','+item.g+','+item.b+','+ (item.a/255).toFixed(2)+')';
+            var fill = new ol.style.Fill({color: color});
+            var stroke = new ol.style.Stroke({ color: color,width: 1});
+            var style = new ol.style.Style({fill: fill,stroke: stroke});
+            legend.addRow({ 
+                            title: caption, 
+                            typeGeom: 'Polygon',
+                            style: style,
+                            leftOffset:10,
+                            data:{
+                                layer:layer,
+                                style:style
+                            }
+                            });
+        }
+    }
+
 //     if(renderer.name=='uniqueValueRenderer'){
 //         var items=renderer.getUniqueValueInfos();
 //         var i=0;

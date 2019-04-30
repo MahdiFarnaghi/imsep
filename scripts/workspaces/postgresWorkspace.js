@@ -2174,14 +2174,33 @@ class PostgresWorkspace {
         if (display.displayType == 'colorMap') {
             var band = display.band;
             var colorMap = display.colorMap;
+            var colorMapstr=colorMap;
             apply_reclass = true; //note: ST_ColorMap without reclassifying generate reverse grayscale
+            if(colorMap=='custom'){
+                apply_reclass=false;
+                var customColorMap=display.customColorMap ||[];
+                colorMapstr=''; 
+                for(var c=0;c<customColorMap.length;c++){
+                    if(colorMapstr){
+                        colorMapstr += '\n';
+                    }
+                    var CI=customColorMap[c];
+                    if(CI){
+                        colorMapstr+= `${CI.value} ${CI.r} ${CI.g} ${CI.b} ${CI.a}`;
+                        if(customColorMap.length==1){
+                            colorMapstr += '\n';
+                            colorMapstr+= `${CI.value} ${CI.r} ${CI.g} ${CI.b} ${CI.a}`;
+                        }
+                    }
+                }
+            }
             if (!apply_reclass) {
                 queryText = `SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
     FROM ( Select 
               ST_Transform(
                ST_ColorMap(
                    ST_Union(${rasterField},${band})
-                   ,1,'${colorMap}'
+                   ,1,'${colorMapstr}'
                 ) 
                 ,${srid},'Bilinear'
               ) as raster

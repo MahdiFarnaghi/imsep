@@ -192,6 +192,8 @@ ol.control.Legend.prototype.refresh = function() {
       var img = document.createElement('img');
       img.src= imageData;
       img.style.width = width + 'px';
+      img.style.height = height + 'px';
+      img.style.objectFit='contain';
       col.appendChild(img);
     }
     col.style.height = height + 'px';

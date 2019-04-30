@@ -91,8 +91,71 @@ function RasterDisplayTab() {
         htm+='                          <option value="pseudocolor" '+((display.colorMap=='pseudocolor')?'selected="selected"':'')+'>Pseudocolor</option>';
         htm+='                          <option value="fire" '+((display.colorMap=='fire')?'selected="selected"':'')+'>Fire</option>';
         htm+='                          <option value="bluered" '+((display.colorMap=='bluered')?'selected="selected"':'')+'>Bluered</option>';
+        htm+='                          <option value="custom" '+((display.colorMap=='custom')?'selected="selected"':'')+'>Custom</option>';
         htm+='    </select>';
         htm+='  </div>';
+
+        htm+='<div id="customColorMap" class="form-group">';
+        
+        htm+=' <table id="tblColors" class=" table order-list col-sm-12">';
+        htm+='  <thead>';
+        htm+='  <tr><td>Value</td><td>Color</td><td>Caption</td></tr>';
+        htm+='  </thead>';
+        htm+='  <tbody>';
+        var customColorMap=display.customColorMap ||[];
+        var counter=0;
+        if(customColorMap.length==0){
+          htm+='  <tr>';
+          var colorStr= StyleFactory.randomColor(null,1);
+          var cols = "";
+
+          cols += '<td><input type="text" class="form-control range-rasterValue nospinner" value=""  name="rasterValue' + counter + '"  data-val="true" data-val-required="Value is required"/><span class="field-validation-valid" data-valmsg-for="rasterValue'+counter+'" data-valmsg-replace="true"></span></td>';
+          cols += '<td>';
+          cols +='    <div id="fillColorPicker' + counter + '" class="input-group colorpicker-component">';
+          cols +='      <input type="text" value="'+colorStr+'" id="fillColor' + counter + '" class="colorpicker-item form-control" />';
+          cols +='      <span class="input-group-addon"><i class="raster-color" ></i></span>';
+          cols +='    </div>';
+          cols += '</td>';
+          cols += '<td><input type="text" class="form-control range-rasterCaption nospinner" value=""  name="rasterCaption' + counter + '" ></td>';
+          htm+=cols;
+          htm+='  </tr>';
+          counter++;
+        }else{
+          for(var i=0;i<customColorMap.length;i++){
+              var item= customColorMap[i];
+              
+              var color='rgba('+item.r + ','+item.g+','+item.b+','+ (item.a/255).toFixed(2)+')';
+              htm+='  <tr>';
+              var cols = "";
+
+              
+              cols += '<td><input type="text" class="form-control range-rasterValue nospinner" value="'+item.value+'"  name="rasterValue' + counter + '"  data-val="true" data-val-required="Value is required"/><span class="field-validation-valid" data-valmsg-for="rasterValue'+counter+'" data-valmsg-replace="true"></span></td>';
+              cols += '<td>';
+              cols +='    <div id="fillColorPicker' + counter + '" class="input-group colorpicker-component">';
+              cols +='      <input type="text" value="'+color+'" id="fillColor' + counter + '" class=" colorpicker-item form-control" />';
+              cols +='      <span class="input-group-addon"><i class="raster-color" ></i></span>';
+              cols +='    </div>';
+              cols += '</td>';
+              cols += '<td><input type="text" class="form-control range-rasterCaption nospinner" value="'+(item.caption||'')+'"  name="rasterCaption' + counter + '" ></td>';
+
+            //  if(i>0){
+                cols +=' <td><button type="button" class="ibtnDel btn btn-xs btn-danger	"  title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button></td>';
+            //  }
+              htm+=cols;
+              htm+='  </tr>';
+              counter++;
+          }
+        }
+        htm+='  </tbody>';
+        htm+='  <tfoot>';
+        htm+='         <tr>';
+        htm+='   <td colspan="4" style="text-align: left;"><input type="button" class="btn btn-lg btn-block " id="addRange" value="Add Range" /></td>';
+        htm+='  </tr>';
+        htm+='  </tfoot>';
+        htm+='  </table>';
+        htm+='</div>';
+
+
 
         htm+='  <div class="form-group">';
         htm+='    <label class="" for="minimum">Minimum</label>';
@@ -113,7 +176,19 @@ function RasterDisplayTab() {
   
     content.find('#colorMapType').change(function(){
       self.display.colorMap=  $(this).val();
+      if(self.display.colorMap==='custom'){
+        content.find('#customColorMap').show();
+      }else{
+        content.find('#customColorMap').hide();
+      }
     });
+    if(self.display.colorMap==='custom'){
+      content.find('#customColorMap').show();
+    }else{
+      content.find('#customColorMap').hide();
+    }
+
+
     content.find('#minimum').change(function(){
       self.display.minimum=  $(this).val();
       if(typeof self.display.maximum !='undefined'){
@@ -131,14 +206,44 @@ function RasterDisplayTab() {
         }
       }
     });
-   
+
+    content.find()
+    content.find("#addRange").on("click", function () {
+      var newRow = $("<tr>");
+      var colorStr= StyleFactory.randomColor(null,1);
+      var cols = "";
+
+      cols += '<td><input type="text" class="form-control range-rasterValue nospinner" value=""  name="rasterValue' + counter + '"  data-val="true" data-val-required="Value is required"/><span class="field-validation-valid" data-valmsg-for="rasterValue'+counter+'" data-valmsg-replace="true"></span></td>';
+      cols += '<td>';
+      cols +='    <div id="fillColorPicker' + counter + '" class="input-group colorpicker-component">';
+      cols +='      <input type="text" value="'+colorStr+'" id="fillColor' + counter + '" class="colorpicker-item form-control" />';
+      cols +='      <span class="input-group-addon"><i class="raster-color" ></i></span>';
+      cols +='    </div>';
+      cols += '</td>';
+      cols += '<td><input type="text" class="form-control range-rasterCaption nospinner" value=""  name="rasterCaption' + counter + '" ></td>';
+      cols +=' <td><button type="button" class="ibtnDel btn btn-xs btn-danger	"  title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button></td>';
+      newRow.append(cols);
+      content.find("#tblColors").append(newRow);
+      content.find("#tblColors .colorpicker-component").colorpicker();
+      counter++;
+  });
+  content.find("#tblColors").on("click", ".ibtnDel", function (event) {
+    $(this).closest("tr").remove();       
+    counter -= 1
+  });
+  
+
+content.find("#tblColors .colorpicker-component").colorpicker();
+
+
+
    var $form = $(content.find('#'+self.tabId+'_form'));
     
      
     this.parentDialog.beforeApplyHandlers.push(function(evt){
          
           var orIgnore= $.validator.defaults.ignore;
-          $.validator.setDefaults({ ignore:'' });
+          $.validator.setDefaults({ ignore: ":hidden" });
           $.validator.unobtrusive.parse($form);
           $.validator.setDefaults({ ignore:orIgnore });
 
@@ -165,6 +270,56 @@ function RasterDisplayTab() {
       
     });
     this.parentDialog.applyHandlers.push(function(evt){
+      var customColorMap=[];
+      content.find('#tblColors > tbody  > tr').each(function() {
+        var rasterValue=$(this).find('.range-rasterValue').val();
+        var rasterCaption=$(this).find('.range-rasterCaption').val();
+        var color= $(this).find('.colorpicker-component').data('colorpicker').color;
+       
+        if(color){
+          var rgb = color.toRGB()
+          customColorMap.push({
+            caption:rasterCaption,
+            value:rasterValue,
+            r:rgb.r,
+            g:rgb.g,
+            b:rgb.b,
+            a:rgb.a*255
+          })
+        }else{
+          customColorMap.push({
+            caption:rasterCaption,
+            value:rasterValue,
+            r:0,
+            g:0,
+            b:0,
+            a:0
+          })
+        }
+         
+
+      });
+      customColorMap.sort(function(a,b){
+        var aV=a.value+'';
+        var bV=b.value+'';
+        try{
+          if(!isNaN(aV) && !isNaN(bV)){
+            return parseFloat(bV)- parseFloat(aV);
+          }else{
+            if(bV.indexOf('%')>=0 && aV.indexOf('%')>=0){
+              bV= bV.replace('%','');
+              aV=aV.replace('%','');
+              return parseFloat(bV)- parseFloat(aV);
+            }else{
+              return bV>aV;
+            }
+          }
+        }
+        catch(ex){
+          return 0;
+        }
+      });
+      self.display.customColorMap=customColorMap;
       LayerHelper.setRasterDisplay(self.layer,self.display);
       var geoImageSource = self.parentDialog.mapContainer.sorceFactory.createGeoImageSource(layerCustom.dataObj,self.parentDialog.mapContainer);
       self.layer.set('source',geoImageSource );
