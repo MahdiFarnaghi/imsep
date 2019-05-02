@@ -62,10 +62,13 @@ module.exports = function(grunt) {
                 'public/js/map/custom/ol-ext/FontAwesomeDef.js',
                 'public/js/map/custom/ol-ext/GeoImage.js',
                 'public/js/map/custom/ol-ext/Legend.js',
+                'public/js/map/custom/ol-ext/CanvasScaleLine.js',
+                 
                 
                 
                 'public/js/map/LayerHelper.js',
-                
+                'public/js/map/PrintUtil.js',
+
                 'public/js/map/StyleFactory.js',
                 'public/js/map/renderers/simpleRenderer.js',
                 'public/js/map/renderers/uniqueValueRenderer.js',
@@ -77,6 +80,8 @@ module.exports = function(grunt) {
             
                 'public/js/map/sourceFactory.js',
                 'public/js/map/tasks/dlgTaskBase.js',
+                'public/js/map/tasks/dlgPrint.js',
+                
                 'public/js/map/tasks/layerTasks.js',
                 'public/js/map/tasks/vectorLayerSelectTask.js',
                 'public/js/map/tasks/vectorLayerEditTask.js',

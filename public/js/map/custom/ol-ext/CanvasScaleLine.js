@@ -15,6 +15,7 @@ ol.control.CanvasScaleLine = function(options)
 	if (!options) options={};
 	if (!options.style) options.style = new ol.style.Style();
 	this.setStyle(options.style);
+	this.custom=undefined;
 }
 ol.inherits(ol.control.CanvasScaleLine, ol.control.ScaleLine);
 /**
@@ -67,9 +68,18 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
 	var ctx = e.context;
 	// Get size of the scale div
 	var scalewidth = parseInt(this.olscale.style.width);
+	if(this.custom && this.custom.width ){
+		scalewidth= this.custom.width;
+	}
 	if (!scalewidth) return;
 	var text = this.olscale.textContent;
 	var position = {left: this.element.offsetLeft, top: this.element.offsetTop};
+	if(this.custom && typeof this.custom.left !=='undefined' ){
+		position.left= this.custom.left;
+	}
+	if(this.custom && typeof this.custom.top !=='undefined' ){
+		position.top= this.custom.top;
+	}
 	// Retina device
 	var ratio = e.frameState.pixelRatio;
 	ctx.save();
@@ -91,7 +101,11 @@ ol.control.CanvasScaleLine.prototype.drawScale_ = function(e)
     ctx.lineWidth = this.fontStrokeWidth_;
     ctx.textAlign = "center";
 	ctx.textBaseline ="bottom";
-    ctx.font = this.font_;
+	if(this.custom && typeof this.custom.font !=='undefined' ){
+		ctx.font = this.custom.font;
+	}else{
+		ctx.font = this.font_;
+	}
 	ctx.strokeText(text, position.left+scalewidth/2, position.top);
     ctx.fillText(text, position.left+scalewidth/2, position.top);
 	ctx.closePath();

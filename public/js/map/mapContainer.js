@@ -414,6 +414,7 @@ this.legend=legend;
     map.addControl(scaleLineControl);
     this.scaleLineControl=scaleLineControl;
 
+ 
 
 
   var mapElement = map.getTarget();

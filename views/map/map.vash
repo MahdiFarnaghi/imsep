@@ -20,7 +20,8 @@
         <style>
         .ol-search.nominatim {
             position: absolute!important;
-            top: 45px!important;
+           /* top: 45px!important;*/
+            top: 4em!important;
                 right: 0.5em;
             left: auto;
         }
@@ -128,6 +129,11 @@
     .tab-fixed-height{
         overflow-y:auto;
         overflow-x:hidden;
+
+    }
+    .printpdf{
+        right: 0.5em;
+			top: 6.3em;
 
     }
     @@media print {
@@ -423,6 +429,11 @@
 
     <script src="/js/lib/proj4.js"></script>
     <script src="/js/lib/ol.js"></script>
+    
+    <script src="/js/lib/jspdf/html2canvas.js"></script>
+    <script src="/js/lib/jspdf/jspdf.min.js"></script>
+    
+
 @if(process.env.NODE_ENV=='development'){
     
     <script src="/js/map/custom/ol-ext/Transform.js"></script>
@@ -440,8 +451,11 @@
     
     
     <script src="/js/map/LayerHelper.js"></script>
-    
+    <script src="/js/map/PrintUtil.js"></script>
+
     <script src="/js/map/StyleFactory.js"></script>
+    
+
     <script src="/js/map/renderers/simpleRenderer.js"></script>
     <script src="/js/map/renderers/uniqueValueRenderer.js"></script>
     <script src="/js/map/renderers/rangeValueRenderer.js"></script>
@@ -452,6 +466,7 @@
 
     <script src="/js/map/sourceFactory.js"></script>
     <script src="/js/map/tasks/dlgTaskBase.js"></script>
+    <script src="/js/map/tasks/dlgPrint.js"></script>
     <script src="/js/map/tasks/layerTasks.js"></script>
     <script src="/js/map/tasks/vectorLayerSelectTask.js"></script>
     <script src="/js/map/tasks/vectorLayerEditTask.js"></script>

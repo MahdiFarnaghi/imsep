@@ -207,6 +207,12 @@ var pageTask={
                  event.preventDefault();
            }
         });
+        frmMap.find('#name').change(function(event) {
+            app.mapContainer.mapSettings.name=$(this).val();
+        });
+        frmMap.find('#description').change(function(event) {
+            app.mapContainer.mapSettings.description=$(this).val();
+        });
         $('#cmdSaveMap').click(function(){
             self.saveMap(frmMap,false);
             
