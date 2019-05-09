@@ -34,6 +34,7 @@
         padding-left: 5px;
         padding-right: 5px;
     }
+ 
 </style>
 
 
@@ -162,6 +163,8 @@
  @html.block('scripts', function(model) {
     <script>
         $(document).ready(function () {
+        
+
             $("#tblItems_search").on("keyup change", function () {
                 var value = $(this).val().toLowerCase();
                 $("#tblItems .listItem").filter(function () {

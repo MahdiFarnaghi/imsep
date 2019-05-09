@@ -185,6 +185,9 @@ app.use(async function (req, res, next) {
     
     if (res.locals.user) {
         res.locals.identity.name = res.locals.user.userName;
+        res.locals.identity.firstName = res.locals.user.firstName;
+        res.locals.identity.lastName = res.locals.user.lastName;
+        res.locals.identity.email = res.locals.user.email;
         res.locals.identity.id=res.locals.user.id;
         
         var roles = res.locals.user.BelongsToGroups.map(v => {

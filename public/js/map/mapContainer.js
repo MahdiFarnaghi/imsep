@@ -414,7 +414,57 @@ this.legend=legend;
     map.addControl(scaleLineControl);
     this.scaleLineControl=scaleLineControl;
 
- 
+ var printpdf = new ol.control.Button (
+        {	
+            html: '<i class="fa fa-print"></i>',
+           // className: "hello",
+           
+            className:'myOlbutton24 printpdf',
+            title: "Print",
+            handleClick: function()
+                {	
+                    var dlg = new DlgPrint(self, {
+                            templates:PrintUtil.templates,
+                            activeTemplate:PrintUtil.activeTemplate
+                        }, {
+                        title:'Print',
+                        onapply:function(dlg,data){
+                            var thumbnail='';
+                            if(data && data.settings  && data.settings.template){
+                                thumbnail=data.settings.template.thumbnail;
+                                
+                            }
+
+                            //var msg='Generating <i style="display:inline" class="far fa-file-pdf">PDF file<i><br/><hr />';
+                            var msg='Generating PDF File<i><br/><hr />';
+                            msg+='    <img id="printThumbnail" style="object-fit: contain; height: 200px; object-position: center; box-shadow: #a4a4ad 10px 10px 10px;" src="'+thumbnail+'" class="img-thumbnail center-block"  height=""></img>';
+                            waitingDialog.show(msg, { progressType: ''});
+                            PrintUtil.print({
+                                mapContainer:self,
+                                settings:data.settings,
+                                onComplete:function(evt){
+                                    waitingDialog.hide();
+                                    if(!evt.status){
+                                        $.notify({
+                                            message: evt.message || 'Error: failed to generate PDF'
+                                        },{
+                                          z_index:50000,
+                                            type:'danger',
+                                            delay:10000,
+                                            animate: {
+                                                enter: 'animated fadeInDown',
+                                                exit: 'animated fadeOutUp'
+                                            }
+                                        }); 
+                                    }
+                                }
+                            })
+                        }
+                
+                      }).show();
+                }
+        });
+map.addControl(printpdf);
 
 
   var mapElement = map.getTarget();
@@ -447,6 +497,7 @@ this.legend=legend;
 
   });
   map.on('singleclick', function(evt) {
+      
     var ct=self.getCurrentTool();
     //if(!ct){
     //    return;

@@ -114,7 +114,10 @@
     
     <script>
         app.setIdentity(atob('@html.getBase64(model.identity)'));
+        app.SITE_NAME='@process.env.SITE_NAME';
         app.BING_MAPS_KEY='@process.env.BING_MAPS_KEY';
+        app.COPY_RIGHTS='@process.env.COPY_RIGHTS';
+        app.MAPS_COPY_RIGHTS='@process.env.MAPS_COPY_RIGHTS';
         app.set_UPLOAD_SHAPEFILE_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_SHAPEFILE_MAX_SIZE_MB')) ;
         app.set_UPLOAD_RASTER_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_RASTER_MAX_SIZE_MB')) ;
        

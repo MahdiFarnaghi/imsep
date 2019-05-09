@@ -559,6 +559,7 @@ RouteTasks.prototype.hideTab=function(){
     htm+='<i class="route-profile fa fa-lg fa-bus" data-profile="driving-hgv" title="Bus"></i>'; 
     htm+='<i class="route-profile fa fa-lg fa-bicycle" data-profile="cycling-regular" title="Bicycle"></i>'; 
     htm+='<i class="route-profile fa fa-lg fa-male" data-profile="foot-walking" title="Walking"></i>'; 
+    htm+='<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#Route">?</a>';
     htm+='</div>'; 
     htm+='<div class="" id="'+self.tabId+'_stops" >';
     htm+='</div>'; 

@@ -42,11 +42,12 @@ var StyleFactory={
     randomStyle:function(options){
         options=options||{};
         options.strokeWidth=  options.strokeWidth|| 1.25;
+        options.strokeColor= options.strokeColor ||'#3399CC';
         var fill = new ol.style.Fill({
-            color: StyleFactory.randomColor(null,0.5)
+            color: options.fillColor? options.fillColor:StyleFactory.randomColor(null,0.5)
           });
           var stroke = new ol.style.Stroke({
-            color: options.randomStrokeColor? StyleFactory.randomColor(null,0.7):'#3399CC',
+            color: options.randomStrokeColor? StyleFactory.randomColor(null,0.7):options.strokeColor,
             width: options.strokeWidth
           });
           var style = 

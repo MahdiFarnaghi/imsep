@@ -403,6 +403,7 @@ function LayerStyleTab() {
     }
 
     this.rendererContent.find('#cmdAddAllUniqueValues').click(function(){
+      var defSym=self.renderer.getDefaultStyle();
       var fldName= self.rendererContent.find('#renderer_field').val();
       var source= self.layer.getSource();
       var features = source.getFeatures();
@@ -420,7 +421,14 @@ function LayerStyleTab() {
       self.renderer.setField(fldName);
       self.renderer.ClearAllValues();
       for(var i=0;i< valueArray.length;i++){
-        self.renderer.addValue(valueArray[i],valueArray[i]+'',StyleFactory.randomStyle({randomStrokeColor:true,strokeWidth:2}));
+        if(shapeType=='Polygon'|| shapeType=='MultiPolygon'){
+          self.renderer.addValue(valueArray[i],valueArray[i]+'',StyleFactory.randomStyle({
+            randomStrokeColor:false,
+            strokeColor:defSym.getStroke().getColor(),
+            strokeWidth:defSym.getStroke().getWidth()}));  
+        }else{
+          self.renderer.addValue(valueArray[i],valueArray[i]+'',StyleFactory.randomStyle({randomStrokeColor:true,strokeWidth:defSym.getStroke().getWidth()}));
+        }
       }
       self.populateRendererPanel(); 
     });
@@ -488,8 +496,20 @@ function LayerStyleTab() {
       var fromValue= item['minValue'];
       var toValue= item['maxValue'];
       htm+='<tr>';
-      htm+='<td>' + ((typeof fromValue !=='undefined')?fromValue:'')  +'</td>' ;
-      htm+='<td>' + ((typeof toValue !=='undefined')?toValue:'')  +'</td>' ;
+      //htm+='<td>' + ((typeof fromValue !=='undefined')?fromValue:'')  +'</td>' ;
+      htm+='<td>';
+      if(typeof fromValue !=='undefined'){
+        htm+= '<input id="rvr_fromvalue'+i+'" name="rvr_fromvalue'+i+'" data-index="'+i+'" type="number" class="form-control nospinner" value="'+fromValue+'"   data-val="true" data-val-required="Value is required"/><span class="field-validation-valid" data-valmsg-for="rvr_fromvalue'+i+'" data-valmsg-replace="true"></span>'
+      }
+      htm+='</td>';
+      
+      //htm+='<td>' + ((typeof toValue !=='undefined')?toValue:'')  +'</td>' ;
+      htm+='<td>';
+      if(typeof toValue !=='undefined'){
+        htm+= '<input id="rvr_tovalue'+i+'" name="rvr_tovalue'+i+'" data-index="'+i+'" type="number" class="form-control nospinner" value="'+toValue+'"   data-val="true" data-val-required="Value is required"/><span class="field-validation-valid" data-valmsg-for="rvr_tovalue'+i+'" data-valmsg-replace="true"></span>'
+      }
+      htm+='</td>';
+     
       htm+='<td id="item_' +i +'"></td>' ;
       //htm+='<td></td>';
       htm +=' <td><button type="button" class="ibtnDel btn btn-xs btn-danger	" id="delete_'+i+'" data-index="'+i+'"  title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button></td>';
@@ -558,11 +578,31 @@ function LayerStyleTab() {
           self.populateRangeRenderer();
         }catch(ex){}
       });
+
+      this.rendererContent.find('#rvr_fromvalue'+i).change(function(e){
+        e.stopPropagation();
+        e.preventDefault();
+        try{
+          var index= $(this).data('index');
+          items[index].minValue= parseFloat($(this).val() );
+          self.populateRangeRenderer();
+        }catch(ex){}
+      });
+      this.rendererContent.find('#rvr_tovalue'+i).change(function(e){
+        e.stopPropagation();
+        e.preventDefault();
+        try{
+          var index= $(this).data('index');
+          items[index].maxValue= parseFloat($(this).val() );
+          self.populateRangeRenderer();
+        }catch(ex){}
+      });
       
     }
 
     this.rendererContent.find('#cmdCreateRangevalue').click(function(){
       var numberOnRanges=3;
+      var defSym=self.renderer.getDefaultStyle();
       var fldName= self.rendererContent.find('#renderer_field').val();
       var source= self.layer.getSource();
       var features = source.getFeatures();
@@ -628,11 +668,28 @@ function LayerStyleTab() {
                     toValue= valueArray[c];
                     // if(c+cR> valueArray.length)
                     //   toValue=undefined;
-                    self.renderer.addValue(fromValue,toValue,'',StyleFactory.randomStyle({randomStrokeColor:true,strokeWidth:2}));
+                    if(shapeType=='Polygon'|| shapeType=='MultiPolygon'){
+                        self.renderer.addValue(fromValue,toValue,'',StyleFactory.randomStyle({
+                          randomStrokeColor:false,
+                        strokeColor:defSym.getStroke().getColor(),
+                        strokeWidth:defSym.getStroke().getWidth()}));  
+                    }else{
+                      self.renderer.addValue(fromValue,toValue,'',StyleFactory.randomStyle({randomStrokeColor:true,strokeWidth:defSym.getStroke().getWidth()}));
+                    }
+                    
                     if(i+cR>= valueArray.length){
                       fromValue=toValue;
                       toValue=undefined;
-                      self.renderer.addValue(fromValue,toValue,'',StyleFactory.randomStyle({randomStrokeColor:true,strokeWidth:2}));
+                     
+                      if(shapeType=='Polygon'|| shapeType=='MultiPolygon'){
+                          self.renderer.addValue(fromValue,toValue,'',StyleFactory.randomStyle({
+                            randomStrokeColor:false,
+                          strokeColor:defSym.getStroke().getColor(),
+                          strokeWidth:defSym.getStroke().getWidth()}));  
+                        }else{
+                          self.renderer.addValue(fromValue,toValue,'',StyleFactory.randomStyle({randomStrokeColor:true,strokeWidth:defSym.getStroke().getWidth()}));
+                        }
+
                     }
                     
                 }
