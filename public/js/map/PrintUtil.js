@@ -9,7 +9,7 @@ var PrintData={
      a4p: {h:297, w:210},
      a5: {w:210, h:148},
      resolutions:{
-          'Coarse (fast)':72,
+          'Coarse (fast)':96,
           'Medium':150,
           'Fine (slow)':300
      },
@@ -1122,15 +1122,17 @@ var PrintUtil={
     },
     print_internal:function(options){
         var mapContainer=options.mapContainer;
+        
         var settings=options.settings;
         var template=settings.template;
         this.activeTemplate= template.name;
+        var downloadPDF=settings.downloadPDF?true:false;
         
         var map=mapContainer.map;
 
 
         var pageSize = template.pageSize;
-        var resolution = template.resolution || 72;
+        var resolution = template.resolution || 96;
         
         var mapFrame=template.mapFrame;
         var mapFrame_width = Math.round(mapFrame.width * resolution / 25.4);
@@ -1345,12 +1347,24 @@ var PrintUtil={
           
 
           var finalize=function(){
-               pdf.save('Map-'+template.name+'.pdf');
+               if(downloadPDF){
+                    pdf.save('Map-'+template.name+'.pdf');   
+               }else{
+                    window.open(pdf.output('bloburl'), '_blank');
+               }
+               //pdf.save('Map-'+template.name+'.pdf');
+               //pdf.output('dataurlnewwindow');
+               
                // Reset original map size
                mapContainer.scaleLineControl.custom=undefined;
                mapContainer.legend.set('title',orig_legend_title);
                map.setSize(orig_mapSize);
-               map.getView().fit(orig_extent, {size: orig_mapSize});
+               //map.getView().fit(orig_extent, {size: orig_mapSize});
+               setTimeout(function(){
+                    
+                    map.getView().fit(orig_extent, {size: orig_mapSize});
+               },1000);
+               
                //on complete
                if(options.onComplete){
                     options.onComplete({status:true});

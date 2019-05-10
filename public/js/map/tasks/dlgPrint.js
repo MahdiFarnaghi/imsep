@@ -57,6 +57,11 @@ DlgPrint.prototype.createUI=function(){
   htm+='    <img id="printThumbnail" style="object-fit: contain; height: 200px; object-position: center; box-shadow: #a4a4ad 10px 10px 10px;" src="'+thumbnail+'" class="img-thumbnail center-block" title="'+thumbnail_alt+'"  height=""></img>';
   htm+='  </div>';
  
+  htm+='<div class="form-group">';
+  htm+='  <label class="col-sm-offset-1_ col-sm-12 checkbox">';
+  htm+='   <input type="checkbox" id="downloadPDF" name="downloadPDF"  value="" /> Download PDF file';
+  htm+='</label>';
+  htm+='</div>';
 
   htm += '</form>';
   htm+='  </div>';
@@ -128,9 +133,11 @@ DlgPrint.prototype.createUI=function(){
         break;
       }
     }
+    var downloadPDF =content.find('#downloadPDF').prop("checked");
     activeTemplate.resolution= parseInt(content.find('#resolution').val());
       evt.data.settings={
-        template:activeTemplate
+        template:activeTemplate,
+        downloadPDF:downloadPDF
       }
       
   });
