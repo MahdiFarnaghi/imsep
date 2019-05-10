@@ -178,7 +178,10 @@
    
     
     @if(process.env.NODE_ENV=='development'){
-    <script src="/js/pages/admin/group_page.js"></script>
+       @model.uglify.group_page.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        })
    }else{
        <script src="/dist/js/group_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
    }

@@ -433,103 +433,22 @@
     <script src="/js/lib/jspdf/jspdf.min.js"></script>
     
 
-@if(process.env.NODE_ENV=='development'){
-    
-    <script src="/js/map/custom/ol-ext/Transform.js"></script>
-    <script src="/js/map/custom/ol-ext/LayerSwitcher.js"></script>
-    <script src="/js/map/custom/ol-ext/Popup.js"></script>
-    <script src="/js/map/custom/ol-ext/Control-Bar.js"></script>
-    <script src="/js/map/custom/ol-ext/Search.js"></script>
-    <script src="/js/map/custom/ol-ext/CustomStyles.js"></script>
-    <script src="/js/map/custom/ol-ext/FontMakiDef.js"></script>
-    <script src="/js/map/custom/ol-ext/FontMaki2Def.js"></script>
-    <script src="/js/map/custom/ol-ext/FontAwesomeDef.js"></script>
-    <script src="/js/map/custom/ol-ext/GeoImage.js"></script>
-    <script src="/js/map/custom/ol-ext/Legend.js"></script>
-    <script src="/js/map/custom/ol-ext/CanvasScaleLine.js"></script>
-    
-    
-    <script src="/js/map/LayerHelper.js"></script>
-    <script src="/js/map/PrintUtil.js"></script>
-
-    <script src="/js/map/StyleFactory.js"></script>
-    
-
-    <script src="/js/map/renderers/simpleRenderer.js"></script>
-    <script src="/js/map/renderers/uniqueValueRenderer.js"></script>
-    <script src="/js/map/renderers/rangeValueRenderer.js"></script>
-    <script src="/js/map/renderers/RendererFactory.js"></script>
-
-    <script src="/js/map/renderers/featureLabeler.js"></script>
-    
-
-    <script src="/js/map/sourceFactory.js"></script>
-    <script src="/js/map/tasks/dlgTaskBase.js"></script>
-    <script src="/js/map/tasks/dlgPrint.js"></script>
-    <script src="/js/map/tasks/layerTasks.js"></script>
-    <script src="/js/map/tasks/vectorLayerSelectTask.js"></script>
-    <script src="/js/map/tasks/vectorLayerEditTask.js"></script>
-    <script src="/js/map/tasks/vectorLayerAnalysisTask.js"></script>
-    <script src="/js/map/tasks/dlgBuffer.js"></script>
-    <script src="/js/map/tasks/dlgIdentity.js"></script>
-    <script src="/js/map/tasks/dlgIntersection.js"></script>
-    <script src="/js/map/tasks/dlgClip.js"></script>
-    <script src="/js/map/tasks/dlgDissolve.js"></script>
-    <script src="/js/map/tasks/dlgVectorSearch.js"></script>
-    <script src="/js/map/tasks/dlgVectorTableView.js"></script>
-        
-        <script src="/js/map/tasks/dlgOSMFilter.js"></script>
-        <script src="/js/map/tasks/dlgOSMShapeTypeSelection.js"></script>
-        <script src="/js/map/tasks/dlgOSMTagSelection.js"></script>
-        <script src="/js/map/tasks/dlgAddGeoJSON.js"></script>
-        <script src="/js/map/tasks/dlgWCS.js"></script>
-        
-
-
-    
-
-    <script src="/js/map/tasks/rasterLayerValueTask.js"></script>
-    <script src="/js/map/tasks/rasterLayerAnalysisTask.js"></script>
-    <script src="/js/map/tasks/dlgSlope.js"></script>
-    <script src="/js/map/tasks/dlgHillshade.js"></script>
-    <script src="/js/map/tasks/dlgRasterClassify.js"></script>
-    <script src="/js/map/tasks/dlgRasterPointBasedFloodArea.js"></script>
-    <script src="/js/map/tasks/dlgRasterClip.js"></script>
-    
-    
-    
-    
-    <script src="/js/map/tasks/measureTasks.js"></script>
-    <script src="/js/map/tasks/routeTasks.js"></script>
-    <script src="/js/map/tasks/geolocationTasks.js"></script>
-    
-
-    <script src="/js/map/mapContainer.js"></script>
-
-    <script src="/js/map/propertyTabs/layerGeneralTab.js"></script>
-    <script src="/js/map/propertyTabs/layerStyleTab.js"></script>
-    <script src="/js/map/propertyTabs/layerLabelTab.js"></script>
-    <script src="/js/map/propertyTabs/layerSourceTab.js"></script>
-    
-    <script src="/js/map/propertyTabs/featureAttributesTab.js"></script>
-    <script src="/js/map/propertyTabs/featureShapeTab.js"></script>
-    <script src="/js/map/propertyTabs/featurePointTab.js"></script>
-    
-
-    <script src="/js/map/propertyTabs/styleImageTab.js"></script>
-    <script src="/js/map/propertyTabs/styleFillTab.js"></script>
-    <script src="/js/map/propertyTabs/styleStrokeTab.js"></script>
-    <script src="/js/map/propertyTabs/rasterDisplayTab.js"></script>
-    <script src="/js/map/objectPropertiesDlg.js"></script>
-
-       
+  @if(process.env.NODE_ENV=='development'){
+        @model.uglify.map.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        });
    }else{
        <script src="/dist/js/map-@(process.env.PACKAGE_VERSION)-min.js"></script>
    }
     
     
      @if(process.env.NODE_ENV=='development'){
-     <script src="/js/pages/map/map_page.js"></script>
+     
+        @model.uglify.map_page.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        });
      }else{
        <script src="/dist/js/map_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
      }

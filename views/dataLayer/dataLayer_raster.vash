@@ -116,7 +116,10 @@
   
    
 @if(process.env.NODE_ENV=='development'){
-    <script src="/js/pages/dataLayer/dataLayer_raster_page.js"></script>
+       @model.uglify.dataLayer_raster_page.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        })
    }else{
        <script src="/dist/js/dataLayer_raster_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
    }

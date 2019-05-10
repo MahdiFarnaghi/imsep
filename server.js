@@ -3,6 +3,7 @@
 
 //#region require  
 var pjson = require('./package.json');
+var uglify_ = require('./Grunt_Uglify.js');
 //console.log(pjson.version);
 var dotenv = require('dotenv');
 var uuidv4 = require('uuid/v4');
@@ -173,15 +174,16 @@ app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(passport.authenticate('remember-me'));
+
 // customizing after authentication
 app.use(async function (req, res, next) { 
-
+    res.locals.uglify=uglify_;
     res.locals.identity = {
         name: 'anonymous'
     };
     res.locals.user = req.user ? req.user : null;
     res.locals.displayOptions = res.locals.displayOptions || {};
-    
+   // res.locals.displayOptions.uglify=uglify_;
     
     if (res.locals.user) {
         res.locals.identity.name = res.locals.user.userName;
