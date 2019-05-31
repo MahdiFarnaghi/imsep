@@ -65,7 +65,9 @@
             }else{
             <ul class="nav navbar-nav navbar-right">
                 <li class="@(html.equals('Log in',model.title)?'active':'')"><a href="/login"><span class="glyphicon glyphicon-log-in"></span> Log in</a></li>
-                <li class="@(html.equals('Sign up',model.title)?'active':'')"><a href="/signup"><span class="glyphicon glyphicon-user"></span> Sign up</a></li>
+                 @if(html.equals(process.env.FREE_SIGN_UP,'true')){
+                    <li class="@(html.equals('Sign up',model.title)?'active':'')"><a href="/signup"><span class="glyphicon glyphicon-user"></span> Sign up</a></li>
+                 }   
             </ul>
             }
         </div>

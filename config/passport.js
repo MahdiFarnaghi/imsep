@@ -167,6 +167,12 @@ passport.use(new RememberMeStrategy(
                 return done();
             }
             try {
+                if(process.env.FREE_SIGN_UP !=='true')
+                {
+                    
+                    req.flash('error', { msg: 'There is no user account in this site associated with your Google account!' });
+                    return done();
+                }
                 var superAdmin = await User.findOne({ where: { userName: 'superadmin' } });
                 var [, allUsers] = await util.call(models.Group.findOne({ where: { name: 'users' } }));
                 var emailToken = await util.generateUrlSafeToken();

@@ -155,7 +155,8 @@ var PrintUtil={
                          name:'description',
                          text:'{description}',
                          left:10,//10+200+10,
-                         top:15+5,//+ 160+5+5,
+                         //top:15+5,//+ 160+5+5,
+                         top: 15+5+5+ (PrintData.a4.h- (75)-10-1)+5,
                          width:67-3,
                          fontSize:12,
                          align:'left',//The alignment of the text, possible values: left, center, right, justify
@@ -175,7 +176,7 @@ var PrintUtil={
                     {
                          type:'text',
                          name:'map-copyright',
-                         text:'{map-copyrights}, User:{user-id}, Date:{dateTime_local} ',
+                         text:'{map-copyrights}, User: {user-id}, Date:{dateTime_local} ',
                          left:PrintData.a4.w-5,
                          top:PrintData.a4.h-5,
                          fontSize:10,
@@ -187,7 +188,8 @@ var PrintUtil={
                          name:'legend-title',
                          text:'Legend',
                          left:10,
-                         top:75-5,
+                         //top:75-5,
+                         top:15+5,
                          fontSize:10,
                          align:'left',
                          baseline:'top',
@@ -198,9 +200,11 @@ var PrintUtil={
                     {
                          type:'line',
                          x1:10,
-                         y1:75,
+                         //y1:75,
+                         y1:15+5+5,
                          x2:10+ 67-5,
-                         y2:75,
+                         //y2:75,
+                         y2:15+5+5,
                          lineWidth:0.2,
                          lineColor:'rgb(200,200,200)',
                          isHidden:function(mapContainer){
@@ -210,7 +214,8 @@ var PrintUtil={
                     {
                          type:'legend',
                          left:5+2,
-                         top: 75,//15+ 160+5 +5 ,
+                        // top: 75,//15+ 160+5 +5 ,
+                         top:15+5+5,
                          width:67-1,
                          height:PrintData.a4.h- (75)-10-1,
                          columnCount:1,//column-count
@@ -329,7 +334,8 @@ var PrintUtil={
                          type:'text',
                          name:'description',
                          text:'{description}',
-                         left:10,//10+200+10,
+                         //left:10,//10+200+10,
+                         left:5+5+PrintData.a4p.w -(67+10+10)-10,
                          top:PrintData.a4p.h -(67+10-3-5+3),
                          width:67-3,
                          fontSize:12,
@@ -350,7 +356,7 @@ var PrintUtil={
                     {
                          type:'text',
                          name:'map-copyright',
-                         text:'{map-copyrights}, User:{user-id}, Date:{dateTime_local} ',
+                         text:'{map-copyrights}, User: {user-id}, Date:{dateTime_local} ',
                          left:PrintData.a4p.w-5,
                          top:PrintData.a4p.h-5,
                          fontSize:10,
@@ -361,7 +367,8 @@ var PrintUtil={
                          type:'text',
                          name:'legend-title',
                          text:'Legend',
-                         left:10+67+10+3,
+                        // left:10+67+10+3,
+                        left:5+3,
                          top:PrintData.a4p.h -(67+10-3-5-5+3)-5,
                          fontSize:10,
                          align:'left',
@@ -372,9 +379,11 @@ var PrintUtil={
                     }, 
                     {
                          type:'line',
-                         x1:10+67 +10,
+                       //  x1:10+67 +10,
+                         x1:5+3,
                          y1:PrintData.a4p.h -(67+10-3-5-5+3),
-                         x2:10+67 +10+PrintData.a4p.w -(67+10+10)-10,
+                        // x2:10+67 +10+PrintData.a4p.w -(67+10+10)-10,
+                         x2:5+3+ PrintData.a4p.w -(67+10+10)-10,
                          y2:PrintData.a4p.h -(67+10-3-5-5+3),
                          lineWidth:0.2,
                          lineColor:'rgb(200,200,200)',
@@ -385,7 +394,8 @@ var PrintUtil={
                   
                     {
                          type:'legend',
-                         left:10+67 +10,
+                        // left:10+67 +10,
+                          left:5+3,
                          
                          top:PrintData.a4p.h -(67+10-3-5-5+3),
                          
@@ -505,7 +515,8 @@ var PrintUtil={
                          name:'description',
                          text:'{description}',
                          left:10,//10+200+10,
-                         top:15+5,//+ 160+5+5,
+                         //top:15+5,//+ 160+5+5,
+                         top: 15+5 +5+3 +PrintData.a3.h- (80)-10-1,
                          width:67-3,
                          fontSize:12,
                          align:'left',//The alignment of the text, possible values: left, center, right, justify
@@ -525,7 +536,7 @@ var PrintUtil={
                     {
                          type:'text',
                          name:'map-copyright',
-                         text:'{map-copyrights}, User:{user-id}, Date:{dateTime_local} ',
+                         text:'{map-copyrights}, User: {user-id}, Date:{dateTime_local} ',
                          left:PrintData.a3.w-5,
                          top:PrintData.a3.h-5,
                          fontSize:10,
@@ -537,7 +548,8 @@ var PrintUtil={
                          name:'legend-title',
                          text:'Legend',
                          left:10,
-                         top:80-5,
+                         //top:80-5,
+                         top:15+5,
                          fontSize:10,
                          align:'left',
                          baseline:'top',
@@ -548,9 +560,11 @@ var PrintUtil={
                     {
                          type:'line',
                          x1:10,
-                         y1:80,
+                         //y1:80,
+                         y1:15+5+5,
                          x2:10+ 67-5,
-                         y2:80,
+                         //y2:80,
+                         y2:15+5+5,
                          lineWidth:0.2,
                          lineColor:'rgb(200,200,200)',
                          isHidden:function(mapContainer){
@@ -560,7 +574,8 @@ var PrintUtil={
                     {
                          type:'legend',
                          left:5+2,
-                         top: 80,//15+ 160+5 +5 ,
+                         //top: 80,//15+ 160+5 +5 ,
+                         top:15+5+5,
                          width:67-1,
                          height:PrintData.a3.h- (80)-10-1,
                          columnCount:1,//column-count
@@ -677,7 +692,7 @@ var PrintUtil={
                          type:'text',
                          name:'description',
                          text:'{description}',
-                         left:10,//10+200+10,
+                         left:10+PrintData.a3p.w -(67+40+10+10)-10,//10+200+10,
                          top:PrintData.a3p.h -(67+10-3-5+3),
                          width:67+40-3,
                          fontSize:12,
@@ -698,7 +713,7 @@ var PrintUtil={
                     {
                          type:'text',
                          name:'map-copyright',
-                         text:'{map-copyrights}, User:{user-id}, Date:{dateTime_local} ',
+                         text:'{map-copyrights}, User: {user-id}, Date:{dateTime_local} ',
                          left:PrintData.a3p.w-5,
                          top:PrintData.a3p.h-5,
                          fontSize:10,
@@ -709,7 +724,7 @@ var PrintUtil={
                          type:'text',
                          name:'legend-title',
                          text:'Legend',
-                         left:10+67+40 +10+3,
+                         left:5+3,
                          top:PrintData.a3p.h -(67+10-3-5-5+3)-5,
                          
                          fontSize:10,
@@ -721,9 +736,9 @@ var PrintUtil={
                     }, 
                     {
                          type:'line',
-                         x1:10+67+40 +10,
+                         x1:5+3,
                          y1:PrintData.a3p.h -(67+10-3-5-5+3),
-                         x2:10+67+40 +10+PrintData.a3p.w -(67+40+10+10)-10,
+                         x2:5+3+PrintData.a3p.w -(67+40+10+10)-10,
                          y2:PrintData.a3p.h -(67+10-3-5-5+3),
                          lineWidth:0.2,
                          lineColor:'rgb(200,200,200)',
@@ -734,7 +749,7 @@ var PrintUtil={
                   
                     {
                          type:'legend',
-                         left:10+67+40 +10,
+                         left:5+3,
                          
                          top:PrintData.a3p.h -(67+10-3-5-5+3),
                          width:PrintData.a3p.w -(67+40+10+10)-10,
@@ -852,7 +867,7 @@ var PrintUtil={
                          name:'description',
                          text:'{description}',
                          left:10,//10+200+10,
-                         top:15+5,//+ 160+5+5,
+                         top:15+5+5+PrintData.a2.h- (100)-10-1,//+ 160+5+5,
                          width:67-3,
                          fontSize:12,
                          align:'left',//The alignment of the text, possible values: left, center, right, justify
@@ -872,7 +887,7 @@ var PrintUtil={
                     {
                          type:'text',
                          name:'map-copyright',
-                         text:'{map-copyrights}, User:{user-id}, Date:{dateTime_local} ',
+                         text:'{map-copyrights}, User: {user-id}, Date:{dateTime_local} ',
                          left:PrintData.a2.w-5,
                          top:PrintData.a2.h-5,
                          fontSize:10,
@@ -884,7 +899,7 @@ var PrintUtil={
                          name:'legend-title',
                          text:'Legend',
                          left:10,
-                         top:100-5,
+                         top:15+3,
                          fontSize:10,
                          align:'left',
                          baseline:'top',
@@ -895,9 +910,9 @@ var PrintUtil={
                     {
                          type:'line',
                          x1:10,
-                         y1:100,
+                         y1:15+5+3,
                          x2:10+ 67-5,
-                         y2:100,
+                         y2:15+5+3,
                          lineWidth:0.2,
                          lineColor:'rgb(200,200,200)',
                          isHidden:function(mapContainer){
@@ -907,7 +922,7 @@ var PrintUtil={
                     {
                          type:'legend',
                          left:5+2,
-                         top: 100,//15+ 160+5 +5 ,
+                         top: 15+5+3,//15+ 160+5 +5 ,
                          width:67-1,
                          height:PrintData.a2.h- (100)-10-1,
                          columnCount:1,//column-count
@@ -980,9 +995,9 @@ var PrintUtil={
                     {
                          type:'box',
                          name:'compass-border',
-                         left:PrintData.a2p.w -10-5-3,
-                         top:PrintData.a2p.h -(15+67)-5-3,
-                         width:10,height:10,
+                         left:PrintData.a2p.w -10-10-5-3,
+                         top:PrintData.a2p.h -(15+67)-10-5-3,
+                         width:20,height:20,
                          lineColor:'rgb(100,100,100)',
                          fillColor:'#ffffff82',
                          borderWidth:0.2
@@ -1025,7 +1040,7 @@ var PrintUtil={
                          type:'text',
                          name:'description',
                          text:'{description}',
-                         left:10,//10+200+10,
+                         left:10+5+PrintData.a2p.w -(67+40+10+10)-10,//10+200+10,
                          top:PrintData.a2p.h -(67+10-3-5+3),
                          width:67+40-3,
                          fontSize:12,
@@ -1046,7 +1061,7 @@ var PrintUtil={
                     {
                          type:'text',
                          name:'map-copyright',
-                         text:'{map-copyrights}, User:{user-id}, Date:{dateTime_local} ',
+                         text:'{map-copyrights}, User: {user-id}, Date:{dateTime_local} ',
                          left:PrintData.a2p.w-5,
                          top:PrintData.a2p.h-5,
                          fontSize:10,
@@ -1057,7 +1072,7 @@ var PrintUtil={
                          type:'text',
                          name:'legend-title',
                          text:'Legend',
-                         left:10+67+40 +10+3,
+                         left:10,
                          top:PrintData.a2p.h -(67+10-3-5-5+3)-5,
                          fontSize:10,
                          align:'left',
@@ -1068,9 +1083,9 @@ var PrintUtil={
                     }, 
                     {
                          type:'line',
-                         x1:10+67+40 +10,
+                         x1:10,
                          y1:PrintData.a2p.h -(67+10-3-5-5+3),
-                         x2:10+67+40 +10+PrintData.a2p.w -(67+40+10+10)-10,
+                         x2:10+PrintData.a2p.w -(67+40+10+10)-10,
                          y2:PrintData.a2p.h -(67+10-3-5-5+3),
                          lineWidth:0.2,
                          lineColor:'rgb(200,200,200)',
@@ -1081,7 +1096,7 @@ var PrintUtil={
                   
                     {
                          type:'legend',
-                         left:10+67+40 +10,
+                         left:10,
                          
                          top:PrintData.a2p.h -(67+10-3-5-5+3),
                          width:PrintData.a2p.w -(67+40+10+10)-10,
@@ -1221,8 +1236,8 @@ var PrintUtil={
                     if(elemItem.type=='text'){
                          var elemItemText=elemItem.text+'';
                          if(elemItemText){
-                              elemItemText=elemItemText.replace('{name}',mapContainer.mapSettings.name);
-                              elemItemText=elemItemText.replace('{description}',mapContainer.mapSettings.description);
+                              elemItemText=elemItemText.replace('{name}',mapContainer.mapSettings.name?mapContainer.mapSettings.name:'Untitled');
+                              elemItemText=elemItemText.replace('{description}',mapContainer.mapSettings.description?mapContainer.mapSettings.description:'');
                               elemItemText=elemItemText.replace('{app-footer}',app.COPY_RIGHTS);
                               
                               elemItemText=elemItemText.replace('{site-name}',app.SITE_NAME);

@@ -136,8 +136,13 @@ module.exports = function (passportConfig) {
      * GET /signup
      */
     module.signupGet = function (req, res) {
+        
         if (req.user) {
             return res.redirect('/');
+        }
+        if(process.env.FREE_SIGN_UP !=='true')
+        {
+            return res.redirect('/login');
         }
         res.render('account/signup', {
             title: 'Sign up'
@@ -148,6 +153,11 @@ module.exports = function (passportConfig) {
      * POST /signup
      */
     module.signupPost =async function (req, res,  next) {
+        if(process.env.FREE_SIGN_UP !=='true')
+        {
+            res.redirect('/');
+            return;
+        }
         req.assert('userName', 'User name cannot be blank').notEmpty();
         req.assert('email', 'Email is not valid').isEmail();
         req.assert('email', 'Email cannot be blank').notEmpty();

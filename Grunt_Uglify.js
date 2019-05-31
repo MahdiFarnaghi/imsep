@@ -93,6 +93,8 @@ module.exports = {
             'public/js/map/tasks/dlgSlope.js',
             'public/js/map/tasks/dlgHillshade.js',
             'public/js/map/tasks/dlgRasterClassify.js',
+            'public/js/map/tasks/DlgRasterClip.js',
+            
             'public/js/map/tasks/dlgRasterPointBasedFloodArea.js',
             
             
