@@ -45,7 +45,8 @@ services:
       - ./public:/usr/src/app/public
       - ./views:/usr/src/app/views
       - ./log:/usr/src/app/log
-      - ./uploads:/usr/src/app/uploads   
+      - ./app_data:/usr/src/app/app_data   
+      - ./uploads:/usr/src/app/app_data/uploads
       
 volumes:
   imsepdb:

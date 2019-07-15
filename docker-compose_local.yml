@@ -38,7 +38,7 @@ services:
       - "1336:1337"   
     volumes:
       - ./log:/usr/src/app/log
-      - ./uploads:/usr/src/app/uploads   
+      - ./app_data:/usr/src/app/app_data   
       
 volumes:
   imsepdb:

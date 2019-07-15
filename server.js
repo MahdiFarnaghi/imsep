@@ -32,7 +32,7 @@ var passport = require('passport');
 var multer  = require('multer')
 var memorystorage = multer.memoryStorage()
 //var upload = multer({ storage: storage,limits: { fileSize: 1024 } })
-//var uploadFolder = multer({ dest: 'uploads/' });
+//var uploadFolder = multer({ dest: 'app_data/uploads/' });
  var uploadFolder = multer.diskStorage({
      destination: function (req, file, cb) {
         var folder  ;
@@ -42,9 +42,11 @@ var memorystorage = multer.memoryStorage()
             
             req._uploadId =folder=uuidv4();  
          }
-        var uploadDirectory = path.join(__dirname, 'uploads/');
-        var saveDirectory = path.join(__dirname, 'uploads/'+ folder+'/');
+        var app_dataDirectory = path.join(__dirname, 'app_data/');
+        var uploadDirectory = path.join(app_dataDirectory, 'uploads/');
+        var saveDirectory = path.join(app_dataDirectory, 'uploads/'+ folder+'/');
         try{
+            fs.existsSync(app_dataDirectory) || fs.mkdirSync(app_dataDirectory);// ensure  app_data directory exists
             fs.existsSync(uploadDirectory) || fs.mkdirSync(uploadDirectory);// ensure  upload directory exists
             fs.existsSync(saveDirectory) || fs.mkdirSync(saveDirectory);// ensure  saveDirectory exists
         }catch(ex){
@@ -54,7 +56,7 @@ var memorystorage = multer.memoryStorage()
                 date: new Date()
             });
         }   
-        cb(null, 'uploads/'+ folder+'/')
+        cb(null, 'app_data/uploads/'+ folder+'/')
      }
       ,
       filename: function (req, file, cb) {
@@ -443,6 +445,7 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     app.get('/datalayer/:id/vectorextent',   [Authenticated],   handleErrors(dataLayerController.vectorextentGet));
 
     app.get('/datalayer/:id/raster',   [Authenticated],  handleErrors(dataLayerController.rasterGet));
+    app.get('/datalayer/:id/rastertile',   [Authenticated],  handleErrors(dataLayerController.rasterTileGet));
     
     app.get('/datalayer/:id/analysis',   [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataAnalysts'})],
     handleErrors(dataLayerController.analysisGet));
@@ -681,10 +684,15 @@ drop role imsep_gdb_reader;
         var a=1;
         return false;
     }
-    var q=`CREATE ROLE ${userName} LOGIN PASSWORD '${userPass}';
-    GRANT CONNECT ON DATABASE ${dbName}  to  ${userName};
-    `;
+    var q=`CREATE ROLE ${userName} LOGIN PASSWORD '${userPass}'; `;
+    try{
     const res = await client.query(q)
+    }catch(eee){}
+     q=` GRANT CONNECT ON DATABASE ${dbName}  to  ${userName}; `;
+    try{
+        const res = await client.query(q)
+      }catch(eee){}
+        
     await client.end()
 
     params.database=dbName;

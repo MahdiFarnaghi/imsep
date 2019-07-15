@@ -361,6 +361,9 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
       return;
     }
     fieldName= '"'+fieldName+'"';
+    if(field.expression && field.isExpression){
+      fieldName= '('+field.expression+')';
+    }
     var logicalOperator = 'AND';
     var newExp = "";
     var needValue = true;

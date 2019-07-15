@@ -39,5 +39,9 @@ exports.generateToken = function ({ stringBase = 'base64', byteLength = 48 } = {
 exports.generateUrlSafeToken = function () {
     return exports.generateToken({ stringBase:'hex', byteLength: 16 });
 };
+exports.hashString = function (string) {
 
+    var hash = crypto.createHash('md5').update(String(string)).digest('hex');
+    return hash;
+};
 

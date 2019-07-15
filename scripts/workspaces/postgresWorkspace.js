@@ -1800,10 +1800,14 @@ class PostgresWorkspace {
         var psqlBinPath_linux = this.connectionSettings.psqlBinPath_linux;
 
         if(process.platform=='win32'){
-        var importBatchFile = path.join(filePathFolder, filebaseName + '_import.bat');
-        var batchScript = `set PGPASSWORD=${password}
-"${psqlBinPath_win}/raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} | "${psqlBinPath_win}/psql" -h ${host} -p ${port} -U ${user} -d ${database}`;
-        try {
+        var importBatchFile = path.join(filePathFolder, filebaseName.replace(/ /g,"_").toLowerCase() + '_import.bat');
+//        var batchScript = `set PGPASSWORD=${password}
+//"${psqlBinPath_win}/raster2pgsql" -s ${srid} -I -d -C -M -l 2,4,8,16 "${filePath}" -t 100x100 public.${tbl} | "${psqlBinPath_win}/psql" -h ${host} -p ${port} -U ${user} -d ${database}`;
+
+var batchScript = `set PGPASSWORD=${password}
+"${psqlBinPath_win}/raster2pgsql" -s ${srid} -I -d -C -M -l 2,4,8,16,32 "${filePath}" -t 100x100 public.${tbl} | "${psqlBinPath_win}/psql" -h ${host} -p ${port} -U ${user} -d ${database}`;
+
+try {
             //await fs_writeFile(importBatchFile, batchScript);
             await util.promisify(fs.writeFile)(importBatchFile, batchScript);
             //require('fs').writeFileSync(importBatchFile, batchScript);
@@ -1826,8 +1830,8 @@ class PostgresWorkspace {
         }
     }else if(process.platform=='linux'){
        
-          var importBatchFile = path.join(filePathFolder, filebaseName + '_import.sh');
-          var outSqlFile = path.join(filePathFolder, filebaseName + '_import.sql');
+          var importBatchFile = path.join(filePathFolder,  filebaseName.replace(/ /g,"_").toLowerCase() + '_import.sh');
+          var outSqlFile = path.join(filePathFolder,  filebaseName.replace(/ /g,"_").toLowerCase() + '_import.sql');
   
           //todo: copy all related files
           
@@ -1842,7 +1846,7 @@ class PostgresWorkspace {
         // "psql" -h ${host} -p ${port} -U ${user} -d ${database} -f import.sql`;
 
         var batchScript = `export PGPASSWORD=${password}
-        "raster2pgsql" -s ${srid} -I -d -C -M "${filePath}" -t 100x100 public.${tbl} > ${outSqlFile}
+        "raster2pgsql" -s ${srid} -I -d -C -M -l 2,4,8,16,32 "${filePath}" -t 100x100 public.${tbl} > ${outSqlFile}
         "psql" -h ${host} -p ${port} -U ${user} -d ${database} -f ${outSqlFile}`;
 
         //var batchScript = `export PGPASSWORD=${password}
@@ -1896,7 +1900,7 @@ class PostgresWorkspace {
         await copyFile(filePath, path.join(shareVolume, filename));
         
         var batchScript = `export PGPASSWORD=${password}
-        "raster2pgsql" -s ${srid} -I -d -C -M "${filename}" -t 100x100 public.${tbl} | "${psqlBinPath_linux}/psql" -p ${port} -U ${user} -d ${database}`;
+        "raster2pgsql" -s ${srid} -I -d -C -M -l 2,4,8,16,32 "${filename}" -t 100x100 public.${tbl} | "${psqlBinPath_linux}/psql" -p ${port} -U ${user} -d ${database}`;
 
         try {
             //await fs_writeFile(importBatchFile, batchScript);
@@ -2351,6 +2355,376 @@ class PostgresWorkspace {
             return null;
 
     }
+    async getRasterTileAsPng(options) {
+        var tableName = options.tableName;
+        var oidField = options.oidField || 'rid';
+        var rasterField = options.rasterField || 'rast';
+        var srid = options.srid;
+        var origRaster_srid= options.origRaster_srid || 3857;
+        var display = options.display;
+        if (!display) {
+            return;
+        }
+        var ref_z=options.ref_z || 18;
+        var x= options.x;
+        var y= options.y;
+        var z= options.z;
+        //var overview_factor= Math.pow(2,(ref_z-z));
+        
+
+        //var overview_factor= Math.pow(2,(ref_z-z -1));
+        var overview_factor= Math.pow(2,(ref_z-z ));
+        if(overview_factor <1){
+            overview_factor=1;
+        }
+        if(overview_factor>32){
+            overview_factor=32;
+        }
+        var overview_prefix= 'o_'+ overview_factor+ '_';
+        if(overview_factor==1){
+            overview_prefix='';
+        }
+        if(overview_factor>1){
+            try{
+                var queryOverview = `SELECT * FROM public.raster_overviews where r_table_name ='${tableName}' and overview_factor=${overview_factor}`;
+                var overviewResults = await this.query({ text: queryOverview  });
+                if(!(overviewResults && overviewResults.rowCount)){
+                    queryOverview = `SELECT ST_CreateOverview('${tableName}'::regclass, '${rasterField}', ${overview_factor});`;
+                    overviewResults = await this.query({ text: queryOverview  });
+                }
+            }catch(ex){
+
+            }
+        }
+        var tileSize= options.tileSize || 256;
+        var RBand = options.display.RBand || 1;
+        var GBand = options.display.GBand || 1;
+        var BBand = options.display.BBand || 1;
+        var ABand = options.display.ABand;
+        var bands = options.bands;
+        var bandsCount=1;
+        if(bands){
+            bandsCount= bands.length;
+        }
+        var apply_reclass = false;
+        var noDataValue = null;
+        var minimum, maximum;
+        var bandMinimum, bandMaximum;
+        if (display.displayType == 'colorMap') {
+            if (display.reclass) {
+                apply_reclass = true;
+            }
+            if (!display.colorMap) {
+                display.colorMap = 'grayscale';
+            }
+            if (!display.band) {
+                display.band = 1;
+            }
+            if (bands && bands.length) {
+                var band = bands[display.band - 1];
+                noDataValue = band.noDataValue;
+                bandMinimum = minimum = band.minimum;
+                bandMaximum = maximum = band.maximum;
+            }
+            if (typeof display.minimum == 'undefined') {
+
+                display.minimum = minimum;
+            }
+            if (typeof display.maximum == 'undefined') {
+
+                display.maximum = maximum;
+            }
+
+            minimum = Math.max(minimum, display.minimum);
+            maximum = Math.min(maximum, display.maximum);
+            if (minimum !== bandMinimum || maximum != bandMaximum) {
+                apply_reclass = true;
+            }
+        }
+      
+        var ABand_expr = '';
+
+        if (ABand){
+            ABand_expr = `,ST_Union(${rasterField},${ABand})`;
+        }
+
+        var where='';
+        var bbox;
+        var north = 180 - (360 * y) / Math.pow(2, z);
+        var south = 180 - (360 * (y + 1)) / Math.pow(2, z);
+        var west = (360 * x) / Math.pow(2, z) - 180;
+        var east = (360 * (x + 1)) / Math.pow(2, z) - 180;
+
+        
+        if (true)//mIsMercatorProjected)
+        {
+            var res = Math.PI * (1 - 2 * (y / Math.pow(2, z)));
+            var Phi = 2 * Math.atan(Math.exp(res)) - Math.PI / 2;
+            north = Phi * 180 / Math.PI;
+            res = Math.PI * (1 - 2 * ((y + 1) / Math.pow(2, z)));
+            Phi = 2 * Math.atan(Math.exp(res)) - Math.PI / 2;
+            south = Phi * 180 / Math.PI;
+        }
+        //var dw= (east-west)/256.0;
+       // west= west-dw;
+       // east= east+dw;
+        bbox= west+','+south+','+east+','+north+ ',4326';
+        
+        var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox}),${origRaster_srid}))`;
+        
+
+var clipTileExpr=`with inputR as (SELECT ST_Transform(
+    ST_Union(
+        ${rasterField}
+     )
+    ,${srid},'NearestNeighbor') as rast
+    FROM public."${overview_prefix}${tableName}"
+     WHERE ${whereStr}
+)
+,clipRect as (
+    SELECT ST_AsRaster(
+            ST_Transform(	ST_MakeEnvelope(${bbox}),${srid}),
+					inputR.rast
+					,ST_BandPixelType(inputR.rast)
+					,1) as rast
+		from inputR	
+        )
+
+--,clipped1 as (select ST_Clip(
+--    inputR.rast
+--        ,ST_Transform(	ST_MakeEnvelope(${bbox}),${srid})
+--        ,true
+--   ) as rast
+--    FROM inputR
+
+--  )
+  --,rect1 as (
+  --  SELECT ST_AsRaster(ST_Transform(	ST_MakeEnvelope(${bbox}),${srid}),256,256) as rast
+   --     )
+ 
+,clippedB1 as (
+    SELECT ST_MapAlgebra(clipRect.rast,1,inputR.rast,1,'[rast2]',NULL,'FIRST') as rast
+   from clipRect,inputR
+)`;
+var lastBn=1;
+for(var bn=2;bn<=bandsCount;bn++){
+    
+    clipTileExpr +=`,clippedB${bn} as (
+        SELECT ST_AddBand(clippedB${lastBn}.rast, ST_MapAlgebra(clipRect.rast,1,inputR.rast,${bn},'[rast2]',NULL,'FIRST')) as rast
+       from clippedB${lastBn},clipRect,inputR
+    )`;
+    lastBn=bn;
+}
+
+clipTileExpr +=`,cippedBands as (
+    select * from clippedB${lastBn}
+ )`;
+ clipTileExpr +=`
+ 
+,tile as (SELECT
+    ST_Resample (
+        cippedBands.rast
+          ,${tileSize},${tileSize},NULL,NULL,0,0,'NearestNeighbour'
+         )
+          as ${rasterField} 
+  from cippedBands
+)
+`;
+
+        var queryText = '';
+        if (display.displayType === 'RGB') {
+            queryText = `${clipTileExpr} SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+ FROM ( Select 
+         
+              ST_AddBand(
+                ST_Union(${rasterField},${RBand}),
+                 ARRAY[
+                     ST_Union(${rasterField},${GBand}),
+                     ST_Union(${rasterField},${BBand})
+                     ${ABand_expr}
+                    ]
+               )
+         
+                as raster
+           from  tile where not tile.rast is null
+) as raster`;
+        }
+
+        if (display.displayType == 'colorMap') {
+            var band = display.band;
+            var colorMap = display.colorMap;
+            var colorMapstr=colorMap;
+            apply_reclass = true; //note: ST_ColorMap without reclassifying generate reverse grayscale
+            var customColorMapArray=undefined;
+            if(colorMap=='pseudocolor'){
+                customColorMapArray=[
+                    [100, 255,   0,   0, 255],
+                    [50,  0, 255,   0, 255],
+                    [0,   0,   0, 255, 255],
+                    ['nv',   0,   0,   0,   0]] ; 
+            }
+            if(colorMap=='fire'){
+                customColorMapArray=[
+                    [100, 243, 255, 221, 255],
+                    [93.75, 242, 255, 178, 255],
+                    [87.5, 255, 255, 135, 255],
+                    [81.25, 255, 228,  96, 255],
+                    [75, 255, 187,  53, 255],
+                    [68.75, 255, 131,   7, 255],
+                    [62.5, 255,  84,   0, 255],
+                    [56.25, 255,  42,   0, 255],
+                    [50, 255,   0,   0, 255],
+                    [43.75, 255,  42,   0, 255],
+                    [37.5, 224,  74,   0, 255],
+                    [31.25, 183,  91,   0, 255],
+                    [25, 140,  93,   0, 255],
+                    [18.75,  99,  82,   0, 255],
+                    [12.5,  58,  58,   1, 255],
+                    [6.25,  12,  15,   0, 255],
+                    [0,   0,   0,   0, 255],
+                    ['nv',   0,   0,   0,   0]];
+            }
+            if(colorMap=='bluered'){
+                customColorMapArray=[
+                    [100.00, 165,   0,  33, 255],
+                    [94.12, 216,  21,  47, 255],
+                    [88.24, 247,  39,  53, 255],
+                    [82.35, 255,  61,  61, 255],
+                    [76.47, 255, 120,  86, 255],
+                    [70.59, 255, 172, 117, 255],
+                    [64.71, 255, 214, 153, 255],
+                    [58.82, 255, 241, 188, 255],
+                    [52.94, 255, 255, 234, 255],
+                    [47.06, 234, 255, 255, 255],
+                    [41.18, 188, 249, 255, 255],
+                    [35.29, 153, 234, 255, 255],
+                    [29.41, 117, 211, 255, 255],
+                    [23.53,  86, 176, 255, 255],
+                    [17.65,  61, 135, 255, 255],
+                    [11.76,  40,  87, 255, 255],
+                    [5.88,  24,  28, 247, 255],
+                    [0.00,  36,   0, 216, 255],
+                    ['nv',   0,   0,   0,   0]];
+            }
+            if(customColorMapArray){
+                apply_reclass=false;
+                colorMapstr='';
+                for(var c=0;c<customColorMapArray.length;c++){
+                    var CI=customColorMapArray[c];
+                    if(colorMapstr){
+                        colorMapstr += '\n';
+                    }
+                    var cv=CI[0];
+                    if(cv!='nv'){
+                        cv=minimum + (maximum-minimum)*cv/100.0;
+                    }
+                    colorMapstr+= `${cv} ${CI[1]} ${CI[2]} ${CI[3]} ${CI[4]}`;
+                }
+            }
+           
+            if(colorMap=='custom'){
+                apply_reclass=false;
+                var customColorMap=display.customColorMap ||[];
+                colorMapstr=''; 
+                for(var c=0;c<customColorMap.length;c++){
+                    var CI=customColorMap[c];
+                    if(colorMapstr){
+                        colorMapstr += '\n';
+                    }
+                    
+                    if(CI){
+                        var cv=CI.value+'';
+                        if(cv.indexOf('%')){
+                            try{
+                                cv= parseFloat(cv);
+                                cv=minimum + (maximum-minimum)*cv/100.0;
+                            }catch(xx){}
+                        }
+                        colorMapstr+= `${cv} ${CI.r} ${CI.g} ${CI.b} ${CI.a}`;
+                        if(customColorMap.length==1){
+                            colorMapstr += '\n';
+                            colorMapstr+= `${cv} ${CI.r} ${CI.g} ${CI.b} ${CI.a}`;
+                        }
+                    }
+                }
+            }
+            if (!apply_reclass) {
+                queryText = `${clipTileExpr} SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+    FROM ( Select 
+         
+               ST_ColorMap(
+                  -- ST_Union(
+                       ${rasterField},${band}
+                  --     )
+                   ,
+                   --1,
+                   '${colorMapstr}'
+                ) 
+        
+             as raster
+              from  tile where not tile.rast is null
+   ) as raster`;
+            } else {
+                 //calssified values
+                 var c_minimum = 1;
+                 var c_maximum = 254;
+                 var c_noDataValue = 255;
+               
+                if (colorMap == 'grayscale') { // grayscale does not support transparency                        
+                    queryText = `${clipTileExpr} SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+    FROM ( Select 
+     
+                ST_Reclass(
+                    --ST_Union(
+                        ${rasterField},${band}
+                       -- )
+                        ,
+                        --1,
+                         '[${minimum}-${maximum}]:${c_minimum}-${c_maximum}', '8BUI',${c_noDataValue} )
+      --          ,1,'${colorMap}'
+             as raster
+            from  tile where not tile.rast is null
+) as raster`;
+                } else {
+                    queryText = `${clipTileExpr} SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+        FROM ( Select 
+           
+                ST_ColorMap(
+                    ST_Reclass(
+                        --ST_Union( 
+                            ${rasterField},${band}
+                          --  )
+                            ,
+                         --1,
+                          '[${minimum}-${maximum}]:${c_minimum}-${c_maximum}', '8BUI',${c_noDataValue} 
+                          ),
+                          1,'${colorMap}'
+                    ) 
+         
+                 as raster
+                from  tile where not tile.rast is null
+    ) as raster`;
+
+                }
+            }
+
+
+        }
+     
+try{
+        var results = await this.query({
+            text: queryText
+        });
+    }catch(ex){
+        return null;  
+    }
+        if (results) {
+
+            return results.rows[0];
+        } else
+            return null;
+
+    }
     async getRasterMetadata(options) {
         var tableName = options.tableName;
         var oidField = options.oidField || 'rid';
@@ -2613,6 +2987,20 @@ SELECT AddRasterConstraints(
             errors += '<br/>' + ex.message;
         }
 
+        try {
+            var results_overviews = await this.query({
+                text: `SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 2);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 4);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 8);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 16);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 32);
+                `
+            });
+            
+        } catch (ex) {
+            console.log(ex);
+        }
+
         if (status) {
 
             var thumbnail = null;
@@ -2865,7 +3253,19 @@ SELECT AddRasterConstraints(
             status = false;
             errors += '<br/>' + ex.message;
         }
-
+        try {
+            var results_overviews = await this.query({
+                text: `SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 2);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 4);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 8);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 16);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 32);
+                `
+            });
+            
+        } catch (ex) {
+            console.log(ex);
+        }
         if (status) {
 
             var thumbnail = null;
@@ -3024,6 +3424,8 @@ SELECT AddRasterConstraints(
         var oidField = fromDetails.oidField || 'rid';
         var rasterField = fromDetails.rasterField || 'rast';
         var srid = options.out_srid || fromDetails.spatialReference.srid;
+        var origRaster_srid=fromDetails.spatialReference.srid || 3857;
+
         var clipArea = settings.clipArea;
         var clipAreaSrid=settings.clipAreaSrid;
         if(!clipArea){
@@ -3055,14 +3457,18 @@ SELECT AddRasterConstraints(
         }
         var where = options.where || '';
         var whereStr = ''
+        whereStr=  `WHERE ST_Intersects(
+            ${rasterField},
+             ST_Transform(${clipGeom},${origRaster_srid})
+          )`;
         if (where) {
             var checkSQlExpression_res= this.checkSQlExpression(where);
            if(!checkSQlExpression_res.valid){
                throw new Error(checkSQlExpression_res.message);
            }
-            whereStr = ` WHERE ${where}`;
+            whereStr = whereStr + ` AND (${where})`;
         }
-
+       
         var uniqueTableName = 'rst_' + uuidv4().replace(new RegExp('-', 'g'), '');
 
         var errors = '';
@@ -3098,7 +3504,8 @@ SELECT ST_Clip(
          )
         ,${srid},'Bilinear')
     ,  ST_Buffer( ST_Transform(${clipGeom},${srid}),0) )
-FROM ${fromTbl} ${whereStr}; 
+FROM ${fromTbl} ${whereStr};
+
 
 SELECT AddRasterConstraints(
     '${tbl}'::name,  
@@ -3122,7 +3529,19 @@ SELECT AddRasterConstraints(
             status = false;
             errors += '<br/>' + ex.message;
         }
-
+        try {
+            var results_overviews = await this.query({
+                text: `SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 2);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 4);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 8);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 16);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 32);
+                `
+            });
+            
+        } catch (ex) {
+            console.log(ex);
+        }
         if (status) {
 
             var thumbnail = null;
@@ -3337,7 +3756,19 @@ SELECT AddRasterConstraints(
             status = false;
             errors += '<br/>' + ex.message;
         }
-
+        try {
+            var results_overviews = await this.query({
+                text: `SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 2);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 4);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 8);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 16);
+                SELECT ST_CreateOverview('${tbl}'::regclass, '${rasterField}', 32);
+                `
+            });
+            
+        } catch (ex) {
+            console.log(ex);
+        }
         if (status) {
 
             var thumbnail = null;

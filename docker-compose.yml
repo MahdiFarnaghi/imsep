@@ -36,7 +36,7 @@ services:
       - "127.0.0.1:1336:1337"   
     volumes:
       - /data/imsep/log:/usr/src/app/log
-      - /data/imsep/uploads:/usr/src/app/uploads   
+      - /data/imsep/app_data:/usr/src/app/app_data   
       
 volumes:
   postgis:

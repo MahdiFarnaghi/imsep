@@ -3,6 +3,7 @@ var path= require('path');
 var fs = require('fs');
 var util = require('./util');
 const nativeUtil = require('util');
+
 var models = require('../models/index');
 var sharp= require('sharp');
 var ogr2ogr= require('../ogr2ogr');
@@ -1258,7 +1259,22 @@ module.exports = function (postgresWorkspace) {
          //
          console.log(ex);
        } );
-
+       if(item.dataType=='raster'){
+            var queryText=`DROP TABLE if exists public."o_2_${tableName}";
+            DROP TABLE if exists public."o_4_${tableName}";
+            DROP TABLE if exists public."o_8_${tableName}";
+            DROP TABLE if exists public."o_16_${tableName}";
+            DROP TABLE if exists public."o_32_${tableName}";
+            DROP TABLE if exists public."o_64_${tableName}";
+            DROP TABLE if exists public."o_128_${tableName}";
+            DROP TABLE if exists public."o_256_${tableName}";`
+            await postgresWorkspace.query({
+                text:queryText
+            }).catch(ex=>{
+            //
+                           console.log(ex);
+            } );
+       }
         try {
             await item.destroy();
         } catch (ex) {
@@ -2659,6 +2675,252 @@ module.exports = function (postgresWorkspace) {
             res.status(404).end('Not found');
             return;
         }
+    };
+     /**
+     * GET /datalayer/:id/rastertile
+     */
+    module.rasterTileGet = async function (req, res, next) {
+       
+        var item,err;
+        //var bbox= req.query.bbox;
+        var x,y,z;
+        x=req.query.x;
+        y=req.query.y;
+        z=req.query.z;
+        var ref_z= req.query.ref_z || 18;
+        try{
+            ref_z=  parseInt(ref_z);
+        }catch(ex){}
+        try{
+            x=  parseInt(x);
+        }catch(ex){}
+        try{
+            y=  parseInt(y);
+        }catch(ex){}
+        try{
+            z=  parseInt(z);
+        }catch(ex){}
+        var out_srid= 3857;//req.query.srid;// reproject to srid
+        var request=req.query.request || 'png';
+        var tileSize=req.query.size || 256;
+        var display= req.query.display;
+        var itemId=req.params.id;
+        
+        if(display){
+            try{
+                display= JSON.parse(display);
+            }catch(ex){}
+        }
+        if(!(req.params.id && req.params.id != '-1')){ 
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
+        }
+                    
+        [err, item] = await util.call(models.DataLayer.findById(itemId) );
+
+            
+        if (!item) {
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
+        }
+
+        
+        if (!item.details) {
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
+        }
+        //todo: permission check
+
+        //todo: permission check
+        if(req.user.id !== item.ownerUser && !res.locals.identity.isAdministrator  )
+        {
+            
+            var userHasViewPermission=false;
+            var err;
+            [err, item] = await util.call(models.DataLayer.findOne({
+                where: {  id: itemId },
+                include: [ 
+                        { model: models.Permission, as: 'Permissions'
+                            ,include: [
+                                {
+                                    model: models.User, as: 'assignedToUser',
+                                    required: false,
+                                    where: {
+                                        id:  req.user.id
+                                    }
+                                },
+                                {
+                                    model: models.Group, as: 'assignedToGroup',
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.User, as: 'Users',
+                                            required: true,
+                                            where: {
+                                                id: req.user.id
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                            }
+                    ]
+            }));
+
+            if(item){// get permission
+                var permissions = item.Permissions;
+                if(permissions){
+                    userHasViewPermission= permissions.some((p)=>{
+                    if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                        return (p.permissionName=='Edit'|| p.permissionName=='View' );
+                    }else return false;
+                    });
+                }
+                
+            }
+            
+            if(!userHasViewPermission){
+                res.set('Content-Type', 'text/plain');
+                res.status(403).end('Access denied');
+            }
+            
+            
+        }
+
+        
+        var details={};
+        try{
+          details= JSON.parse( item.details);
+        }catch(ex){}
+
+        //todo: workspace selection
+
+        var tableName= details.datasetName || item.name;
+        var oidField= details.oidField || 'rid';
+        var rasterField=details.rasterField || 'raster';
+        var srid=  details.spatialReference.srid || 3857;
+        if(!out_srid)
+        {
+            out_srid=details.spatialReference.srid || 3857;
+        }
+    
+        var BBand=3;
+        if(details.numberOfBands<3)
+          BBand=details.numberOfBands;
+        var GBand=2;
+        if(details.numberOfBands<2)
+            GBand=details.numberOfBands;   
+        var RBand=1;
+        if(details.bands && details.bands.length){
+            for(var i=0;i< details.bands.length;i++){
+                var band=details.bands[i];
+                if(!band.name){
+                band.name=band.colorInterpretation;
+                }
+                if(band.name==='Red'){
+                    RBand= band.id;
+                }
+                if(band.name==='Green'){
+                GBand= band.id;
+            }
+            if(band.name==='Blue'){
+                BBand= band.id;
+            }
+            }
+        }
+        if(!display){
+        display= details.display;
+        }
+        if(!display){
+            if(details.numberOfBands>1){
+                display={
+                displayType:'RGB',
+                RBand:RBand,
+                GBand:GBand,
+                BBand:BBand,
+                ABand:undefined,
+                reclass:false
+                }
+            }else{
+            display={
+                displayType:'colorMap',
+                band:1,
+                colorMap:'grayscale',
+                reclass:false
+                }
+            }
+        }
+        var themeKey=util.hashString(JSON.stringify(display)); 
+
+        //var cacheKey=util.hashString(req.url);
+        var app_dataDirectory = path.join(__basedir, 'app_data/');
+        var tilecacheDirectory = path.join(app_dataDirectory, 'tilecache/');
+        var cacheDirectory = path.join(app_dataDirectory, 'tilecache/'+ item.id+'/');
+        var cacheThemeDirectory = cacheDirectory + `/${themeKey}/`;
+        var cacheFilePath = cacheThemeDirectory + `${z}_${x}_${y}.png`;
+        try{
+            fs.existsSync(app_dataDirectory) || fs.mkdirSync(app_dataDirectory);// ensure  upload directory exists
+            fs.existsSync(tilecacheDirectory) || fs.mkdirSync(tilecacheDirectory);// ensure  tilecacheDirectory exists
+            
+            fs.existsSync(cacheDirectory) || fs.mkdirSync(cacheDirectory);// ensure  tilecacheDirectory exists
+            fs.existsSync(cacheThemeDirectory) || fs.mkdirSync(cacheThemeDirectory);// ensure  cacheThemeDirectory exists
+        }catch(ex){
+            logger.log({
+                level: 'error',
+                message: ex.message,
+                date: new Date()
+            });
+        } 
+        if(fs.existsSync(cacheFilePath)){
+            res.download(cacheFilePath);
+            res.set('Cache-Control', 'public, max-age=2592000'); //30 days cache header
+            res.set('theme-key',themeKey);
+            return;
+        }
+        
+        try{
+           var result=await postgresWorkspace.getRasterTileAsPng({
+                    tableName:tableName,
+                    oidField:oidField,
+                    rasterField:rasterField,
+                    srid:out_srid,
+                    bands:details.bands,
+                    display:display,
+                    origRaster_srid:details.spatialReference.srid || 3857,
+                    
+                    x:x,y:y,z:z,
+                    tileSize:tileSize,
+                    
+                    ref_z:ref_z,
+                    details:details
+                });
+                if(!result){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(404).end('Not found');
+                    return;
+                }
+                
+                try {
+                    await nativeUtil.promisify(fs.writeFile)(cacheFilePath, result.output);
+                } catch (exx) {
+                    console.log(exx);
+                }
+                res.set('Content-Type', 'image/png');
+                res.set('Cache-Control', 'public, max-age=2592000'); //30 days cache header
+                res.set('theme-key',themeKey);
+                res.end(result.output, 'binary');
+                return;
+            
+        }catch(ex){
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found.('+ ex.message +')' );
+        }
+            
+            
+        
     };
      /**
      * GET /datalayer/:id/analysis

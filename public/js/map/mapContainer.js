@@ -1240,11 +1240,17 @@ MapContainer.prototype.createLayer = function(layerInfo) {
               } catch (ex) {}
             var geoImageSource = this.sorceFactory.createGeoImageSource(dataObj,this);
             if (geoImageSource) {
-
-                newLayer = new ol.layer.Image({
+                var metadata_3857= dataObj.details.metadata_3857;
+                var extent = 
+                [metadata_3857.upperleftx ,
+                  metadata_3857.upperlefty+  (metadata_3857.scaley* metadata_3857.height) ,
+                  metadata_3857.upperleftx + (metadata_3857.scalex * metadata_3857.width),
+                  metadata_3857.upperlefty];
+               // newLayer = new ol.layer.Image({
+                newLayer = new ol.layer.Tile({
                     title: layerInfo.title,
                     source: geoImageSource,
-                  
+                    extent:extent,
                     opacity: layerInfo.opacity,
                     custom: {
                         type: 'ol.layer.Image',

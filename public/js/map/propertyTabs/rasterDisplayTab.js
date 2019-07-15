@@ -319,7 +319,9 @@ content.find("#tblColors .colorpicker-component").colorpicker();
           return 0;
         }
       });
-      self.display.customColorMap=customColorMap;
+      if(self.display.colorMap=='custom'){
+        self.display.customColorMap=customColorMap;
+      }
       LayerHelper.setRasterDisplay(self.layer,self.display);
       var geoImageSource = self.parentDialog.mapContainer.sorceFactory.createGeoImageSource(layerCustom.dataObj,self.parentDialog.mapContainer);
       self.layer.set('source',geoImageSource );

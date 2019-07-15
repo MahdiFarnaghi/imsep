@@ -370,7 +370,7 @@ function LayerSourceTab() {
 
         htm+='  <div class="form-group">';
         htm+='    <label class="" for="url">Service url:</label>';
-        htm+='    <input type="text" name="url" id="url" value="'+details.url+'" placeholder="WFS address" autocomplete="on" class="form-control" data-val="true" data-val-required="Service url is required" />'
+        htm+='    <input type="text" name="url" id="url" value="'+details.url+'" placeholder="WFS address" autocomplete="on" class="form-control" data-val="true"  data-val-url2="Enter a valid Url" data-val-required="Service url is required" />'
         htm+='    <span class="field-validation-valid" data-valmsg-for="url" data-valmsg-replace="true"></span>';
         htm+='  </div>';
 
@@ -426,7 +426,7 @@ function LayerSourceTab() {
 
         htm+='  <div class="form-group">';
         htm+='    <label class="" for="url">Service url:</label>';
-        htm+='    <input type="url" name="url" id="url" value="'+details.url+'" placeholder="WMS address" autocomplete="on" class="form-control" data-val="true" data-val-required="Service url is required" />'
+        htm+='    <input type="text" name="url" id="url" value="'+details.url+'" placeholder="WMS address" autocomplete="on" class="form-control" data-val="true" data-val-url2="Enter a valid Url" data-val-required="Service url is required" />'
         htm+='    <span class="field-validation-valid" data-valmsg-for="url" data-valmsg-replace="true"></span>';
         htm+='  </div>';
 
