@@ -2634,7 +2634,7 @@ clipTileExpr +=`,cippedBands as (
                     
                     if(CI){
                         var cv=CI.value+'';
-                        if(cv.indexOf('%')){
+                        if(cv.indexOf('%')>-1){
                             try{
                                 cv= parseFloat(cv);
                                 cv=minimum + (maximum-minimum)*cv/100.0;

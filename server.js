@@ -1,6 +1,6 @@
 ﻿'use strict';
-//var forceRebuildDatabase = false; // replaced with process.env.DB_REBUILD
-
+//var forceRebuildDatabaseSchema = false; // replaced with process.env.DB_REBUILD
+const adb_version = 1;
 //#region require  
 var pjson = require('./package.json');
 var uglify_ = require('./Grunt_Uglify.js');
@@ -517,17 +517,31 @@ app.set('port', process.env.PORT || 3000);
         message: 'Application started',
         date: new Date()
     });
-    var forceRebuildDatabase=process.env.DB_REBUILD? (process.env.DB_REBUILD=='true'):flase;
+    var forceRebuildDatabaseSchema=process.env.DB_REBUILD? (process.env.DB_REBUILD=='true'):flase;
     
-    
+    var old_adb_version=undefined;
     if (true) {
+       
         try {
-            forceRebuildDatabase= await createDb();
+            forceRebuildDatabaseSchema= await create_ADB_if_not_exists(adb_version);
             console.log((process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep") +' is created' );
         } catch (ex) {
             var a = 1;
+            //database already exists
         }
-        if(forceRebuildDatabase){
+        try{
+            old_adb_version = await get_ADB_version();
+        }catch(ex){
+            old_adb_version=undefined;
+        }
+        if(!forceRebuildDatabaseSchema){
+            try{
+                await  upgrade_ADB(adb_version,old_adb_version);
+            }catch(ex){
+
+            }
+        }
+        if(forceRebuildDatabaseSchema){
             try {
                 
                 await createGDB();
@@ -555,8 +569,8 @@ app.set('port', process.env.PORT || 3000);
   
     
     
-    await models.sequelize.sync({ force: forceRebuildDatabase });
-    if (forceRebuildDatabase) {
+    await models.sequelize.sync({ force: forceRebuildDatabaseSchema });
+    if (forceRebuildDatabaseSchema) {
         try {
             await initDataAsync();
         } catch (ex) {
@@ -603,6 +617,123 @@ async function createDb(){
     const res = await client.query('CREATE DATABASE ' + dbName)
     await client.end()
     return true;
+}
+async function create_ADB_if_not_exists(adb_version){
+    const { Client } = require('pg')
+    const dbName=process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep";
+    var params={
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        //"database":dbName,
+        "database":"postgres",
+        "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
+      };
+    const client = new Client(params)
+      
+    try{
+    await client.connect()
+    }catch(ex){
+        var a=1;
+        return false
+    }
+
+    const res = await client.query('CREATE DATABASE ' + dbName)
+    await client.end()
+
+    params.database=dbName;
+    const client2 = new Client(params)
+    
+    await client2.connect()
+    
+    const res2 = await client2.query(`CREATE TABLE public.adb_properties
+    (
+        key text  NOT NULL,
+        value text ,
+        CONSTRAINT adb_properties_pkey PRIMARY KEY (key)
+    )   WITH (  OIDS = FALSE  );
+    INSERT INTO public.adb_properties (
+        key, value) VALUES (
+        'version', '${adb_version}');
+    `)
+    await client2.end()
+    
+
+    return true;
+}
+async function get_ADB_version(){
+    const { Client } = require('pg')
+    const dbName=process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep";
+    var params={
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        "database":dbName,
+        "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
+      };
+    
+    const client2 = new Client(params)
+    
+    await client2.connect()
+    const q=`SELECT value FROM public.adb_properties
+    WHERE key='version';`;
+    
+    const res2 = await client2.query(q)
+    await client2.end()
+    if(res2 && res2.rowCount){
+        var version= res2.rows[0]['value'];
+        try {
+            version= parseInt(version);
+        } catch (error) {
+            
+        }
+        return version;
+    }
+
+    return undefined;
+}
+async function upgrade_ADB(adb_version,old_adb_version){
+    if(typeof old_adb_version=='undefined'){
+        old_adb_version=0;
+    }
+    if(old_adb_version==0){
+        try{
+            await upgrade_ADB_to_1();
+        }catch(ex){
+            console.log('Failed to upgrade ADB to version 1');
+        }
+    }
+
+}
+async function upgrade_ADB_to_1(){
+    const { Client } = require('pg')
+    const dbName=process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep";
+    var params={
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        "database":dbName,
+        "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
+      };
+    
+    const client2 = new Client(params)
+    
+    await client2.connect()
+    const q=`CREATE TABLE public.adb_properties
+    (
+        key text  NOT NULL,
+        value text ,
+        CONSTRAINT adb_properties_pkey PRIMARY KEY (key)
+    )   WITH (  OIDS = FALSE  );
+    INSERT INTO public.adb_properties (
+        key, value) VALUES (
+        'version', '1');
+    `;
+    
+    const res2 = await client2.query(q)
+    await client2.end()
+   return true;
+
 }
 async function createGDB(){
     const { Client } = require('pg')

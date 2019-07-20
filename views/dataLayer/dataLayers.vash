@@ -25,6 +25,9 @@
         padding-top:0.5em;
         
     }
+    .item-container .item-description{
+            white-space: pre-wrap;
+    }
     .list-inline{
             margin: 0 0 0 -15px;
             padding: 0.5em;
@@ -102,7 +105,7 @@
                                 <h4>@item.name</h4>
                                 </label>
                                 }*@
-                            <p style="white-space: pre;" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
+                            <p class="item-description" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
                             
                                 <ul class="list-inline">
                                     <li>

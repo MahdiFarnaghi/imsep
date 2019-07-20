@@ -1,15 +1,14 @@
 ﻿# iMSEP
 ## Visual Studio Code installing
-1. install Visual Studio Code
-2. install follwing extensions
+1. Install Node.js v8.15.0 (tested)
+2. Install Visual Studio Code
+3. Install follwing extensions
     * Debugger for Chrome
     * Vash syntax
-    * vscode-icons
-    * Bracket Pair Colorizer
-
-3. Clone GIT Repository 
+    * vscode-icons (Optional)
+    * Bracket Pair Colorizer (Optional)
 ## Executing's Parameters
-* All the usable executing/environment parameters are in [.env](.env) file
+* All usable executing/environment parameters are in [.env](.env) file
 ## Debug
 * Use "Server/Chrome" configuration in [launch.json](.vscode/launch.json)
 ## Docker

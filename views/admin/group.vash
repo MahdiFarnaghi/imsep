@@ -50,7 +50,7 @@
                  <div class="form-group">
                             <label class="col-sm-12" for="description">Description</label>
                             <div class="col-sm-12">
-                                <textarea type="text" name="description" rows="5" id="description" autofocus placeholder="Description" class="form-control">@html.raw(model.item.description) </textarea>
+                                <textarea type="text" name="description" rows="5" id="description" autofocus placeholder="Description" class="form-control">@html.raw(model.item.description)</textarea>
                                @* <span class="help-block">This is some help text that breaks onto a new line and may extend more than one line.</span>*@
                             </div>
                 </div>

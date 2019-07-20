@@ -34,6 +34,9 @@
         padding-top:0.5em;
         
     }
+     .item-container .item-description{
+            white-space: pre-wrap;
+    }
     .list-inline{
             margin: 0 0 0 -15px;
             padding: 0.5em;
@@ -70,7 +73,7 @@
                                         else {<i class="avatar fa fa-map"> </i>}
                                         <h4>@item.name</h4>
                                         </a>
-                                        <p>@html.raw(item.description)</p>
+                                        <p class="item-description">@html.raw(item.description)</p>
                                         
                                         <ul class="list-inline">
                                             
@@ -142,7 +145,7 @@
                                         <h4>@item.name</h4>
                                         </label>
                                         }*@
-                                         <p style="white-space: pre;" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
+                                         <p class="item-description" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
                                        
                                         <ul class="list-inline">
                                              <li>
