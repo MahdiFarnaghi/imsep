@@ -1,0 +1,20 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+ 
+<div class="container">
+    <div class="panel" style="font-size:1.5em;">
+        <div class="panel-heading" >
+            <h3 class="panel-title">About iMSEP</h3>
+        </div>
+        <hr />
+        <div class="panel-body">
+           
+          <p style="text-align: justify;">Spatial data and analysis has proven to be essential for knowledge-based and reliable environment protection and disaster management. <strong>iMSEP</strong> is &rdquo;<strong>i</strong>nternet-based information <strong>M</strong>anagement <strong>S</strong>ystem for <strong>E</strong>nvironmental <strong>P</strong>rotection and Disaster Risk Management&rdquo; that provides decision-makers and planners with access to spatial data and analysis, at any time and any place, over internet, for a better environment and/or disaster management. The system has been developed at Lund University, under coordination and management of Associate Professor <a href="https://www.nateko.lu.se/ali-mansourian">Dr. Ali Mansourian</a>.</p>
+<p style="text-align: justify;"><strong>iMSEP</strong> is a subproject of a larger project funded by European Union. It has general GIS (Geographical Information System) functions for collection (e.g. on-screen digitizing, importing maps, editing attribute data), analysis (e.g. buffering, overlaying, shortest path analysis, DEM analysis), visualization (different and flexible cartographic presentations), management, and sharing spatial data. To use <strong>iMSEP</strong> you should create an account. Using that account you can visualize maps. If you want to be able to add, edit or share spatial data within <strong>iMSEP</strong> you should contact <strong>iMSEP</strong> admin in your region or country to provide you with proper authorization.</p>
+        </div>
+    </div>
+
+</div>
+
+  })
+})

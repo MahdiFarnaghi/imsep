@@ -143,6 +143,9 @@ app.set('view engine', 'vash');
 vash.helpers.equals = function (e1, e2) {
     return e1 === e2;
 };
+vash.helpers.randomNumber = function (from, to) {
+    return Math.floor(Math.random() * to) + from;
+};
 vash.helpers.getBase64 = function (jsonObject) {
 var str=new Buffer(JSON.stringify(jsonObject)).toString('base64');
 //var str= btoa(JSON.stringify(jsonObject));
@@ -240,10 +243,13 @@ app.post('/proxy',
     [Authenticated],
     handleErrors( homeController.proxyPost));
 
-app.get('/', handleErrors(homeController.index));
+app.get('/', [Authenticated],handleErrors(homeController.index));
 app.get('/help', handleErrors(homeController.help));
+app.get('/about',  handleErrors(homeController.aboutGet));
+
 app.get('/contact',  handleErrors(contactController.contactGet));
 app.post('/contact',handleErrors( contactController.contactPost));
+
 app.get('/account',   [Authenticated],  handleErrors( accountController.accountGet));
 app.put('/account',   [Authenticated],    handleErrors(accountController.accountPut));
 app.get('/account/:id/avatar', validateController.noCache,handleErrors( accountController.avatarGet));    

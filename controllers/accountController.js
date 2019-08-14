@@ -17,10 +17,45 @@ module.exports = function (passportConfig) {
      */
     module.ensureAuthenticated = function (req, res, next) {
         if (req.isAuthenticated()) {
-            next();
+            if(req.user &&req.user.status==='inactive'){
+                req.flash('notify', {
+                    type:'danger',
+                    notify:true,
+                    delay:10000, msg: 'Account is deactivated.' });
+                //delete req.session.returnToUrl;    
+                //return res.redirect('/login')
+                     module.logout(req,res);
+            }else{
+                next();
+            }
         } else {
             req.session.returnToUrl = req.url; 
             res.redirect('/login');
+        }
+    };
+    module.ensureAuthenticatedOrGuest =async function (req, res, next) {
+        if (req.isAuthenticated()) {
+            if(req.user &&req.user.status==='inactive'){
+                req.flash('notify', {
+                    type:'danger',
+                    notify:true,
+                    delay:10000, msg: 'Account is deactivated.' });
+                // delete req.session.returnToUrl;    
+                // return res.redirect('/login')
+                 module.logout(req,res);
+            }else{
+                next();
+            }
+        } else {
+            req.user = await models.User.findOne({ where: { userName: 'guest' } , include: [{ model: models.Group, as: 'BelongsToGroups' }] });
+            if(req.user &&req.user.status==='active'){
+                delete req.session.returnToUrl;
+                next();
+            }else{
+                req.session.returnToUrl = req.url; 
+                res.redirect('/login');
+            }
+            
         }
     };
     // Make autorize middleware
@@ -100,23 +135,74 @@ module.exports = function (passportConfig) {
                 return res.redirect('/login')
             }
             
-            req.logIn(user, function (err) {
-                if ('remember_me' in req.body && user){
-                    passportConfig.issueToken(user, function(err, token) {
-                        if (err) { return next(err); }
-                        try{
-                        res.cookie('remember_me', token, { path: '/', httpOnly: true, maxAge: 7*24*3600000 });// 1 week
-                        }catch(ex0){
-                            var t=1;
+            req.logIn(user, async function (err) {
+                var emailVerified=true;
+                if(process.env.FORCE_EMAIL_VERIFICATION && process.env.FORCE_EMAIL_VERIFICATION=='true' ){
+                    if(user.email && !user.emailVerified && user.emailVerifyToken){
+                        emailVerified=false;
+                    }   
+                }
+                if(emailVerified){
+                    if ('remember_me' in req.body && user){
+                        passportConfig.issueToken(user, function(err, token) {
+                            if (err) { return next(err); }
+                            try{
+                            res.cookie('remember_me', token, { path: '/', httpOnly: true, maxAge: 7*24*3600000 });// 1 week
+                            }catch(ex0){
+                                var t=1;
+                            }
+                        // return next();
+                        res.redirect(req.session.returnToUrl || '/');
+                        delete req.session.returnToUrl;
+                        });
+                    }else{
+                
+                        res.redirect(req.session.returnToUrl || '/');
+                        delete req.session.returnToUrl;
                         }
-                       // return next();
-                       res.redirect(req.session.returnToUrl || '/');
-                       delete req.session.returnToUrl;
-                    });
                 }else{
-               
-                res.redirect(req.session.returnToUrl || '/');
-                delete req.session.returnToUrl;
+                    var emailToken = user.emailVerifyToken;
+                    if(!emailToken){
+                        emailToken=await util.generateUrlSafeToken();
+                    } 
+                    user.set('emailVerified',false);
+                    user.set('emailVerifyToken',emailToken);
+                    user.set('emailVerifyExpires',new Date(Date.now() + (30*24*3600000)));
+                    await user.save();
+                    var transporter = nodemailer.createTransport({
+                        service: process.env.EMAIL_SENDER_SERVICE,
+                        secure: false,
+                        auth: {
+                            user: process.env.EMAIL_SENDER_USERNAME,
+                            pass: process.env.EMAIL_SENDER_PASSWORD
+                        },
+                        tls: {
+                            rejectUnauthorized: false//https://github.com/nodemailer/nodemailer/issues/406
+                        }
+                    });
+                    var mailOptions = {
+                        to: user.email,
+                        from: process.env.SUPPORT_EMAIL,
+                        subject: '✔ Verify your email on ' + process.env.SITE_NAME,
+                        text: 'You are receiving this email because this email address is linked to an account in this site.\n\n' +
+                            'Please click on the following link, or paste this into your browser to complete email verification process:\n\n' +
+                            'http://' + req.headers.host + '/verifyemail/' + emailToken + '\n\n' +
+                            ''
+                        };
+                   
+                    try {
+                        await transporter.sendMail(mailOptions);
+                        
+                    } catch (ex) {
+                    }
+                      
+                    req.flash('info', { msg: 'An email verification link has been sent to your email address. Please, follow the instructions in it to activate your account.' });      
+                    delete req.session.returnToUrl;
+                    res.clearCookie('remember_me');
+                    req.logout();
+                    res.redirect('/');
+                    
+
                 }
             });
         })(req, res, next);
@@ -189,7 +275,7 @@ module.exports = function (passportConfig) {
         var superAdmin = await models.User.findOne({ where: { userName: 'superadmin' } });
         var [, allUsers] = await util.call(models.Group.findOne({ where: { name: 'users' } }));
         var emailToken = await util.generateUrlSafeToken();
-
+        var emailSent=false;
         try {
             var newUser = await models.User.create({
                 userName: req.body.userName,
@@ -206,6 +292,7 @@ module.exports = function (passportConfig) {
                 }catch(ex){
 
                 }
+                
                 var transporter = nodemailer.createTransport({
                     service: process.env.EMAIL_SENDER_SERVICE,
                     secure: false,
@@ -226,17 +313,35 @@ module.exports = function (passportConfig) {
                         'http://' + req.headers.host + '/verifyemail/' + emailToken + '\n\n' +
                         ''
                     };
-               
+                    emailSent=true;
                 try {
                     await transporter.sendMail(mailOptions);
                     
                 } catch (ex) {
+                   
                 }
 
             }
             if (newUser) {
-                req.logIn(newUser, function (err) {
-                    res.redirect('/');
+               // req.logIn(newUser, function (err) {
+               //     res.redirect('/');
+               // });
+               if(emailSent){
+                req.flash('info', { msg: 'An email verification link has been sent to your email address. Please, follow the instructions in it to activate your account.' });      
+               }
+               delete req.session.returnToUrl;
+               res.clearCookie('remember_me');
+               req.logout();
+               res.redirect('/');
+            }else{
+               
+                    req.flash('error', { msg: 'Failed to create new account!' });
+                //return res.redirect('/signup');
+                res.render('account/signup', {
+                    title: 'Sign up',
+                    userName: req.body.userName,
+                    email: req.body.email,
+                    password: req.body.password
                 });
             }
         } catch (ex) {
@@ -509,6 +614,10 @@ module.exports = function (passportConfig) {
     module.unlink = async function (req, res, next) {
         var user = await models.User.findOne({ where: { id: req.user.id } });
         if (user) {
+            if(!user.password){
+                req.flash('error', { msg: 'It is required that you have set a password before the unlinking.' });
+                return res.redirect('/account');
+            }
             switch (req.params.provider) {
                 case 'facebook':
                     user.set('facebook', null);
@@ -709,6 +818,8 @@ module.exports = function (passportConfig) {
         user.set('emailVerified', true);
         user.set('passwordResetToken', null);
         user.set('passwordResetExpires', null);
+        user.set('emailVerifyToken',null);
+        
         await user.save();
         req.logIn(user, function (err) {
             var transporter = nodemailer.createTransport({

@@ -1,3 +1,6 @@
-<footer id="footer">
-        <p>&copy;@process.env.COPY_RIGHTS</p>
+<footer id="footer" style="color:#1a3bf1">
+        <p style="float:left;">&copy;@process.env.COPY_RIGHTS</p>
+        <p style="float:right;">
+            Co-funded by the Erasmus+ Programme of the European Union <img style="height: 1.5em;" src="/images/eroflag.png"/>
+        </p>
 </footer>

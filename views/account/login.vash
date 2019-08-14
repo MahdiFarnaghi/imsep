@@ -4,7 +4,46 @@
         function getCaptcha() {
             $("#captcha").attr('src', '/captcha?' + new Date().getTime());
         }
+
+
 </script>
+
+<style>
+.login-container {
+    max-width: 400px;
+}
+body{
+/*background-image: url(@('/images/background')@html.randomNumber(1,5)@('.jpg'));*/
+background-image: url('/images/background2.jpg');
+background-size: cover;
+background-repeat: no-repeat;
+transition: background-image 2s ease-in-out;
+
+
+/*height: 100%;*/
+
+}
+.panel {
+    /*background-color: #ffffff2e;*/
+    background-color:rgba(100, 100, 100, 0.5);
+
+    color: white;
+}
+legend , label, p.text-center{
+    color: white!important;
+}
+a, a:hover {
+    /*color: #2cc363;*/
+    color:#1d7cf4;
+    font-weight:normal;
+}
+a:hover{
+    text-decoration:underline;
+}
+label{
+    font-weight:normal;
+}
+</style>
 <div class="login-container container">
     <div class="panel">
         <div class="panel-body">
@@ -14,14 +53,20 @@
             <form method="POST">
                 <legend>Log In</legend>
                 <div class="form-group">
-                    <label for="userName" class="control-label">Username</label>
-                    <input type="text" name="userName" id="userName" value="@model.userName" placeholder="Username" autofocus class="form-control" data-val="true" data-val-required="The Username field is required.">
+                    @*<label for="userName" class="control-label">Username</label>*@
+                    <div class="input-group">
+                        <span class="input-group-addon"><i title="Username" class="glyphicon glyphicon-user"></i></span>
+                        <input type="text" name="userName" id="userName" value="@model.userName" placeholder="Username" autofocus class="form-control" data-val="true" data-val-required="The Username field is required.">
+                    </div>    
                     <span class="field-validation-valid" data-valmsg-for="userName" data-valmsg-replace="true"></span>
 
                 </div>
                 <div class="form-group">
-                    <label for="password" class="control-label">Password</label>
-                    <input type="password" name="password" id="password" placeholder="Password" class="form-control" data-val="true" data-val-required="Password is required">
+                    @*<label for="password" class="control-label">Password</label>*@
+                    <div class="input-group">
+                        <span class="input-group-addon"><i title="Password" class="glyphicon glyphicon-lock"></i></span>
+                         <input type="password" name="password" id="password" placeholder="Password" class="form-control" data-val="true" data-val-required="Password is required">
+                     </div>      
                     <span class="field-validation-valid" data-valmsg-for="password" data-valmsg-replace="true"></span>
                 </div>
                 <div class="form-group">
@@ -45,11 +90,36 @@
             <div class="hr-title"><span>or</span></div>
             <div class="btn-toolbar text-center"><a href="/auth/google" class="btn btn-google">Sign in with Google</a></div>
         </div>
-    </div>
-    @if(html.equals(process.env.FREE_SIGN_UP,'true')){
+        @if(html.equals(process.env.FREE_SIGN_UP,'true')){
     <p class="text-center">Don't have an account?&nbsp;<a href="/signup"><strong>Sign up</strong></a></p>
     }
+    </div>
+    
 </div>
 
   })
+  @html.block('scripts', function(model) {
+    <script>
+        $(document).ready(function () {
+        function setRandomBackground(){
+            var imageIndex=1;
+            var maxCount=2;
+            imageIndex= Math.floor(Math.random() * maxCount) + 1;
+            $('body').css('background-image','url("/images/background'+ imageIndex +'.jpg")');
+        }
+
+        //setRandomBackground();
+        window.setInterval(function() {
+                    setRandomBackground();
+                }, 5 * 1000);
+
+           
+        
+        // setTimeout(function(){
+        //     $('body').css('background-image','url("/images/background4.jpg")');
+        // },2000);
+        
+          });
+    </script>
+    })
 })

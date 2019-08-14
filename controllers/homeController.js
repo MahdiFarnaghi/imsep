@@ -249,6 +249,15 @@ module.help = async function(req, res) {
           content:content
     });
   };
+ /**
+ * GET /about
+ */
+module.aboutGet = function(req, res) {
+  
+    res.render('about', {
+      title: 'About'
+    });
+  }; 
   /**
      * GET /proxy
      */

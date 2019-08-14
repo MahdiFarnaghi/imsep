@@ -1894,6 +1894,7 @@ module.exports = function (postgresWorkspace) {
                 if(!userHasViewPermission){
                     res.set('Content-Type', 'text/plain');
                     res.status(403).end('Access denied');
+                    return;
                 }
                 
                 
@@ -1966,6 +1967,7 @@ module.exports = function (postgresWorkspace) {
                 if(!(validate || onlyIds) ){
                     res.set('Content-Type', 'text/plain');
                     res.status(404).end('Not found.('+ ex.message +')' );
+                    return;
                 }else{
                     return res.json({
                         status:false,
@@ -2058,6 +2060,7 @@ module.exports = function (postgresWorkspace) {
                 if(!userHasViewPermission){
                     res.set('Content-Type', 'text/plain');
                     res.status(403).end('Access denied');
+                    return;
                 }
               }
               var details={};
@@ -2088,6 +2091,7 @@ module.exports = function (postgresWorkspace) {
             }catch(ex){
                 res.set('Content-Type', 'text/plain');
                 res.status(404).end('Not found.('+ ex.message +')' );
+                return;
             }
             
             
@@ -2518,6 +2522,7 @@ module.exports = function (postgresWorkspace) {
               if(!userHasViewPermission){
                   res.set('Content-Type', 'text/plain');
                   res.status(403).end('Access denied');
+                  return;
               }
               
               
@@ -2667,6 +2672,7 @@ module.exports = function (postgresWorkspace) {
             }catch(ex){
                 res.set('Content-Type', 'text/plain');
                 res.status(404).end('Not found.('+ ex.message +')' );
+                return;
             }
             
             
@@ -2785,6 +2791,7 @@ module.exports = function (postgresWorkspace) {
             if(!userHasViewPermission){
                 res.set('Content-Type', 'text/plain');
                 res.status(403).end('Access denied');
+                return;
             }
             
             
@@ -2917,6 +2924,7 @@ module.exports = function (postgresWorkspace) {
         }catch(ex){
             res.set('Content-Type', 'text/plain');
             res.status(404).end('Not found.('+ ex.message +')' );
+            return;
         }
             
             
@@ -3021,6 +3029,7 @@ module.exports = function (postgresWorkspace) {
               if(!userHasViewPermission){
                   res.set('Content-Type', 'text/plain');
                   res.status(403).end('Access denied');
+                  return;
               }
               
               
@@ -3298,12 +3307,14 @@ module.exports = function (postgresWorkspace) {
             }catch(ex){
                 res.set('Content-Type', 'text/plain');
                 res.status(404).end('Not found.('+ ex.message +')' );
+                return;
             }
             
             
         }else{
             res.set('Content-Type', 'text/plain');
             res.status(404).end('Not found');
+
             return;
         }
     };
