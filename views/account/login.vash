@@ -14,7 +14,7 @@
 }
 body{
 /*background-image: url(@('/images/background')@html.randomNumber(1,5)@('.jpg'));*/
-background-image: url('/images/background2.jpg');
+background-image: url('/images/background1.jpg');
 background-size: cover;
 background-repeat: no-repeat;
 transition: background-image 2s ease-in-out;
@@ -25,12 +25,13 @@ transition: background-image 2s ease-in-out;
 }
 .panel {
     /*background-color: #ffffff2e;*/
-    background-color:rgba(100, 100, 100, 0.5);
-
-    color: white;
+    /*background-color:rgba(100, 100, 100, 0.5);*/
+    background-color: #f7f7f7e6;
+    /*color: white;*/
+        box-shadow: #8e8d8d 10px 10px 15px;
 }
 legend , label, p.text-center{
-    color: white!important;
+    /*color: white!important;*/
 }
 a, a:hover {
     /*color: #2cc363;*/
@@ -111,10 +112,10 @@ label{
             $('body').css('background-image','url("/images/background'+ imageIndex +'.jpg")');
         }
 
-        //setRandomBackground();
-        window.setInterval(function() {
-                    setRandomBackground();
-                }, 5 * 1000);
+        // //setRandomBackground();
+        // window.setInterval(function() {
+        //             setRandomBackground();
+        //         }, 5 * 1000);
 
            
         
