@@ -196,7 +196,7 @@ module.exports = function (passportConfig) {
                     } catch (ex) {
                     }
                       
-                    req.flash('info', { msg: 'An email verification link has been sent to your email address. Please, follow the instructions in it to activate your account.' });      
+                    req.flash('info', { msg: 'We have sent an email with a confirmation link to your email address. Please, follow the instructions in it to activate your account.' });      
                     delete req.session.returnToUrl;
                     res.clearCookie('remember_me');
                     req.logout();
@@ -327,7 +327,7 @@ module.exports = function (passportConfig) {
                //     res.redirect('/');
                // });
                if(emailSent){
-                req.flash('info', { msg: 'An email verification link has been sent to your email address. Please, follow the instructions in it to activate your account.' });      
+                req.flash('info', { msg: 'We have sent an email with a confirmation link to your email address. Please, follow the instructions in it to activate your account.' });      
                }
                delete req.session.returnToUrl;
                res.clearCookie('remember_me');
@@ -902,7 +902,7 @@ module.exports = function (passportConfig) {
                 req.flash('notify', {
                     type:'success',
                     notify:true,
-                    delay:3000, msg: 'An email verification link has been sent to your email address.' });
+                    delay:3000, msg: 'We have sent an email with a confirmation link to your email address.' });
             
                res.redirect('/account');
             
