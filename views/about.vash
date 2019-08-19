@@ -1,12 +1,35 @@
 @html.extend('layout', function(model) {
   @html.block('content', function(model) {
- 
-<div class="container">
-    <div class="panel" style="font-size:1.5em;">
+ <style>
+.about-container {
+    max-width: 800px;
+}
+body{
+/*background-image: url(@('/images/background')@html.randomNumber(1,5)@('.jpg'));*/
+background-image: url('/images/background1.jpg');
+background-size: cover;
+background-repeat: no-repeat;
+transition: background-image 2s ease-in-out;
+
+
+/*height: 100%;*/
+
+}
+
+.panel {
+    /*background-color: #ffffff2e;*/
+    /*background-color:rgba(100, 100, 100, 0.5);*/
+    background-color: #f7f7f7e6;
+    /*color: white;*/
+        box-shadow: #8e8d8d 10px 10px 15px;
+}
+</style>
+<div class="about-container container">
+    <div class="panel" style="font-size:1.1em;padding-left: 2em;padding-right: 2em;">
         <div class="panel-heading" >
             <h3 class="panel-title">About iMSEP</h3>
         </div>
-        <hr />
+        <hr style="    margin: 0;" />
         <div class="panel-body">
            
           <p style="text-align: justify;">Spatial data and analysis has proven to be essential for knowledge-based and reliable environment protection and disaster management. <strong>iMSEP</strong> is &rdquo;<strong>i</strong>nternet-based information <strong>M</strong>anagement <strong>S</strong>ystem for <strong>E</strong>nvironmental <strong>P</strong>rotection and Disaster Risk Management&rdquo; that provides decision-makers and planners with access to spatial data and analysis, at any time and any place, over internet, for a better environment and/or disaster management. The system has been developed at Lund University, under coordination and management of Associate Professor <a href="https://www.nateko.lu.se/ali-mansourian">Dr. Ali Mansourian</a>.</p>
