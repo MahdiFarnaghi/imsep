@@ -37,7 +37,11 @@
         padding-left: 5px;
         padding-right: 5px;
     }
- 
+  #extMap {
+       clear:both;
+    border: solid 1px rgba(160, 160, 160, 0.3);
+    box-shadow: 5px 5px 4px 0 rgba(150, 148, 148, 0.65);
+}
 </style>
 
 
@@ -53,7 +57,12 @@
                         <span class="help-block"></span>
                         <p></p>
                         
-                        <input class="search-box animated-search-box_ form-control" id="tblItems_search" type="search" placeholder="Search..">
+                       <div class="input-group">
+                            <input class="search-box_ animated-search-box_ form-control" id="tblItems_search" type="search" placeholder="Search..." autofocus >
+                            <span class="input-group-btn">
+                             <button class="btn btn-primary" type="button" id="text_search_btn"><i class="fa fa-search"></i></button>
+                            </span>
+                        </div> 
                          
                             @if(model.identity.isAdministrator || model.identity.isPowerUser|| model.identity.isDataManager || model.identity.isDataAnalyst){
                                 <br/>
@@ -69,83 +78,71 @@
                         
                     </div>
                 </div>
-            </div>
+
+                <div class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlDatasetType" aria-expanded="false" class="btn btn-link btn-block ">
+                                    <i class="collapse-action glyphicon"></i>
+                                    <h4 class="title"><i class="glyphicon glyphicon-filter"></i>Type</h4>
+                            </button>
+                        </div>
+                        <div id="pnlDatasetType" class="panel-collapse collapse in">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <ul class="nav list-group" id="datasetTypes">
+                        
+                                     </ul>  
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                 <div class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlAuthor" aria-expanded="false" class="btn btn-link btn-block collapsed ">
+                                    <i class="collapse-action glyphicon"></i>
+                                    <h4 class="title"><i class="fa fa-user"></i> Author</h4>
+                            </button>
+                        </div>
+                        <div id="pnlAuthor" class="panel-collapse collapse ">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <ul class="nav list-group" id="authors">
+                        
+                                     </ul>  
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                 
+                 <div class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlSort" aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                    <i class="collapse-action glyphicon"></i>
+                                     <h4 class="title "><i class="glyphicon glyphicon-sort"></i> Sort </h4>
+                            </button>
+                        </div>
+                        <div id="pnlSort" class="panel-collapse collapse ">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <ul class="nav" id="orderbys">
+                        
+                                     </ul>  
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+
+                
+    </div>
+      <input type="hidden" name="items" id="items" value="@(JSON.stringify(model.data))" readonly class="form-control">
     <div class="col-sm-8">
       <div class="panel">
         <div class="panel-body">
-            <div class="row row-grid" id="tblItems">
-                @{var i=0;}
-                @model.items.forEach(function(item) {
-                                        
-                <div class="col-xs-18 col-sm-12 col-md-12 listItem">
-                        <div class="item-container" >
-                        <div class="thumbnail">
-                        
-                            <div class="caption">
-
-                                <a href="/map/preview?layers=@item.id" >
-                                @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
-                                else {<i class="avatar fa fa-map"> </i>}
-                                <h4>@item.name</h4>
-                                </a>
-
-                                @*<a href="/datalayer/@item.id@(html.equals('raster',item.dataType)?'/raster':'')" >*@
-                                @*
-                                @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || (model.identity.isDataManager && item._userHasPermission_EditSchema)){
-                                <a href="/datalayer/@item.id?dataType=@item.dataType" >
-                                @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
-                                else {<i class="avatar fa fa-map"> </i>}
-                                <h4>@item.name</h4>
-                                </a>
-                                }else
-                                {
-                                 <label>
-                                @if (item.thumbnail){<img class="avatar" src="/datalayer/@item.id/thumbnail" />}
-                                else {<i class="avatar fa fa-map"> </i>}
-                                <h4>@item.name</h4>
-                                </label>
-                                }*@
-                            <p class="item-description" >@html.raw((item.description || '').replace(/(?:\r\n|\r|\n)/g, '<br />'))</p>
-                            
-                                <ul class="list-inline">
-                                    <li>
-                                        <i class="fa fa-calendar fa-calendar-o"></i><span class="convertTolocalDateTime" title="Definition modified at" >@item.updatedAt.toUTCString()</span>
-                                    </li>
-                                    <li>
-                                        <i class="fa fa-user" title="Owner" ></i> 
-                                        @if(model.identity.id==item.OwnerUser.id){
-                                            <b> <span title="Owner" >@item.OwnerUser.userName</span></b>
-                                        }else{
-                                            <span title="Owner">@item.OwnerUser.userName</span>
-                                        }
-                                        
-                                    </li>
-                                    
-                                    @if(model.identity.isAdministrator || (model.identity.id==item.OwnerUser.id) || ( (model.identity.isPowerUser || model.identity.isDataManager ||  model.identity.isDataAnalyst) && item._userHasPermission_EditSchema)){
-                                     <li>
-                                        <a href="/datalayer/@item.id?dataType=@item.dataType"><i class="glyphicon glyphicon-edit"></i></a> 
-                                     </li>   
-                                    }
-                                    
-                                    <li>
-                                    
-                                      @if(model.identity.isAdministrator || ( model.identity.id==item.OwnerUser.id)
-                                      || (item.OwnerUser.parent== model.identity.id )
-                                      ){
-                                        <form method="POST" action="/datalayer/@item.id/delete?_method=DELETE">
-                                            <button title="Delete" type="submit" style="color:red" class="btn-link  glyphicon glyphicon-remove" onclick="return confirm('Confirm deletion?');"> </button>
-                                        </form>
-                                    }
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
-                        </div>
-                        </div>
-
-
-                })
-                </div>
+             <div class="row row-grid" id="tblItems">
+                <div class="col-xs-18 col-sm-12 col-md-12 ">
+                     <div class="thumbnail waitbar_h" style="height:30px"  ></div>
+                </div>  
+            </div>
 
         </div>
     </div>
@@ -164,19 +161,17 @@
  
   })
  @html.block('scripts', function(model) {
-    <script>
-        $(document).ready(function () {
-        
+  
 
-            $("#tblItems_search").on("keyup change", function () {
-                var value = $(this).val().toLowerCase();
-                $("#tblItems .listItem").filter(function () {
-                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
-              //  app.test('11');
-            });
-        });
-    </script>
+   @if(process.env.NODE_ENV=='development'){
+       @model.uglify.dataLayers_page.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        })
+   }else{
+       <script src="/dist/js/dataLayers_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+
     })
 })
 

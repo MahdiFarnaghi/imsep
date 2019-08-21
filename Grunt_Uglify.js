@@ -16,6 +16,10 @@ module.exports = {
         src:['public/js/pages/dataLayer/uploadRaster_page.js'],
         dest: 'public/dist/js/uploadRaster_page-<%= pkg.version %>-min.js'
     },
+    dataLayers_page:{
+        src:['public/js/pages/dataLayer/dataLayers_page.js'],
+        dest: 'public/dist/js/dataLayers_page-<%= pkg.version %>-min.js'
+    },
     dataLayer_vector_page:{
         src:['public/js/pages/dataLayer/dataLayer_vector_page.js'],
         dest: 'public/dist/js/dataLayer_vector_page-<%= pkg.version %>-min.js'
@@ -28,7 +32,10 @@ module.exports = {
         src:['public/js/pages/admin/group_page.js'],
         dest: 'public/dist/js/group_page-<%= pkg.version %>-min.js'
     },
-    
+    maps_page:{
+        src:['public/js/pages/map/maps_page.js'],
+        dest: 'public/dist/js/maps_page-<%= pkg.version %>-min.js'
+    },
     map_page:{
         src:['public/js/pages/map/map_page.js'],
         dest: 'public/dist/js/map_page-<%= pkg.version %>-min.js'

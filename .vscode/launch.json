@@ -11,6 +11,14 @@
             "program": "${workspaceFolder}\\server"
         },
         {
+            "type": "node",
+            "request": "launch",
+            "name": "Server_Production",
+            "program": "${workspaceFolder}\\server",
+            "env": {"NODE_ENV":"production"},
+            "preLaunchTask": "uglifyAllScripts",
+        },
+        {
             "type":"chrome",
             "request": "launch",
             "name": "Chrome",
@@ -37,6 +45,12 @@
         },
     ],
     "compounds": [
+        {
+            "name": "Server/Chrome (Production)",
+            
+            "configurations": ["Server_Production", "Chrome"]
+            
+        },
         {
             "name": "Server/Chrome",
             "configurations": ["Server", "Chrome"]

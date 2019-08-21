@@ -6,7 +6,7 @@
     <title>@model.title | @process.env.SITE_NAME</title>
 
     <link rel="icon" type="image/png" href="/earth48.png" />
-    <link rel='stylesheet' href='/css/bootstrap.min.css' />
+    <link rel='stylesheet' href='/css/bootstrap.css' />
     <link rel='stylesheet' href='/bootstrap3-dialog/css/bootstrap-dialog.min.css' />
     <link rel='stylesheet' href='/bootstrap-colorpicker/css/bootstrap-colorpicker.min.css' />
      

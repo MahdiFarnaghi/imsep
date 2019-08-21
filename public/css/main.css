@@ -591,3 +591,25 @@ input[type=number].nospinner::-webkit-outer-spin-button {
   -o-transform: scale(-1,1);
   transform: scale(-1,1)
 }
+
+
+.collapsible-panel .btn-link:hover,
+    .collapsible-panel .btn-link:focus{
+        text-decoration:none;
+        background-color: #d4d8d8b5;
+        border-color: #d6d2d2;
+    }
+ 
+    span.page-link {
+      cursor: pointer;
+  }
+  .nav .list-group-item{
+      cursor:pointer;
+  }
+  .nav .list-group-item.active{
+      color: inherit;
+      
+      background-color: #c8e0f5;
+    border-color: #b0d6f7;
+      
+  }

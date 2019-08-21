@@ -1333,6 +1333,8 @@ MapContainer.prototype.addData = function(dataObj) {
       
        
         
+    }else {
+        this.addLayerById(dataObj.id);
     }
     if(newLayer){
         this.setActiveLayer(newLayer);

@@ -1,4 +1,5 @@
-﻿const { Op } = require('sequelize');
+﻿const  Sequelize  = require('sequelize');
+const { Op } = require('sequelize');
 var models = require('../models/index');
 var util = require('./util');
 var sharp= require('sharp');
@@ -10,6 +11,360 @@ module.exports = function () {
      * GET /maps
      */
     module.mapsGet = async function (req, res) {
+        var items;
+        var format=undefined;
+        
+        if(req.query && 'format' in req.query){
+            format=req.query.format;
+        }
+        var filterExpression= req.query.filterExpression || req.query.filterexpression;
+        var start= req.query.start;
+        var limit= req.query.limit;
+        var orderby=req.query.orderby || req.query.orderBy;
+        var extent=req.query.extent;
+        var authors=req.query.author || req.query.Author;
+        if(authors){
+            if(!Array.isArray(authors)){
+                authors=[authors];
+            }
+        }
+        var keywords= req.query.keyword || req.query.keyword;
+        if(keywords){
+            if(!Array.isArray(keywords)){
+                keywords=[keywords];
+            }
+        }
+        if(format=='json'){
+            if(!limit){
+                limit=-1;
+            }
+        }else{
+            if(!limit){
+                limit=20;
+            }
+            if(limit<0){
+                limit= -limit;
+            }
+        }
+        if(!start || start<1){
+            start=1;
+        }
+        try{     start=parseInt(start)  }catch(ex){start=1}
+        if(limit){
+            try{     limit=parseInt(limit)  }catch(ex){}
+        }
+        var where={};
+        var whereExpressions=[];
+        if(filterExpression){
+            filterExpression=filterExpression.toLowerCase();
+            whereExpressions.push({
+                [Op.or]:[
+                    //{
+                     //     name:{[Op.iLike]:'%'+ filterExpression+'%'}
+                        
+                   // },// or
+                    Sequelize.where(Sequelize.fn('lower', Sequelize.col('Map.name')),'LIKE','%'+ filterExpression+'%'),
+                    {
+                        description:{[Op.iLike]:'%'+ filterExpression+'%'}
+                    },
+                    {
+                        keywords:{[Op.iLike]:'%'+ filterExpression+'%'}
+                    },
+                    
+                     Sequelize.where(Sequelize.cast(Sequelize.col('Map.id'),'varchar'),'=', filterExpression)
+                    
+                ]
+            })
+        }
+        if(extent ){
+            var extentArray= extent.split(',');
+            try{
+                var ext_west= parseFloat(extentArray[0]);
+                var ext_south= parseFloat(extentArray[1]);
+                var ext_east= parseFloat(extentArray[2]);
+                var ext_north= parseFloat(extentArray[3]);
+                //not (minx> extent.maxx|| maxx< extent.minx || miny>extent.maxy || maxy<extent.miny ){
+                whereExpressions.push({
+                    [Op.or]:[
+                        // {[Op.or]:[
+                        //     {ext_west:null},
+                        //     {ext_east:null},
+                        //     {ext_south:null},
+                        //     {ext_north:null}
+                        // ]},
+                        {[Op.not]:[
+                            {[Op.or]:[
+                                {ext_west:{[Op.gt]:ext_east}},
+                                {ext_east:{[Op.lt]:ext_west}},
+                                {ext_south:{[Op.gt]:ext_north}},
+                                {ext_north:{[Op.lt]:ext_south}}
+                            ]}
+                        ]}
+                    ]
+                });
+
+            }catch(ex){}
+        }
+        if(whereExpressions && whereExpressions.length){
+            where={
+                [Op.and]:whereExpressions
+            }
+        }
+        if (res.locals.identity.isAdministrator) {
+            items = await models.Map.findAll( {
+                attributes: ['id','name',
+                    'description','keywords','ext_north','ext_east','ext_south','ext_west',
+                    //'thumbnail',
+                    [models.Map.sequelize.literal(`CASE  WHEN thumbnail isnull THEN false ELSE true END`), 'thumbnail'],
+                    
+                    'ownerUser','createdAt','updatedAt'
+                ], 
+                where:where,
+                include: [ {
+                     model: models.User, as: 'OwnerUser',
+                     attributes: ['userName','id','firstName','lastName','parent']
+                }]
+            ,order:[ 
+                ['updatedAt','DESC']
+                //['id', 'DESC']
+            ]
+         });
+        } else {
+            // items = await models.Map.findAll({
+            //      where: { ownerUser: req.user.id },
+            //      include: [ { model: models.User, as: 'OwnerUser' }]
+            // ,order:[ 
+            //     ['updatedAt','DESC']
+            //     //['id', 'DESC']
+            // ]
+            // });
+             items = await models.Map.findAll({ 
+                attributes: ['id','name',
+                'description','keywords','ext_north','ext_east','ext_south','ext_west',
+                //'thumbnail',
+                [models.Map.sequelize.literal(`CASE  WHEN thumbnail isnull THEN false ELSE true END`), 'thumbnail'],
+                
+                'ownerUser','createdAt','updatedAt'
+            ], 
+            where:where,
+            //where: { ownerUser: req.user.id },
+               include: [ { model: models.User, as: 'OwnerUser',
+                    attributes: ['userName','id','firstName','lastName','parent']}
+                        ,{ model: models.Permission, as: 'Permissions'
+                            ,include: [
+                                {
+                                    model: models.User, as: 'assignedToUser',
+                                    required: false,
+                                    where: {
+                                        id:  req.user.id
+                                    }
+                                }          ,
+                                {
+                                    model: models.Group, as: 'assignedToGroup',
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.User, as: 'Users',
+                                            required: true,
+                                            where: {
+                                                id: req.user.id
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                            }
+                    ],
+                        
+            order:[     ['updatedAt','DESC'] ]
+            });
+            var filteredItems = items.filter((v) => {
+                if(v.ownerUser == req.user.id){
+                    return true;
+                }
+                if(v.OwnerUser && (v.OwnerUser.parent == req.user.id)){
+                    return true;
+                }
+                if(v.Permissions && v.Permissions.length){
+                    var hasPermission= v.Permissions.some((p)=>{
+                        if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                                return (p.permissionName=='Edit'|| p.permissionName=='View' );
+                        }else
+                        {
+                            return false;
+                        }
+                    });
+                    return (hasPermission);
+                }
+                return false;
+            });
+            items=filteredItems;
+        }
+
+
+        var jsonArray=[];
+        var keywordMap={};
+        var authorMap={};
+        for(var i=0;i<items.length;i++){
+            var m= items[i];
+             var item={};
+             item.id=m.id;
+
+            
+             item.keywords=m.keywords;
+             item.ext_north=m.ext_north;
+             item.ext_east=m.ext_east;
+             item.ext_south=m.ext_south;
+             item.ext_west=m.ext_west;
+             
+
+             item.updatedAt=m.updatedAt;
+             item.thumbnail= (m.thumbnail)?`/map/${m.id}/thumbnail`:false;
+             
+             item.name=m.name;
+             item.description=m.description;
+             if(m.OwnerUser){
+                 item.OwnerUser={
+                     id:m.OwnerUser.id,
+                    userName:m.OwnerUser.userName,
+                    parent:m.OwnerUser.parent
+                 };
+                 item.author= m.OwnerUser.userName;   
+             }
+            
+             if(item.author){
+                if ( authorMap.hasOwnProperty(item.author)) {
+                    authorMap[item.author]++;
+                } else {
+                    authorMap[item.author] = 1;
+                }
+             }
+             if(item.keywords){
+                var keywords_= item.keywords.split(/[ ,.،]+/);
+                keywords_.forEach(function (key) {
+                    if(key.length>1){
+                          if (keywordMap.hasOwnProperty(key)) {
+                              keywordMap[key]++;
+                          } else {
+                              keywordMap[key] = 1;
+                          }
+                   }
+                });
+            }
+
+           //check filters
+           var filtered=false;
+           if(!filtered && authors){
+            var found= authors.some(function(m) {
+                return item.author==m;
+              });
+              filtered= !found;
+          }
+           if(!filtered && keywords ){
+             var found= keywords.some(function(m) {
+                 if(item.keywords)
+                     return item.keywords.indexOf(m) >-1;
+                  else
+                     return false;   
+               });
+               filtered= !found;
+           }
+           
+           if(!filtered){
+             jsonArray.push(item);
+           }
+
+        }
+
+        var authorArray = [];
+        authorArray = Object.keys(authorMap).map(function (key) {
+          return {
+            name: key,
+            total: authorMap[key]
+          };
+        });
+        authorArray.sort(function (a, b) {
+          return b.total - a.total;
+        });
+
+        var keywordArray = [];
+        keywordArray = Object.keys(keywordMap).map(function (key) {
+          return {
+            name: key,
+            total: keywordMap[key]
+          };
+        });
+        keywordArray.sort(function (a, b) {
+          return b.total - a.total;
+        });
+
+        if(orderby){
+            var orderkey=orderby+'';
+            var dir=1;
+            if (orderkey[0] === '-') { dir = -1; orderkey=orderkey.substring(1); }
+            jsonArray= jsonArray.sort(function(a,b){
+                if (a[orderkey] > b[orderkey]) return dir;
+                if (a[orderkey] < b[orderkey]) return -(dir);
+                return 0;
+            });
+        }
+        var count=jsonArray.length;
+
+        if(limit && limit >0 ){
+            if(start> count){
+                start=1;
+            }
+            jsonArray=  jsonArray.slice(start-1,start-1+limit);
+        }
+
+       
+        if(format==='json'){
+            //  return res.json(jsonArray);
+            return res.json({
+              items: jsonArray,
+              pagination:{
+                  totalItems:count,
+                  limit:limit,
+                  start:start,
+                  orderby:orderby,
+                  
+                  filterExpression:filterExpression,
+                  extent:extent,
+                  authors:authors,
+                  keywords:keywords
+              },
+              statistics:{
+                authors:authorArray,
+                  keywords:keywordArray
+              }
+          });
+          }else{
+              res.render('map/maps', {
+                  title: 'Maps',
+                  data: {
+                      items: jsonArray,
+                      pagination:{
+                          totalItems:count,
+                          limit:limit,
+                          start:start,
+                          orderby:orderby,
+                          
+                          filterExpression:filterExpression,
+                          extent:extent,
+                          authors:authors,
+                          
+                          keywords:keywords
+                      },
+                      statistics:{
+                        authors:authorArray,
+                          keywords:keywordArray
+                          
+                      }
+                  }
+              });
+           }
+    };
+    module.mapsGet__ = async function (req, res) {
         var items;
         if (res.locals.identity.isAdministrator) {
             items = await models.Map.findAll( {

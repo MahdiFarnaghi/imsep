@@ -11,7 +11,11 @@ module.exports = (sequelize, DataTypes) => {
         description: DataTypes.TEXT,
         keywords: DataTypes.STRING(200),
         details: DataTypes.TEXT,
-        //thumbnail:DataTypes.BLOB('medium')
+        // ext_north:DataTypes.FLOAT,
+        // ext_east:DataTypes.FLOAT,
+        // ext_south:DataTypes.FLOAT,
+        // ext_west:DataTypes.FLOAT,
+        
         thumbnail:DataTypes.BLOB
         
     }, {

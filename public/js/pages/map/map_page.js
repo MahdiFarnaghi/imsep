@@ -556,9 +556,12 @@ pageTask.create_Layer_AutoSearch=function(){
             }
             if(!self.downloding){
                 self.downloding=true;
-                $.getJSON(_autoSearchUrl, request, function (data, status, xhr) {
+                $.getJSON(_autoSearchUrl, request, function (dataObj, status, xhr) {
                     // cache[term] = data;
-                    
+                    var data=[];
+                    if(dataObj && dataObj.items){
+                      data= dataObj.items;
+                    }
                     cache = data.sort(function(a,b){
                         if(a.OwnerUser.userName==b.OwnerUser.userName){
                             return a.updatedAt > b.updatedAt;  
