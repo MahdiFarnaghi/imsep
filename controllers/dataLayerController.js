@@ -207,33 +207,40 @@ module.exports = function (postgresWorkspace) {
                 });
                 return res.redirect('/');
             }
-            var newLayer = await models.DataLayer.create(
-                { 
-                    name: '',
-                    dataType: dataType,
-                    description:'',
-                    keywords:'',
-                    ownerUser: (req.user.id), 
-                    details:JSON.stringify({isNew:true })
-            });
-            [err, item] = await util.call(models.DataLayer.findOne({
-                where: {
-                    [Op.and]: {
-                        
-                        id: { [Op.eq]: newLayer.id },
-                        ownerUser: { [Op.eq]:  req.user.id },
-                    }
-                },include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}] 
-            }));
-            if (!item) {
-                req.flash('error', {
-                    msg: 'Faild to create new Datalayer!'
-                });
-                return res.redirect('/');
-               
+            item={
+                id:-1,
+                dataType:dataType,
+                details:{
+                    isNew:true
+                }
             }
-            /* Redirect to edit new DataLayer*/
-            return res.redirect('/datalayer/' + item.id+'?dataType='+dataType);
+            // var newLayer = await models.DataLayer.create(
+            //     { 
+            //         name: '',
+            //         dataType: dataType,
+            //         description:'',
+            //         keywords:'',
+            //         ownerUser: (req.user.id), 
+            //         details:JSON.stringify({isNew:true })
+            // });
+            // [err, item] = await util.call(models.DataLayer.findOne({
+            //     where: {
+            //         [Op.and]: {
+                        
+            //             id: { [Op.eq]: newLayer.id },
+            //             ownerUser: { [Op.eq]:  req.user.id },
+            //         }
+            //     },include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}] 
+            // }));
+            // if (!item) {
+            //     req.flash('error', {
+            //         msg: 'Faild to create new Datalayer!'
+            //     });
+            //     return res.redirect('/');
+               
+            // }
+            // /* Redirect to edit new DataLayer*/
+            // return res.redirect('/datalayer/' + item.id+'?dataType='+dataType);
         }else if (req.params.id){
             if (res.locals.identity.isAdministrator) {
                 [err, item] = await util.call(models.DataLayer.findOne({
@@ -420,7 +427,7 @@ module.exports = function (postgresWorkspace) {
         
        
         
-        var details={};
+        var details= item.details;
         
         try{
           details= JSON.parse( item.details);

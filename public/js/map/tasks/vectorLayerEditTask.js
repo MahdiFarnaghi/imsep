@@ -949,7 +949,18 @@ this._toolbar.addControl(editAttribute);
 
     //this._toolbar.addControl(transformShape);
 
+    self.deleteShapeVertexButton=new ol.control.TextButton({
+        //html: 'Delete vertex', 
+        html: '<span style="white-space: nowrap;color:red">Delete vertex</span>',
 
+        title: "Delete selected vertex",
+        handleClick: function() {
+            if (self.interaction && self.interaction.removePoint){
+                 self.interaction.removePoint();
+                 self.deleteShapeVertexButton.setVisible(false);
+            }
+        }
+    });
 
     var editShape = new ol.control.Toggle({
         html: '<span style="display:block;line-height:28px;background-position:center center" class="editVertexIcon" >&nbsp;</span>',
@@ -1002,8 +1013,32 @@ this._toolbar.addControl(editAttribute);
             map.addInteraction(self.interactionSelect);
             self.interaction = new ol.interaction.Modify({
                 features: self.interactionSelect.getFeatures()
+                // ,deleteCondition: function(event) {
+                //     return ol.events.condition.shiftKeyOnly(event) &&
+                //         ol.events.condition.singleClick(event);
+                //   }
+                ,condition: function(event){
+                    if(self.interaction["lastPointerEvent_"] && self.interaction["vertexFeature_"]){
+                        //this.removePointPopup.setPosition(this.modify["lastPointerEvent_"].coordinate);
+                       
+                       self.deleteShapeVertexButton.setVisible(true);
+                    }
+                    else
+                    {    
+                     //   this.removePointPopup.setPosition(undefined);
+                       
+                        self.deleteShapeVertexButton.setVisible(false);
+                    }
+                    return true;
+                }
             });
             map.addInteraction(self.interaction);
+            self.interaction.on('modifystart',function(e){
+                // console.log('modifystart');
+             }) ;
+             self.interaction.on('modifyend',function(e){
+               //  console.log('modifyend');
+             }) ;
             self.mapContainer.setCurrentEditAction('edit');
             map.addInteraction(self.interactionSnap);
            // dirty = {};
@@ -1032,7 +1067,11 @@ this._toolbar.addControl(editAttribute);
 
             self.importSelectionFromSelectTask();
 
-        }
+        },
+        bar: new ol.control.Bar({
+            controls: [self.deleteShapeVertexButton]
+            
+        })
     });
     this.editShape = editShape;
 

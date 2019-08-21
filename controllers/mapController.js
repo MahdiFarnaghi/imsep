@@ -104,7 +104,7 @@ module.exports = function () {
         var usersWhoCanViewMap=[];
         var groupsWhoCanViewMap=[];
         
-        if (req.params.id && req.params.id == '-1') {
+        if (false && req.params.id && req.params.id == '-1') {
             var newMap = await models.Map.create({
                 name: 'Untitled',
                 description: '',
@@ -130,7 +130,7 @@ module.exports = function () {
             /* Redirect to open new Map*/
 
             return res.redirect('/map/' + item.id);
-        }else if (req.params.id && (req.params.id === 'preview'|| req.params.id === 'temp')) {
+        }else if (req.params.id && (req.params.id == '-1' || req.params.id === 'preview'|| req.params.id === 'temp')) {
             var layer;
             var preview=[];
             if(req.query.layers){
