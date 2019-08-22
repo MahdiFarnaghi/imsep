@@ -21,6 +21,15 @@
         float: right;
          margin-right: 1em !important;
     }
+    i.layerSubtype{
+              /* border: solid #1d7cf4 1px; */
+            width: 1.5em;
+            /* height: 1.5em; */
+            display: inline-block;
+            /* background-color: #e2e2e2; */
+            padding: 2px;
+            font-style: normal;
+    }
     .item-container{
         padding-top:0.5em;
         

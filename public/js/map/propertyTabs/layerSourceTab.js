@@ -1341,6 +1341,7 @@ function LayerSourceTab() {
                         message: "Layer's thumbnail saved successfully"
                     },{
                         type:'info',
+                        z_index:50000,
                         delay:2000,
                         animate: {
                             enter: 'animated fadeInDown',
@@ -1353,6 +1354,7 @@ function LayerSourceTab() {
                     },{
                         type:'danger',
                         delay:2000,
+                        z_index:50000,
                         animate: {
                             enter: 'animated fadeInDown',
                             exit: 'animated fadeOutUp'
@@ -1365,6 +1367,7 @@ function LayerSourceTab() {
                     message: "Failed to save thumbnail"
                 },{
                     type:'danger',
+                    z_index:50000,
                     delay:2000,
                     animate: {
                         enter: 'animated fadeInDown',
