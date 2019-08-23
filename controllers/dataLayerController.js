@@ -1648,7 +1648,9 @@ module.exports = function (postgresWorkspace) {
         try{
           details= JSON.parse( item.details);
         }catch(ex){}
-
+        if(!details){
+            details={};
+        }
         //todo: workspace selection
 
        var tableName= details.datasetName || item.name;
@@ -2303,7 +2305,9 @@ module.exports = function (postgresWorkspace) {
               try{
                 details= JSON.parse( item.details);
               }catch(ex){}
-
+              if(!details){
+                details={};
+              }
               //todo: workspace selection
 
              var tableName= details.datasetName || item.name;
@@ -2467,7 +2471,9 @@ module.exports = function (postgresWorkspace) {
               try{
                 details= JSON.parse( item.details);
               }catch(ex){}
-
+              if(!details){
+                details={};
+               }
               //todo: workspace selection
 
              var tableName= details.datasetName || item.name;
@@ -2593,6 +2599,9 @@ module.exports = function (postgresWorkspace) {
           try{
             details= JSON.parse( item.details);
           }catch(ex){}
+          if(!details){
+            details={};
+           }
 
           //todo: workspace selection
           var action=req.body.action;
@@ -2931,6 +2940,9 @@ module.exports = function (postgresWorkspace) {
               try{
                 details= JSON.parse( item.details);
               }catch(ex){}
+              if(!details){
+                details={};
+               }
 
               //todo: workspace selection
 
@@ -3202,6 +3214,9 @@ module.exports = function (postgresWorkspace) {
         try{
           details= JSON.parse( item.details);
         }catch(ex){}
+        if(!details){
+            details={};
+        }
 
         //todo: workspace selection
 
@@ -3439,6 +3454,9 @@ module.exports = function (postgresWorkspace) {
                 details= JSON.parse( item.details);
                 details.name= item.name;
               }catch(ex){}
+              if(!details){
+                details={};
+              }
 
               //todo: workspace selection
 

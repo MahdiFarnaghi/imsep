@@ -37,6 +37,9 @@
     .item-container .item-description{
             white-space: pre-wrap;
     }
+    .item-container.selected  .thumbnail{
+        background-color:#acc5da;
+    }
     .list-inline{
             margin: 0 0 0 -15px;
             padding: 0.5em;

@@ -59,13 +59,14 @@ var pageTask={
     $('#pnlExtentMap').addClass('collapse');
     $('#pnlExtentMapCmd').addClass('collapsed');
     //$('#pnlExtentMap').css('visibility', 'visible');
-    this.fillStatistics(this.data.statistics,this.data.pagination);
+    //this.fillStatistics(this.data.statistics,this.data.pagination);
     this.fillUI();
     
     this.fillOrderByList(this.data.pagination);
     //this.applyFilters();
     
     var url=self.getFiltersUrl();
+    self.last_url=url;
     history.pushState({url:url}, document.title, url);
     window.addEventListener('popstate', function(e){
       if(e.state && e.state.url)
@@ -79,6 +80,39 @@ var pageTask={
     var html='<div class="col-xs-18 col-sm-12 col-md-12 "> <div class="thumbnail waitbar_h" style="height:30px"  ></div> </div>';
     detailsContainer.html(html);
   },
+  deleteItem:function(itemId){
+    var self=this;
+    var container= $('#tblItems .item-container[data-id="'+itemId+'"]');
+    container.addClass('selected');
+    
+    var msg='Are you sure you want to delete selected map?';
+    var confirmDlg= new ConfirmDialog();
+    confirmDlg.show(msg, function (confirm) {
+      container.removeClass('selected');
+        if (confirm) {
+            self.deleteItemForReal(itemId);
+        }else{
+          
+        }
+    },
+        {
+            dialogSize: 'm',
+            alertType: 'danger'
+        }
+    );
+},
+deleteItemForReal:function(itemId){
+  var self=this;
+  var url = '/map/' + itemId + '/delete?_method=DELETE';
+  $.ajax(url, {
+      type: 'POST'
+  }).done(function (response) {
+      //  processNotify.close();
+      if(self.last_url){
+        self.getFromUrl(self.last_url);
+      }
+  });
+},
   fillItems:function(items){
     var self=this;
     var detailsContainer= $('#tblItems');
@@ -93,7 +127,7 @@ var pageTask={
       html+='              data-ext_west="'+item.ext_west+'"';
       html+='              data-ext_south="'+item.ext_south+'"';
       html+='>';//1
-      html+=' <div class="item-container" >';//2
+      html+=' <div class="item-container" data-id="' + item.id+'" >';//2
       html+='   <div class="thumbnail">';//3
       html+='     <div class="caption">';//4
       html+='       <a href="/map/'+item.id+'" >';
@@ -144,9 +178,10 @@ var pageTask={
           app.identity.isAdministrator || ( app.identity.id==item.OwnerUser.id)
        || (item.OwnerUser.parent== app.identity.id )
         ){
-          html+='       <form method="POST" action="/map/'+item.id+'/delete?_method=DELETE">';
-          html+='         <button title="Delete" type="submit" style="color:red" class="btn-link  glyphicon glyphicon-remove" onclick="return confirm(\'Confirm deletion?\');"> </button>';
-          html+='       </form>';
+          // html+='       <form method="POST" action="/map/'+item.id+'/delete?_method=DELETE">';
+          // html+='         <button title="Delete" type="submit" style="color:red" class="btn-link  glyphicon glyphicon-remove" onclick="return confirm(\'Confirm deletion?\');"> </button>';
+          // html+='       </form>';
+          html+='         <button title="Delete" type="button" style="color:red" class="delete-item btn-link  glyphicon glyphicon-remove" data-id="'+ item.id+'" > </button>';
         }
        html+='       </li>';
       html+='      </ul>';
@@ -169,12 +204,19 @@ var pageTask={
             self.getFromUrl(url);
           }
       }
-   })
+   });
+   detailsContainer.find('.delete-item').click(function(){
+    var itemId= $(this).data('id');
+    if(itemId){
+      self.deleteItem(itemId);
+    }
+   });
   }
  , 
  fillUI:function(){
     var self=this;
     this.fillingUI=true;
+    this.fillStatistics(this.data.statistics,this.data.pagination);
     $("#tblItems_search").val(this.pagination.filterExpression);
     if(this.pagination.extent){
       var extent= this.pagination.extent.split(',');
@@ -509,6 +551,7 @@ var pageTask={
   },
   getFromUrl:function(url,skipPushState){
     var self= this;
+    self.last_url=url;
     self.showWaiting();
     $.ajax( {    url: '/maps'+url+'&format=json', dataType: 'json', success: function (data) {
       if(!skipPushState){
