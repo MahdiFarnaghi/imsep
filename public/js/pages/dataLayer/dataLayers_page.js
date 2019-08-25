@@ -61,7 +61,7 @@ var pageTask={
    // this.fillStatistics(this.data.statistics,this.data.pagination);
     this.fillUI();
     
-    this.fillOrderByList(this.data.pagination);
+    //this.fillOrderByList(this.data.pagination);
     //this.applyFilters();
     
     var url=self.getFiltersUrl();
@@ -254,6 +254,7 @@ deleteItemForReal:function(itemId){
       self.applyMapExtent=true;
     }
     this.fillItems(this.items);
+    this.fillOrderByList(this.data.pagination);
     this.fillingUI=false;
   },
   get_pagination:function(pagination){

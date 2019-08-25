@@ -612,17 +612,20 @@ function ConfirmDialog(){
 }
 ConfirmDialog.prototype.show= function (message,callback, options) {
 	// Assigning defaults
+	var self=this;
+	self._confirm=false;
 	var $dialog= this.dialog;
 	if (typeof options === 'undefined') {
 		options = {};
 	}
+	
 	if (typeof message === 'undefined') {
 		message = 'Please Confirm';
 	}
 	var settings = $.extend({
-		title:'Confirm',
-		yesTitle:'Yes',
-		noTitle:'No',
+		title:(app.language==='fa')? 'تایید کنید':'Confirm',
+		yesTitle:(app.language==='fa')?'بله':'Yes',
+		noTitle:(app.language==='fa')?'خیر':'No',
 		dialogSize: 'm',
 		alertType:'warning'
 	}, options);
@@ -636,19 +639,41 @@ ConfirmDialog.prototype.show= function (message,callback, options) {
 	$dialog.find('#confirmDialog_yes').text(settings.yesTitle);
 	$dialog.find('#confirmDialog_no').text(settings.noTitle);
 	$dialog.find('#confirmDialog_yes').click(function(){
-		if(callback){
-			callback(true);
-		}
+		
+		self._confirm=true;
 		$dialog.modal('hide');
+		window.history.back();
 	});
 	$dialog.find('#confirmDialog_no').click(function(){
-		if(callback){
-			callback(false);
-		}
+		
+		self._confirm=false;
 		$dialog.modal('hide');
+		window.history.back();
 	});
 
 	$dialog.find('#confirmDialog_content').html(message);
+
+
+	$dialog.on('hidden.bs.modal', function () {
+		// do something…
+		if(callback){
+			callback(self._confirm);
+		}
+		
+		var hash = settings.title;
+		
+	    history.pushState('', document.title, window.location.pathname + window.location.search);
+	});
+
+	var hash = settings.title;
+	window.location.hash = hash;
+	
+		window.onhashchange = function() {
+				if (!location.hash){
+				$dialog.modal('hide');
+				}
+		};
+	
 	// Opening dialog
 	$dialog.modal();
 }
@@ -663,4 +688,3 @@ ConfirmDialog.prototype.setMessage=function(message){
 	this.dialog.find('#confirmDialog_content').html(message);
 }
 var confirmDialog= new ConfirmDialog();
-

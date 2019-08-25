@@ -1,6 +1,8 @@
 ﻿//chrome.exe --remote-debugging-port=9222
 var app = {
     name: 'untitled',
+    layout:'ltr',
+    language:'en',
     version: '1.0.0',
     identity: undefined,
     pageData:{},
