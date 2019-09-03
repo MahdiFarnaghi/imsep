@@ -125,7 +125,7 @@ RasterLayerValueTask.prototype.init = function (dataObj) {
                     if(!self._activated){
                         return '';
                     }
-                    var c='url("/css/images/Identify_raster_24_cursor.png")1 1,auto'; 
+                    var c='url("/css/images/identify_raster_24_cursor.png")1 1,auto'; 
                     return c;
                   },
                 onActivate: function (event) {
