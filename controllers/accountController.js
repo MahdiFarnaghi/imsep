@@ -615,7 +615,7 @@ module.exports = function (passportConfig) {
         var user = await models.User.findOne({ where: { id: req.user.id } });
         if (user) {
             if(!user.password){
-                req.flash('error', { msg: 'It is required that you have set a password before the unlinking.' });
+                req.flash('error', { msg: 'It is required that you set a password before the unlinking.' });
                 return res.redirect('/account');
             }
             switch (req.params.provider) {
