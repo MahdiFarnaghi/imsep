@@ -317,7 +317,7 @@ module.exports = function () {
             jsonArray=  jsonArray.slice(start-1,start-1+limit);
         }
 
-       
+               
         if(format==='json'){
             //  return res.json(jsonArray);
             return res.json({

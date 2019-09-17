@@ -416,6 +416,7 @@
    @html.block('scripts', function(model) {
     <script>
       app.pageData.mapData='@html.getBase64(model.map)';
+      app.set_ROUTE_SERVICE_TOKENS('@process.env.ROUTE_SERVICE_TOKENS');
     </script>
     @*
     <script src='/bootstrap-popover-picker/js/bootstrap-picker.js' ></script> 

@@ -19,11 +19,7 @@ var app = {
     MAx_TABLE_VIEW_RECORDS:1000,
 
     //openrouteservice
-    routeServiceTokens:[
-            '5b3ce3597851110001cf6248534f1763f9fd495086cc8333c25725fd',
-            '5b3ce3597851110001cf624870554ac82bc24e83bca4b3c26ed4ad00',
-            '5b3ce3597851110001cf6248cc2f42bbe67643b4aa56d6cd9eec9075'
-    ],
+    routeServiceTokens:[],
     //overpassApiServer:'https://overpass-api.de/api/interpreter',
     overpassApiServer:'//overpass-api.de/api/interpreter',
     //overpassApiServer:'//overpass.openstreetmap.fr/api/interpreter',
@@ -38,6 +34,11 @@ var app = {
     },
     set_UPLOAD_SHAPEFILE_MAX_SIZE_MB: function(v){
         this.UPLOAD_SHAPEFILE_MAX_SIZE_MB=v;
+    },
+    set_ROUTE_SERVICE_TOKENS: function(v){
+        if(v){
+         this.routeServiceTokens= v.split(',');   
+        }
     },
     test: function (str) {
         alert(str);

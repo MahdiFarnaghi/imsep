@@ -5,11 +5,11 @@ services:
     container_name: imsep_postgis
     restart: unless-stopped
     image: kartoza/postgis:latest 
-    ports: 
-      - "25432:5432"
+#    ports: 
+#      - "127.0.0.1:25432:5432"
     volumes:  
-      #- imsepdb:/var/lib/postgresql/data
-      - c:\docker\imsep\db_data:/var/lib/postgresql/data
+#      - /data/imsep/db_data:/var/lib/postgresql/data  
+       - /var/docker-volumes/imsep/db_data:/var/lib/postgresql/data
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
@@ -21,7 +21,9 @@ services:
         volumes:
             #- /var/opt/pgbackups:/backups
             #- pgbackups:/backups
-            - c:\docker\imsep\backups:/backups
+            #- /data/imsep/backups:/backups
+            - /var/docker-volumes/imsep/backups:/backups
+            #- c:/docker/backups:/backups
         links:
             - imsep_postgis
         depends_on:
@@ -42,9 +44,7 @@ services:
     container_name: imsep
     restart: unless-stopped
     image: imsep
-    build:
-      context: .
-      dockerfile: Dockerfile
+    build: .
     depends_on:
       - imsep_postgis
     links:
@@ -59,14 +59,14 @@ services:
       GDB_PASSWORD: d747db4520c046ccb5db14f39a014746
       DB_REBUILD: 'false'
     ports:
-      - "1336:1337"   
+      - "127.0.0.1:1336:1337"   
     volumes:
-      #- ./log:/usr/src/app/log
-      - c:\docker\imsep\log:/usr/src/app/log
-      #- ./app_data:/usr/src/app/app_data   
-      - c:\docker\imsep\app_data:/usr/src/app/app_data
-      
+      #- /data/imsep/log:/usr/src/app/log
+      - /var/docker-volumes/imsep/log:/usr/src/app/log
+      #- /data/imsep/app_data:/usr/src/app/app_data   
+      - /var/docker-volumes/imsep/app_data:/usr/src/app/app_data
 volumes:
-  imsepdb:
+  postgis:
+  imsep:
   pgbackups:
     

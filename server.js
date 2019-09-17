@@ -66,6 +66,8 @@ var memorystorage = multer.memoryStorage()
    });
 // Load environment variables from .env file
 dotenv.load();
+//get_Admin_Config();
+
 process.env.PACKAGE_VERSION=pjson.version;
 global.__basedir = __dirname;
 
@@ -336,6 +338,7 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     })],
     handleErrors(adminController.groupGet));
 
+
     app.post('/admin/group/:id',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
@@ -540,6 +543,9 @@ app.set('port', process.env.PORT || 3000);
         }catch(ex){
             old_adb_version=undefined;
         }
+        
+        
+
         if(!forceRebuildDatabaseSchema){
             try{
                 await  upgrade_ADB(adb_version,old_adb_version);
@@ -595,11 +601,32 @@ app.set('port', process.env.PORT || 3000);
       //  console.log('\x1b[47m\x1b[30m%s\x1b[0m', 'Server listening on port ' + server.address().port);  
        
       console.log('\x1b[42m\x1b[42m%s\x1b[32m', 'iMSEP is running on local port:' + server.address().port);  
+      console.log('');
     });
     server.timeout = 60000*10;// 10 minutes
 
 })();
+
+function get_Admin_Config(){
+    const fs = require('fs');
+
+
+    try{
+        let rawdata = fs.readFileSync('admin_config.json');
+        let parsed = JSON.parse(rawdata);
+
+        Object.keys(parsed).forEach(function (key) {
+            
+              process.env[key] = parsed[key]
+            
+          })
+    }catch(ex){
+
+    }
+   
+}
 //#endregion SERVER 
+
 async function createDb(){
     const { Client } = require('pg')
     const dbName=process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep";
@@ -698,6 +725,7 @@ async function get_ADB_version(){
 
     return undefined;
 }
+
 async function upgrade_ADB(adb_version,old_adb_version){
     if(typeof old_adb_version=='undefined'){
         old_adb_version=0;

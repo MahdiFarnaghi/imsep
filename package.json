@@ -3,7 +3,8 @@
   "version": "1.0.4",
   "private": true,
   "scripts": {
-    "start": "node server"
+    "start": "node server",
+    "debug": "nodemon --inspect server"
   },
   "description": "iMSEP",
   "author": {

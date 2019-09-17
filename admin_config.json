@@ -1,0 +1,32 @@
+{
+    "SITE_NAME":"ssss",
+    "COPY_RIGHTS":"2019 LUND University, All Rights Reserved.",
+    "MAPS_COPY_RIGHTS":"Provided by the EPCA Project.",
+
+    "EMAIL_SENDER_SERVICE":"gmail",
+    "EMAIL_SENDER_USERNAME":"info.imsep@gmail.com",
+    "EMAIL_SENDER_PASSWORD":"imsep_@dm1N_5501#03",
+    "SUPPORT_EMAIL":"niranshahi@gmail.com",
+    "CONTACT_TO_EMAIL":"info.imsep@gmail.com,niranshahi@gmail.com",
+
+    
+    "GOOGLE_ID":"1037991881065-f55r3l8itfnavltigda2cv4gbtarvp2q.apps.googleusercontent.com",
+    "GOOGLE_SECRET":"6Y1rV-ELNIAdDqLvsde4AqIu",
+
+    "BING_MAPS_KEY":"At9E6n85nXSY4q1O7tSiA18hd5ERhMxPeTRdOKmhRVMYjw5a7DnebZkOiITLmfkN",
+    "INITMAP_LONGITUDE":"72",
+    "INITMAP_LATITUDE":"41",
+    "INITMAP_ZOOM":"6",
+    "LOGIN_CAPTCHA":"false",
+    "FREE_SIGN_UP":"true",
+    "FORCE_EMAIL_VERIFICATION":"true",
+    "INIT_ADMIN_PASSWORD":"80fmsep#",
+    
+    
+    "PSQL_BIN_PATH_WIN":"d:/Program Files/PostgreSQL/10/bin",
+    "PSQL_BIN_PATH_WIN_":"d:/Works/iMSEP/github/iMSEP/cmd/pgsql/win",
+    "PSQL_BIN_PATH_LINUX":"/usr/lib/postgresql/10/bin",
+    "UPLOAD_GEOJSON_MAX_SIZE_MB":"50",
+    "UPLOAD_SHAPEFILE_MAX_SIZE_MB":"30",
+     "UPLOAD_RASTER_MAX_SIZE_MB":"150"
+}

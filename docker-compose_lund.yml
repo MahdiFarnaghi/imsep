@@ -13,7 +13,31 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
       POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL
-
+  pgbackups:
+        container_name: imsep_pgbackups
+        image: prodrigestivill/postgres-backup-local
+        restart: unless-stopped
+        volumes:
+            #- /var/opt/pgbackups:/backups
+            #- pgbackups:/backups
+            - /data/imsep/backups:/backups
+            #- c:/docker/backups:/backups
+        links:
+            - imsep_postgis
+        depends_on:
+            - imsep_postgis
+            - imsep
+        environment:
+            - POSTGRES_HOST=imsep_postgis
+            - POSTGRES_DB=imsep,imsep_gdb
+            - POSTGRES_USER=postgres
+            - POSTGRES_PASSWORD=d747db4520c046ccb5db14f39a014746
+            - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
+            - SCHEDULE=@daily
+            - BACKUP_KEEP_DAYS=7
+            - BACKUP_KEEP_WEEKS=4
+            - BACKUP_KEEP_MONTHS=6
+            - HEALTHCHECK_PORT=1337
   imsep:
     container_name: imsep
     restart: unless-stopped
@@ -37,8 +61,8 @@ services:
     volumes:
       - /data/imsep/log:/usr/src/app/log
       - /data/imsep/app_data:/usr/src/app/app_data   
-      
 volumes:
   postgis:
   imsep:
+  pgbackups:
     

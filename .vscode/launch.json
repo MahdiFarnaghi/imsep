@@ -10,6 +10,7 @@
             "name": "Server",
             "program": "${workspaceFolder}\\server"
         },
+        
         {
             "type": "node",
             "request": "launch",
@@ -55,6 +56,7 @@
             "name": "Server/Chrome",
             "configurations": ["Server", "Chrome"]
         },
+     
         {
             "name": "Docker/Chrome1338",
             "configurations": ["Docker: Attach to Node", "Chrome1338"]
