@@ -58,6 +58,7 @@ exports.contactPost = function(req, res) {
   
     var mailOptions = {
         from: req.body.name + ' ' + '<' + req.body.email + '>',
+        replyTo :  req.body.email ,
         to: process.env.CONTACT_TO_EMAIL,
         subject: '✔ Contact Form | ' + process.env.SITE_NAME,
         text: req.body.message

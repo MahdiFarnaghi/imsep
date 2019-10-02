@@ -8,7 +8,9 @@
             "type": "node",
             "request": "launch",
             "name": "Server",
-            "program": "${workspaceFolder}\\server"
+            "program": "${workspaceFolder}\\server",
+            // Capture "std" instead of "console" fro winston
+            "outputCapture": "std"
         },
         
         {

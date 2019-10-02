@@ -32,11 +32,14 @@ var pageTask={
     });
     $('.dual-list .selector').click(function () {
         var $checkBox = $(this);
+       
         if (!$checkBox.hasClass('selected')) {
-            $checkBox.addClass('selected').closest('.well').find('ul li:not(.active)').addClass('active');
+            //$checkBox.addClass('selected').closest('.well').find('ul li:not(.active)').addClass('active');
+            $checkBox.addClass('selected').closest('.well').find('ul li:visible:not(.active)').addClass('active');
             $checkBox.children('i').removeClass('glyphicon-unchecked').addClass('glyphicon-check');
         } else {
-            $checkBox.removeClass('selected').closest('.well').find('ul li.active').removeClass('active');
+            //$checkBox.removeClass('selected').closest('.well').find('ul li.active').removeClass('active');
+            $checkBox.removeClass('selected').closest('.well').find('ul li:visible.active').removeClass('active');
             $checkBox.children('i').removeClass('glyphicon-check').addClass('glyphicon-unchecked');
         }
     });
