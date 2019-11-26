@@ -31,7 +31,7 @@
                 <div class="form-group">
                     <label for="message" class="col-sm-2">Message</label>
                     <div class="col-sm-8">
-                        <textarea name="message" id="message" rows="8" class="form-control" data-val="true" data-val-required="The message is required"></textarea>
+                        <textarea name="message" id="message" rows="8" class="form-control" data-val="true" data-val-required="The message is required">@model.message</textarea>
                           
                         <span class="field-validation-valid" data-valmsg-for="message" data-valmsg-replace="true"></span>
                     </div>

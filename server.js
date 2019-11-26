@@ -220,15 +220,18 @@ app.use(async function (req, res, next) {
         res.locals.identity.isDataAnalyst = roles.includes('dataAnalysts');
 
         res.locals.displayOptions.showMaps = true;
-        
+        try{
         if (await res.locals.user.checkPermissionAsync(models, { permissionName: 'Edit', contentType: 'Users' })) {
             res.locals.displayOptions.showUsers = true;
             res.locals.displayOptions.showManagement = true;
         }
+        }catch(ex){}
+        try{
         if (await res.locals.user.checkPermissionAsync(models, { permissionName: 'Edit', contentType: 'Groups' })) {
             res.locals.displayOptions.editUsers = true;
             
         }
+        }catch(ex){}
     }
     next();
 });
@@ -532,8 +535,11 @@ app.set('port', process.env.PORT || 3000);
     if (true) {
        
         try {
-            forceRebuildDatabaseSchema= await create_ADB_if_not_exists(adb_version);
-            console.log((process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep") +' is created' );
+            var iscreated= await create_ADB_if_not_exists(adb_version);
+            if(iscreated){
+                forceRebuildDatabaseSchema=true;
+                console.log((process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep") +' is created' );
+            }
         } catch (ex) {
             var a = 1;
             //database already exists
@@ -580,8 +586,9 @@ app.set('port', process.env.PORT || 3000);
     }
   
     
-    
+    try{
     await models.sequelize.sync({ force: forceRebuildDatabaseSchema });
+    }catch(ex){}
     if (forceRebuildDatabaseSchema) {
         try {
             await initDataAsync();
@@ -646,9 +653,12 @@ async function createDb(){
         var a=1;
         return false
     }
-
+    try{
     const res = await client.query('CREATE DATABASE ' + dbName)
     await client.end()
+    }catch(ex){
+        return false;
+    }
     return true;
 }
 async function create_ADB_if_not_exists(adb_version){
@@ -670,7 +680,7 @@ async function create_ADB_if_not_exists(adb_version){
         var a=1;
         return false
     }
-
+    try{
     const res = await client.query('CREATE DATABASE ' + dbName)
     await client.end()
 
@@ -690,7 +700,9 @@ async function create_ADB_if_not_exists(adb_version){
         'version', '${adb_version}');
     `)
     await client2.end()
-    
+    }catch(ex){
+        return false;
+    }
 
     return true;
 }
@@ -704,7 +716,7 @@ async function get_ADB_version(){
         "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
         "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
       };
-    
+    try{
     const client2 = new Client(params)
     
     await client2.connect()
@@ -722,7 +734,9 @@ async function get_ADB_version(){
         }
         return version;
     }
-
+    }catch(ex){
+        
+    }
     return undefined;
 }
 
@@ -751,7 +765,7 @@ async function upgrade_ADB_to_1(){
       };
     
     const client2 = new Client(params)
-    
+    try{
     await client2.connect()
     const q=`CREATE TABLE public.adb_properties
     (
@@ -766,6 +780,7 @@ async function upgrade_ADB_to_1(){
     
     const res2 = await client2.query(q)
     await client2.end()
+    }catch(ex){}
    return true;
 
 }
@@ -788,7 +803,7 @@ async function createGDB(){
         var a=1;
         return false;
     }
-    
+    try{
     const res = await client.query('CREATE DATABASE ' + dbName)
     await client.end()
 
@@ -804,7 +819,9 @@ async function createGDB(){
     await client2.end()
    
 
-
+    }catch(ex){
+        return false
+    }
 
     return true;
 }
@@ -857,7 +874,8 @@ drop role imsep_gdb_reader;
     try{
         const res = await client.query(q)
       }catch(eee){}
-        
+
+     try{   
     await client.end()
 
     params.database=dbName;
@@ -872,7 +890,9 @@ drop role imsep_gdb_reader;
     ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON SEQUENCES TO ${userName}; `;
     const res2 = await client2.query(q2)
     await client2.end()
-   
+     }catch(ex){
+         return false;
+     }
 
     return true;
 }
@@ -888,18 +908,22 @@ async function initGDB(){
         "password": process.env.GDB_PASSWORD?process.env.GDB_PASSWORD: "postgres"
       }
    
+   try{
      const client2 = new Client(params)
     
     await client2.connect()
     
     const res2 = await client2.query(`ALTER DATABASE "${dbName}" SET postgis.gdal_enabled_drivers= 'ENABLE_ALL';`)
     await client2.end()
-  
+   }catch(ex){
+       return false;
+   }
     return true;
 }
 
 
 async function initDataAsync() {
+    try{
     var superAdmin = await models.User.create({ userName: 'superadmin', password: '8001msep#Aom1n', parent: null });
     var admin = await models.User.create({ userName: 'admin', password: process.env.INIT_ADMIN_PASSWORD?process.env.INIT_ADMIN_PASSWORD:'80fmsep#',  parent: superAdmin.id });
     
@@ -930,5 +954,5 @@ async function initDataAsync() {
             grantToId: powerUsers.id,
             insertedByUserId: admin.id
         });
-   
+    }catch(ex){}
 }

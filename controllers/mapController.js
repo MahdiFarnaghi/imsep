@@ -493,7 +493,7 @@ module.exports = function () {
                 if(layerIds && layerIds.length){
                     for(var i=0;i< layerIds.length;i++){
                         layer=null;
-                        [err, layer] = await util.call(models.DataLayer.findById(layerIds[i],{
+                        [err, layer] = await util.call(models.DataLayer.findByPk(layerIds[i],{
                                            include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
                         if(layer)
                             preview.push(layer);
@@ -513,7 +513,7 @@ module.exports = function () {
         {
             
             if (res.locals.identity.isAdministrator) {
-                [err, item] = await util.call(models.Map.findById(req.params.id,{include: [ { model: models.User, as: 'OwnerUser' ,attributes: ['userName','id','firstName','lastName','parent']}]} ));
+                [err, item] = await util.call(models.Map.findByPk(req.params.id,{include: [ { model: models.User, as: 'OwnerUser' ,attributes: ['userName','id','firstName','lastName','parent']}]} ));
                 if(item){
                     userHasEditPermission=true;
                     userHasViewPermission=true;
@@ -1182,7 +1182,7 @@ module.exports = function () {
     module.thumbnailGet = async function (req, res, next) {
         var item,err;
         if (req.params.id && req.params.id != '-1') {
-          [err, item] = await util.call(models.Map.findById(req.params.id) );
+          [err, item] = await util.call(models.Map.findByPk(req.params.id) );
             if (!item) {
                 res.set('Content-Type', 'text/plain');
                 res.status(404).end('Not found');

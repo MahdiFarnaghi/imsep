@@ -498,7 +498,7 @@ module.exports = function (postgresWorkspace) {
     module.dataLayerInfoGet = async function (req, res) {
       var id=req.params.id;
       var err,layer;
-    [err, layer] = await util.call(models.DataLayer.findById(id,{
+    [err, layer] = await util.call(models.DataLayer.findByPk(id,{
         include: [ 
             { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}
             ,{ model: models.Permission, as: 'Permissions'
@@ -1616,7 +1616,7 @@ module.exports = function (postgresWorkspace) {
             // }
          
             var itemId=req.params.id;
-            [err, item] = await util.call(models.DataLayer.findById(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
+            [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
        
         }
         if (!item) {
@@ -1709,7 +1709,7 @@ module.exports = function (postgresWorkspace) {
         var item,err;
         if (req.params.id && req.params.id != '-1') {
             
-          [err, item] = await util.call(models.DataLayer.findById(req.params.id) );
+          [err, item] = await util.call(models.DataLayer.findByPk(req.params.id) );
 
             
             if (!item) {
@@ -1755,7 +1755,7 @@ module.exports = function (postgresWorkspace) {
          }
          var err,item;
          var itemId=req.params.id;
-         [err, item] = await util.call(models.DataLayer.findById(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
+         [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
          if (!item) {
              result.status=false;
              result.message= 'Data layer not found!';
@@ -2224,7 +2224,7 @@ module.exports = function (postgresWorkspace) {
         }
         if (req.params.id && req.params.id != '-1') {
             
-          [err, item] = await util.call(models.DataLayer.findById(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
+          [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
 
             
             if (!item) {
@@ -2398,7 +2398,7 @@ module.exports = function (postgresWorkspace) {
         var itemId= req.params.id;
         if (req.params.id && req.params.id != '-1') {
             
-          [err, item] = await util.call(models.DataLayer.findById(req.params.id) );
+          [err, item] = await util.call(models.DataLayer.findByPk(req.params.id) );
 
             
             if (!item) {
@@ -2517,7 +2517,7 @@ module.exports = function (postgresWorkspace) {
     
     if (req.params.id && req.params.id != '-1') {
         
-        [err, item] = await util.call(models.DataLayer.findById(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
+        [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
 
         
         if (!item) {
@@ -2863,7 +2863,7 @@ module.exports = function (postgresWorkspace) {
         }
         if (req.params.id && req.params.id != '-1') {
             
-          [err, item] = await util.call(models.DataLayer.findById(itemId) );
+          [err, item] = await util.call(models.DataLayer.findByPk(itemId) );
 
             
             if (!item) {
@@ -3135,7 +3135,7 @@ module.exports = function (postgresWorkspace) {
             return;
         }
                     
-        [err, item] = await util.call(models.DataLayer.findById(itemId) );
+        [err, item] = await util.call(models.DataLayer.findByPk(itemId) );
 
             
         if (!item) {
@@ -3376,7 +3376,7 @@ module.exports = function (postgresWorkspace) {
         
         if (req.params.id && req.params.id != '-1') {
             
-          [err, item] = await util.call(models.DataLayer.findById(itemId) );
+          [err, item] = await util.call(models.DataLayer.findByPk(itemId) );
 
             
             if (!item) {

@@ -17,7 +17,7 @@ module.exports = function (passport) {
         done(null, user.id);
     });
     passport.deserializeUser(function (id, done) {
-        User.findById(id, { include: [{ model: models.Group, as: 'BelongsToGroups' }] }).then(async function (user) {
+        User.findByPk(id, { include: [{ model: models.Group, as: 'BelongsToGroups' }] }).then(async function (user) {
             if (user) {
                 done(null, user);
             } else {
@@ -78,7 +78,7 @@ passport.use(new RememberMeStrategy(
         var user;
         try{
         // user = await User.findOne({ where: { id: uid } });
-         user = await User.findById(uid, { include: [{ model: models.Group, as: 'BelongsToGroups' }] });
+         user = await User.findByPk(uid, { include: [{ model: models.Group, as: 'BelongsToGroups' }] });
         
         }catch(ex){
             var t=11;

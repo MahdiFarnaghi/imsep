@@ -23,7 +23,8 @@ exports.contactGet = function(req, res) {
   res.render('contact', {
     title: 'Contact',
     name:name,
-    email:email
+    email:email,
+    message:''
   });
 };
 
@@ -42,8 +43,16 @@ exports.contactPost = function(req, res) {
 
   if (errors) {
     req.flash('error', errors);
-    return res.redirect('/contact');
-  }
+    res.render('contact', {
+      title: 'Contact',
+      name:req.body.name,
+      email:req.body.email,
+      message:req.body.message
+
+      //,csrfToken: req.csrfToken()
+    });
+    return;
+}
   var transporter = nodemailer.createTransport({
     service: process.env.EMAIL_SENDER_SERVICE,
     secure: false,
