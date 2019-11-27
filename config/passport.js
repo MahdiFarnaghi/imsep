@@ -3,6 +3,12 @@ var models = require('../models/index');
 //var passport = require('passport');
 var LocalStrategy = require('passport-local').Strategy;
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
+
+
+const passportJWT = require("passport-jwt");
+const JWTStrategy   = passportJWT.Strategy;
+const ExtractJWT = passportJWT.ExtractJwt;
+
 var nodemailer = require('nodemailer');
 
 var RememberMeStrategy = require('passport-remember-me').Strategy;
@@ -32,7 +38,8 @@ module.exports = function (passport) {
             userName = userName.toLowerCase();
         var superAdmin = await User.findOne({ where: { userName: 'superadmin' } });
         
-        var user = await User.findOne({ where: { userName: userName } });
+        //var user = await User.findOne({ where: { userName: userName } });
+        var user = await User.findOne({ where: { userName: userName  },include: [{ model: models.Group, as: 'BelongsToGroups' }] });
         if (!user) {
             return done(null, false, {
                 msg: 'Invalid user name or password'
@@ -47,6 +54,25 @@ module.exports = function (passport) {
         }
         return done(null, user);
     }));
+
+    
+  passport.use(new JWTStrategy({
+    jwtFromRequest:ExtractJWT.fromExtractors( [ExtractJWT.fromAuthHeaderAsBearerToken(),ExtractJWT.fromUrlQueryParameter('auth_token')]),
+    secretOrKey   : process.env.JWT_SECRET
+},
+async function (jwtPayload, done) {
+
+    //find the user in db if needed. This functionality may be omitted if you store everything you'll need in JWT payload.
+    var user = await User.findOne({ where: { id: jwtPayload.id },include: [{ model: models.Group, as: 'BelongsToGroups' }] });
+    
+    if(user){
+        return done(null, user);
+    }else{
+       // return done(err);
+        return done(null, false, { msg: 'Invalid token' });
+    }
+}
+));
 
 // Remember Me cookie strategy
 //   This strategy consumes a remember me token, supplying the user the
@@ -79,6 +105,7 @@ passport.use(new RememberMeStrategy(
         try{
         // user = await User.findOne({ where: { id: uid } });
          user = await User.findByPk(uid, { include: [{ model: models.Group, as: 'BelongsToGroups' }] });
+         
         
         }catch(ex){
             var t=11;

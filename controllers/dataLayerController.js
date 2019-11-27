@@ -26,6 +26,9 @@ module.exports = function (postgresWorkspace) {
         if(req.query && 'format' in req.query){
             format=req.query.format;
         }
+        if(req.path.startsWith("/api/")){
+            format='json';
+        }
         var filterExpression= req.query.filterExpression || req.query.filterexpression;
         var start= req.query.start;
         var limit= req.query.limit;
@@ -585,6 +588,13 @@ module.exports = function (postgresWorkspace) {
         if(req.query && 'dataType' in req.query){
             dataType=req.query.dataType;
         }
+        var format;
+        if(req.query && 'format' in req.query){
+            format=req.query.format;
+        }
+        if(req.path.startsWith("/api/")){
+            format='json';
+        }
         // if (!(res.locals.identity.isAdministrator ||  res.locals.identity.isDataManager )) {
         //     req.flash('error', {
         //         msg: 'Access denied'
@@ -595,10 +605,17 @@ module.exports = function (postgresWorkspace) {
         if (req.params.id && req.params.id == '-1' && dataType=='vector') {
             
             if (!(res.locals.identity.isAdministrator || res.locals.identity.isPowerUser ||  res.locals.identity.isDataManager || res.locals.identity.isDataAnalyst )) {
-                req.flash('error', {
-                    msg: 'Access denied'
-                });
-                return res.redirect('/');
+                if(format=='json'){
+                    return res.json({
+                        status:false,
+                        message:'Access denied'
+                    });
+                }else{
+                    req.flash('error', {
+                        msg: 'Access denied'
+                    });
+                    return res.redirect('/');
+                }
             }
             item={
                 id:-1,
@@ -804,17 +821,31 @@ module.exports = function (postgresWorkspace) {
 
             }
             if (!item) {
-                req.flash('error', {
-                    msg: 'Data layer not found, or access denied!'
-                });
-                return res.redirect('/');
+                if(format=='json'){
+                    return res.json({
+                        status:false,
+                        message:'Dataset not found, or access denied!'
+                    })
+                }else{
+                    req.flash('error', {
+                        msg: 'Datalayer not found, or access denied!'
+                    });
+                    return res.redirect('/');
+                }
             }
         }else
         {
-            req.flash('error', {
-                msg: 'Data layer not found!'
-            });
-            return res.redirect('/');
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Dataset not found!'
+                })
+            }else{
+                req.flash('error', {
+                    msg: 'Datalayer not found!'
+                });
+                return res.redirect('/');
+            }
         }
         //#endregion
         
@@ -872,6 +903,25 @@ module.exports = function (postgresWorkspace) {
             if(!details.spatialReference)
                 details.spatialReference={name: 'EPSG:3857',alias:'Google Maps Global Mercator',srid:3857};
         }
+        if(format=='json'){
+            return res.json({
+                status:true,
+                title: 'Dataset'
+                , dataset: item,
+                details:details,
+                isNew:isNew,
+              //  projectList:projectList,
+                userHasViewPermission:userHasViewPermission,
+                userHasEditPermission:userHasEditPermission,
+                userIsOwnerOfItem:userIsOwnerOfItem,
+                grantViewPermissionToAllUsers:grantViewPermissionToAllUsers,
+                grantEditPermissionToAllUsers:grantEditPermissionToAllUsers,
+                usersWhoCanViewData:usersWhoCanViewData,
+                usersWhoCanEditData:usersWhoCanEditData,
+                groupsWhoCanViewData:groupsWhoCanViewData,
+                groupsWhoCanEditData:groupsWhoCanEditData
+            })
+        }else{
         res.render('dataLayer/dataLayer_'+ dataType , {
             title: 'Data layer'
             , dataLayer: item,
@@ -887,6 +937,7 @@ module.exports = function (postgresWorkspace) {
             groupsWhoCanViewData:groupsWhoCanViewData,
             groupsWhoCanEditData:groupsWhoCanEditData
         });
+      }
     };
      /**
      * POST /datalayer/:id
@@ -902,6 +953,13 @@ module.exports = function (postgresWorkspace) {
     var dataType='vector';
     if(req.query && 'dataType' in req.query){
         dataType=req.query.dataType;
+    }
+    var format;
+    if(req.query && 'format' in req.query){
+        format=req.query.format;
+    }
+    if(req.path.startsWith("/api/")){
+        format='json';
     }
     var result={
         status:false
@@ -1604,6 +1662,13 @@ module.exports = function (postgresWorkspace) {
      */
     module.dataLayerDelete = async function (req, res, next) {
         var err,item;
+        var format;
+        if(req.query && 'format' in req.query){
+            format=req.query.format;
+        }
+        if(req.path.startsWith("/api/")){
+            format='json';
+        }
         if (req.params.id && req.params.id != '-1') {
             // try {
             //     item = await models.DataLayer.findOne({
@@ -1620,10 +1685,18 @@ module.exports = function (postgresWorkspace) {
        
         }
         if (!item) {
-            req.flash('error', {
-                msg: 'Data layer not found!'
-            });
-            return res.redirect('/');
+            
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Dataset not found!'
+                })
+            }else{
+                req.flash('error', {
+                    msg: 'Data layer not found!'
+                });
+                return res.redirect('/');
+            }
         }
         
         var isOwner=false;
@@ -1634,8 +1707,16 @@ module.exports = function (postgresWorkspace) {
         }
   
         if(!isOwner && !res.locals.identity.isAdministrator  ){
-            req.flash('error', { msg: `Access denied.` });
-            return res.redirect('/datalayers');
+            
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Access denied!'
+                })
+            }else{
+                req.flash('error', { msg: `Access denied!` });
+                return res.redirect('/datalayers');
+            }
         }
         
         // if (item.ownerUser !== req.user.id) {
@@ -1680,10 +1761,18 @@ module.exports = function (postgresWorkspace) {
         try {
             await item.destroy();
         } catch (ex) {
-            req.flash('error', {
-                msg: 'Failed to delete Data layer!'
-            });
-            return res.redirect('/datalayers');
+           
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Failed to delete Dataset!'
+                })
+            }else{
+                req.flash('error', {
+                    msg: 'Failed to delete Data layer!'
+                });
+                return res.redirect('/datalayers');
+            }
         }
         try{
             var tryDeletePermissions = await models.Permission.destroy(
@@ -1694,11 +1783,20 @@ module.exports = function (postgresWorkspace) {
                          }
                 });
             }catch(ex){}
-        req.flash('info', {
-            msg: `Data layer has been permanently deleted.`
-        });
+        
 
-        res.redirect('/datalayers');
+        if(format=='json'){
+            return res.json({
+                status:true,
+                message:`Dataset has been permanently deleted.`
+            })
+        }else{   
+            req.flash('info', {
+                msg: `Data layer has been permanently deleted.`
+            });
+    
+            res.redirect('/datalayers');
+        }
 
     };
     /**
@@ -2611,30 +2709,223 @@ module.exports = function (postgresWorkspace) {
          var oidField= details.oidField || 'gid';
          var shapeField=details.shapeField || 'geom';
          try{
-             if(action=='insert'){
-                var result=await postgresWorkspace.insertVector(details,geoJSON);
-                return res.json(result);
-             }else if(action==='update')
-             {
-                var result=await postgresWorkspace.updateVector(details,geoJSON);
-                return res.json(result);
-                
-             }else if (action==='delete'){ 
-                 var result=await postgresWorkspace.deleteRow(details,geoJSON.id);
-                return res.json(result);
+            var succeeded=false;
+            var result;
+            if(action=='insert'){
+               result=await postgresWorkspace.insertVector(details,geoJSON);
+               succeeded=true;
+               //return res.json(result);
+            }else if(action==='update')
+            {
+               result=await postgresWorkspace.updateVector(details,geoJSON);
+               succeeded=true;
+               //return res.json(result);
+               
+            }else if (action==='delete'){ 
+                result=await postgresWorkspace.deleteRow(details,geoJSON.id);
+                succeeded=true;
+               //return res.json(result);
 
-             }else
-             {
-                return res.json({status:false,message:'This action is not supported'});
-             }
-        }catch(ex){
-            return res.json({
-                status:false,
-                message:ex.message
-            });
+            }else
+            {
+               return res.json({status:false,message:'This action is not supported'});
+            }
+            if(succeeded){
+          
+             //  await postgresWorkspace.updateVectorLayerExtent(item);
+            //    var metadata= await item.getMetadata();
+            //    if(metadata){ //update metadata
+            //        await module.updateLayerMetadata({datasetItem:item,create:false});
+            //     }
+               return res.json(result);
+            }
+       }catch(ex){
+           return res.json({
+               status:false,
+               message:ex.message
+           });
+       }
+        
+        
+    }else{
+        res.set('Content-Type', 'text/plain');
+        res.status(404).end('Not found');
+        return;
+    }
+   }
+
+   /**
+     * POST /dataset/:id/geojson/sync
+    */
+   module.geojsonSyncRowsPost = async function (req, res) {
+    var item,err;
+    var itemId=req.params.id;
+    
+    if (req.params.id && req.params.id != '-1') {
+        
+        [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
+
+        
+        if (!item) {
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
         }
+
+     
+         if (!item.details) {
+             res.set('Content-Type', 'text/plain');
+             res.status(404).end('Not found');
+             return;
+         }
+          //todo: permission check
+          var isOwner=false;
+          if(item.ownerUser== req.user.id) {
+              isOwner=true;
+          }else if (item.OwnerUser && item.OwnerUser.parent==req.user.id){
+              isOwner=true;
+          }
+          if(!isOwner && !res.locals.identity.isAdministrator  )
+          {
+            // if(!res.locals.identity.isDataManager){ //is applyed in UI
+            //     res.set('Content-Type', 'text/plain');
+            //     res.status(403).end('Access denied');
+            //     return;
+            // }   
+            var userHasEditPermission=false;
+            var err;
+            [err, item] = await util.call(models.DataLayer.findOne({
+                where: {  id: itemId },
+                include: [ 
+                        { model: models.Permission, as: 'Permissions'
+                            ,include: [
+                                {
+                                    model: models.User, as: 'assignedToUser',
+                                    required: false,
+                                    where: {
+                                        id:  req.user.id
+                                    }
+                                },
+                                {
+                                    model: models.Group, as: 'assignedToGroup',
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.User, as: 'Users',
+                                            required: true,
+                                            where: {
+                                                id: req.user.id
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                            }
+                    ]
+            }));
+
+            if(item){// get permission
+                var permissions = item.Permissions;
+                if(permissions){
+                    userHasEditPermission= permissions.some((p)=>{
+                        if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                            return (p.permissionName=='Edit' );
+                        }else return false;
+                    });
+                }
+                
+            }
+            if(!userHasEditPermission){
+                res.set('Content-Type', 'text/plain');
+                res.status(403).end('Access denied');
+                return;
+            }
+          }
+          var details={};
+          try{
+            details= JSON.parse( item.details);
+          }catch(ex){}
+          if(!details){
+            details={};
+           }
+          
+           var tableName= details.datasetName || item.name;
+           var oidField= details.oidField || 'gid';
+           var shapeField=details.shapeField || 'geom';
+           var srid=   3857;
+           if(details.spatialReference){
+               srid=  details.spatialReference.srid ;
+           }
+
+          //todo: workspace selection
+          var geojsons=req.body.geojsons || [];
+
+         // var action=req.body.action;
+          var insert_count=0;
+          var update_count=0;
+          var delete_count=0;
+           for(var i=0;i< geojsons.length;i++){
+               var geoJSON=geojsons[i];
+               if(geoJSON){
+                    var _cacheInfo=undefined;
+                    if( geoJSON.properties){
+                        _cacheInfo=  geoJSON.properties['_cacheInfo'];
+                    }
+                    if(!_cacheInfo){
+                        continue;
+                    }
+                    var action=_cacheInfo.action;
+                    try{
+                        if(action=='insert'){
+                            _cacheInfo.result=await postgresWorkspace.insertVector(details,geoJSON);
+                            if(_cacheInfo.result.status){
+                                insert_count++;
+                            }
+                        }else if(action==='update')
+                        {
+                            _cacheInfo.result=await postgresWorkspace.updateVector(details,geoJSON);
+                            if(_cacheInfo.result.status){
+                                update_count++;
+                            }
+                        }else if (action==='delete'){ 
+                            _cacheInfo.result=await postgresWorkspace.deleteRow(details,geoJSON.id);
+                            if(_cacheInfo.result.status){
+                                delete_count++;
+                            }
+                        }
+                    }catch(ex){
+                        _cacheInfo.result={
+                            status:false,
+                            message:ex.message
+                        };
+                    }
+
+
+
+
+               }
+
+            
+           }
+       
+            
+            try{
+              //      await postgresWorkspace.updateVectorLayerExtent(item);
+                    // var metadata= await item.getMetadata();
+                    // if(metadata){ //update metadata
+                    //     await module.updateLayerMetadata({datasetItem:item,create:false});
+                    // }
+            }catch(ex){
+            
+            }
         
-        
+            return res.json({
+                insert_count:insert_count,
+                update_count:update_count,
+                delete_count:delete_count,
+                status:true,geojsons:geojsons
+            });
+            
     }else{
         res.set('Content-Type', 'text/plain');
         res.status(404).end('Not found');

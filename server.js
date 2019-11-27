@@ -1,6 +1,8 @@
 ﻿'use strict';
 //var forceRebuildDatabaseSchema = false; // replaced with process.env.DB_REBUILD
 const adb_version = 1;
+const format = require('string-format');
+format.extend(String.prototype, {});
 //#region require  
 var pjson = require('./package.json');
 var uglify_ = require('./Grunt_Uglify.js');
@@ -113,7 +115,7 @@ var dataLayerController = require('./controllers/dataLayerController')(postgresW
 //#endregion Controllers 
 var Authenticated = accountController.ensureAuthenticated;
 var authorize = accountController.makeAuthorizeMiddleware;
-
+var InitIdentityInfo = accountController.initIdentityInfo;
 
 
 
@@ -149,10 +151,20 @@ vash.helpers.randomNumber = function (from, to) {
     return Math.floor(Math.random() * to) + from;
 };
 vash.helpers.getBase64 = function (jsonObject) {
-var str=new Buffer(JSON.stringify(jsonObject)).toString('base64');
-//var str= btoa(JSON.stringify(jsonObject));
-//var str0=atob(str);
-    return str; 
+    if(typeof jsonObject =='undefined'){
+        return '';
+    }
+    if(jsonObject===null){
+        return '';
+    }
+    try{
+        var str = new Buffer(JSON.stringify(jsonObject)).toString('base64');
+        //var str= btoa(JSON.stringify(jsonObject));
+        //var str0=atob(str);
+        return str;
+    }catch(ex){
+        return '';
+    }
 };
     
 //#endregion  view engine 
@@ -183,58 +195,59 @@ app.use(passport.session());
 app.use(passport.authenticate('remember-me'));
 
 // customizing after authentication
-app.use(async function (req, res, next) { 
-    res.locals.uglify=uglify_;
-    res.locals.identity = {
-        name: 'anonymous'
-    };
-    res.locals.user = req.user ? req.user : null;
-    res.locals.displayOptions = res.locals.displayOptions || {};
-   // res.locals.displayOptions.uglify=uglify_;
+app.use(InitIdentityInfo);
+// app.use(async function (req, res, next) { 
+//     res.locals.uglify=uglify_;
+//     res.locals.identity = {
+//         name: 'anonymous'
+//     };
+//     res.locals.user = req.user ? req.user : null;
+//     res.locals.displayOptions = res.locals.displayOptions || {};
+//    // res.locals.displayOptions.uglify=uglify_;
     
-    if (res.locals.user) {
-        res.locals.identity.name = res.locals.user.userName;
-        res.locals.identity.firstName = res.locals.user.firstName;
-        res.locals.identity.lastName = res.locals.user.lastName;
-        res.locals.identity.email = res.locals.user.email;
-        res.locals.identity.id=res.locals.user.id;
+//     if (res.locals.user) {
+//         res.locals.identity.name = res.locals.user.userName;
+//         res.locals.identity.firstName = res.locals.user.firstName;
+//         res.locals.identity.lastName = res.locals.user.lastName;
+//         res.locals.identity.email = res.locals.user.email;
+//         res.locals.identity.id=res.locals.user.id;
         
-        var roles = res.locals.user.BelongsToGroups.map(v => {
-            return v.name;
-        });
-        res.locals.identity.roles = roles;
+//         var roles = res.locals.user.BelongsToGroups.map(v => {
+//             return v.name;
+//         });
+//         res.locals.identity.roles = roles;
 
         
-        if( res.locals.identity.name.toLowerCase() ==='admin'
-           || res.locals.identity.name.toLowerCase() ==='superadmin'
-        ){
-            res.locals.identity.isAdministrator=true;    
-            if( res.locals.identity.name.toLowerCase() ==='superadmin'){
-                res.locals.identity.isSuperAdministrator=true;    
-            }
-        }else{
-            res.locals.identity.isAdministrator = roles.includes('administrators');
-        }
-        res.locals.identity.isPowerUser = roles.includes('powerUsers');
-        res.locals.identity.isDataManager = roles.includes('dataManagers');
-        res.locals.identity.isDataAnalyst = roles.includes('dataAnalysts');
+//         if( res.locals.identity.name.toLowerCase() ==='admin'
+//            || res.locals.identity.name.toLowerCase() ==='superadmin'
+//         ){
+//             res.locals.identity.isAdministrator=true;    
+//             if( res.locals.identity.name.toLowerCase() ==='superadmin'){
+//                 res.locals.identity.isSuperAdministrator=true;    
+//             }
+//         }else{
+//             res.locals.identity.isAdministrator = roles.includes('administrators');
+//         }
+//         res.locals.identity.isPowerUser = roles.includes('powerUsers');
+//         res.locals.identity.isDataManager = roles.includes('dataManagers');
+//         res.locals.identity.isDataAnalyst = roles.includes('dataAnalysts');
 
-        res.locals.displayOptions.showMaps = true;
-        try{
-        if (await res.locals.user.checkPermissionAsync(models, { permissionName: 'Edit', contentType: 'Users' })) {
-            res.locals.displayOptions.showUsers = true;
-            res.locals.displayOptions.showManagement = true;
-        }
-        }catch(ex){}
-        try{
-        if (await res.locals.user.checkPermissionAsync(models, { permissionName: 'Edit', contentType: 'Groups' })) {
-            res.locals.displayOptions.editUsers = true;
+//         res.locals.displayOptions.showMaps = true;
+//         try{
+//         if (await res.locals.user.checkPermissionAsync(models, { permissionName: 'Edit', contentType: 'Users' })) {
+//             res.locals.displayOptions.showUsers = true;
+//             res.locals.displayOptions.showManagement = true;
+//         }
+//         }catch(ex){}
+//         try{
+//         if (await res.locals.user.checkPermissionAsync(models, { permissionName: 'Edit', contentType: 'Groups' })) {
+//             res.locals.displayOptions.editUsers = true;
             
-        }
-        }catch(ex){}
-    }
-    next();
-});
+//         }
+//         }catch(ex){}
+//     }
+//     next();
+// });
 //app.use(express.static(path.join(__dirname, 'public')));been moved upper to prenvent midlewares multiple calls
 
 //#endregion app.use 
@@ -249,6 +262,8 @@ app.post('/proxy',
     handleErrors( homeController.proxyPost));
 
 app.get('/', [Authenticated],handleErrors(homeController.index));
+app.post('/api/login',handleErrors(accountController.api_loginPost));
+
 app.get('/help', handleErrors(homeController.help));
 app.get('/about',  handleErrors(homeController.aboutGet));
 
@@ -289,6 +304,7 @@ app.get('/auth/google/callback', passport.authenticate('google', { failureRedire
 
 
 app.get('/users',   [Authenticated],  handleErrors(adminController.allUsersGet));    
+app.get('/api/users', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(adminController.allUsersGet));
 app.get('/admin/users',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
         role: 'administrators', //or 👇
@@ -325,7 +341,8 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     handleErrors(adminController.userPost));
 
 
-    app.get('/groups',  [Authenticated], handleErrors(adminController.allGroupsGet));   
+    app.get('/groups',  [Authenticated], handleErrors(adminController.allGroupsGet));  
+    app.get('/api/groups', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(adminController.allGroupsGet)); 
 
     app.get('/admin/groups',  [Authenticated, authorize({
         users: 'superadmin,admin', //or 👇
@@ -364,19 +381,31 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     handleErrors(adminController.deleteGroupDelete));
 
     app.get('/maps',   [Authenticated ],  handleErrors(mapController.mapsGet));
+    app.get('/api/maps',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(mapController.mapsGet));
 
     app.get('/map/:id',   [Authenticated  ],  handleErrors(mapController.mapGet));
+    app.get('/api/map/:id',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(mapController.mapGet));
     
     app.post('/map/:id',   [Authenticated   ],    handleErrors(mapController.mapPost));
+    app.post('/api/map/:id', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(mapController.mapPost));
     app.delete('/map/:id/delete',    [Authenticated   ],    handleErrors(mapController.mapDelete));
+    app.delete('/api/map/:id/delete', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(mapController.mapDelete));
 
     app.get('/map/:id/thumbnail', validateController.noCache, handleErrors(mapController.thumbnailGet));  
+    app.get('/api/map/:id/thumbnail', validateController.noCache, handleErrors(mapController.thumbnailGet));
     app.post('/map/:id/thumbnail',    [Authenticated ],
         multer({ storage: memorystorage,limits: { fileSize: 1024*1024*10 } }).single('file'),
         handleErrors(mapController.thumbnailPost));  
-
+    app.post('/api/map/:id/thumbnail',  passport.authenticate('jwt', {session: false}),InitIdentityInfo,
+        multer({
+            storage: memorystorage,
+            limits: {
+                fileSize: 1024 * 1024 * 10
+            }
+        }).single('file'),
+        handleErrors(mapController.thumbnailPost));
     app.get('/datalayers',   [Authenticated ],   handleErrors(dataLayerController.dataLayersGet));
-
+    app.get('/api/datasets',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(dataLayerController.dataLayersGet));
     app.get('/datalayer/uploadshapefile',  [Authenticated, authorize({
         anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
@@ -408,7 +437,16 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     })],
     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*(parseFloat(process.env.UPLOAD_GEOJSON_MAX_SIZE_MB) || 10 ) } }).single('file'),
     handleErrors(dataLayerController.createFromGeoJSONPost));
-
+    app.post('/api/dataset/createfromgeojson', [passport.authenticate('jwt', {session: false}),InitIdentityInfo, authorize({
+        anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
+    })],
+    multer({
+        storage: uploadFolder,
+        limits: {
+            fileSize: 1024 * 1024 * (parseFloat(process.env.UPLOAD_GEOJSON_MAX_SIZE_MB) || 10)
+        }
+    }).single('file'),
+    handleErrors(dataLayerController.createFromGeoJSONPost));
     
     app.post('/datalayer/toShapefile',  [Authenticated, authorize({
         anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
@@ -445,31 +483,57 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
 
 
     app.get('/datalayer/:id',  [Authenticated],  handleErrors(dataLayerController.dataLayerGet));
+    app.get('/api/dataset/:id', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.dataLayerGet));
+
     app.post('/datalayer/:id',    [Authenticated],    handleErrors(dataLayerController.dataLayerPost));
+    app.post('/api/dataset/:id', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.dataLayerPost));
     app.get('/datalayer/:id/info',   [Authenticated],   handleErrors(dataLayerController.dataLayerInfoGet));
+    app.get('/api/dataset/:id/info', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.dataLayerInfoGet));
     
     app.delete('/datalayer/:id/delete',   [Authenticated],   handleErrors(dataLayerController.dataLayerDelete));
-    
+    app.delete('/api/dataset/:id/delete', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.dataLayerDelete));
+
 
     app.get('/datalayer/:id/geojson',  [Authenticated],   handleErrors(dataLayerController.geojsonGet));
-
+    app.get('/api/dataset/:id/geojson',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(dataLayerController.geojsonGet));
     
     app.get('/datalayer/:id/vectorextent',   [Authenticated],   handleErrors(dataLayerController.vectorextentGet));
+    app.get('/api/dataset/:id/vectorextent',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(dataLayerController.vectorextentGet));
 
     app.get('/datalayer/:id/raster',   [Authenticated],  handleErrors(dataLayerController.rasterGet));
+    app.get('/api/dataset/:id/raster', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.rasterGet));
     app.get('/datalayer/:id/rastertile',   [Authenticated],  handleErrors(dataLayerController.rasterTileGet));
+    app.get('/api/dataset/:id/rastertile',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(dataLayerController.rasterTileGet));
     
     app.get('/datalayer/:id/analysis',   [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataAnalysts'})],
     handleErrors(dataLayerController.analysisGet));
+    app.get('/api/dataset/:id/analysis', [passport.authenticate('jwt', {session: false}),InitIdentityInfo, authorize({
+        anyOfRoles: 'administrators,powerUsers,dataAnalysts'
+    })],  handleErrors(dataLayerController.analysisGet));
+
+    app.post('/api/dataset/:id/geojson/sync', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.geojsonSyncRowsPost));
 
     app.post('/datalayer/:id/geojson/:row',    [Authenticated],   handleErrors(dataLayerController.geojsonRowPost));
-
+    app.post('/api/dataset/:id/geojson/:row', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.geojsonRowPost));
     
     
     app.get('/datalayer/:id/thumbnail', validateController.noCache, handleErrors(dataLayerController.thumbnailGet));  
+    app.get('/api/dataset/:id/thumbnail', validateController.noCache, handleErrors(dataLayerController.thumbnailGet));
+    app.get('/api/datalayer/:id/thumbnail', validateController.noCache, handleErrors(dataLayerController.thumbnailGet));
+
     app.post('/datalayer/:id/thumbnail',    [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataManagers'})],
     multer({ storage: memorystorage,limits: { fileSize: 1024*1024*4 } }).single('file'),
     handleErrors(dataLayerController.thumbnailPost));  
+    app.post('/api/dataset/:id/thumbnail', [passport.authenticate('jwt', {session: false}),InitIdentityInfo , authorize({
+        anyOfRoles: 'administrators,powerUsers,dataManagers'
+    })],
+    multer({
+        storage: memorystorage,
+        limits: {
+            fileSize: 1024 * 1024 * 4
+        }
+    }).single('file'),
+    handleErrors(dataLayerController.thumbnailPost));
 
 app.get('/validate/user/username', validateController.noCache, handleErrors(validateController.validateUserUsernameGet));
 app.get('/validate/user/:id/email', validateController.noCache, handleErrors(validateController.validateUserEmailGet));

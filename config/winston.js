@@ -9,7 +9,9 @@ var options = {
         level: 'error',
         filename: path.join(logDirectory, 'app_errors.log'),
         handleExceptions: true,
-        json: true,
+        //json: true,
+        format: winston.format.json(),
+       
         maxsize: 5242880, // 5MB
         maxFiles: 5,
         colorize: false,
@@ -18,7 +20,8 @@ var options = {
         level: 'info',
         filename: path.join(logDirectory, 'app.log'),
         handleExceptions: true,
-        json: true,
+        //json: true,
+        format: winston.format.json(),
         maxsize: 5242880, // 5MB
         maxFiles: 5,
         colorize: false,
@@ -26,16 +29,20 @@ var options = {
     console: {
         level: 'debug',
         handleExceptions: true,
-        json: false,
+      //  json: false,
+        format: winston.format.json(),
+      //  format: winston.format.prettyPrint(),
         colorize: true,
     }
 };
 // instantiate a new Winston Logger with the settings defined above
+
 var logger =  winston.createLogger({
     transports: [
-        new winston.transports.File(options.errorfile),
-        new winston.transports.File(options.file),
+         new winston.transports.File(options.errorfile),
+         new winston.transports.File(options.file),
         new winston.transports.Console(options.console)
+        
     ],
     exitOnError: false, // do not exit on handled exceptions
 });

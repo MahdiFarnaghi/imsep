@@ -4,6 +4,7 @@ var sharp= require('sharp');
 var crypto = require('crypto');
 var nodemailer = require('nodemailer');
 var passport = require('passport');
+const jwt = require('jsonwebtoken');
 var util = require('./util');
 //var User = require('../models/User');
 
@@ -74,6 +75,87 @@ module.exports = function (passportConfig) {
             next(new util.HttpError(403, 'Insufficient permissions to access resource'));
             return;
         }
+    };
+    module.initIdentityInfo = async function (req, res, next) {
+        var uglify_ = require('../Grunt_Uglify.js');
+        res.locals.uglify = uglify_;
+        res.locals.identity = {
+            isAnonymous: true,
+            name: 'anonymous'
+        };
+        //if(!req.user){
+        //    req.user = await models.User.findOne({ where: { userName: 'guest' } , include: [{ model: models.Group, as: 'BelongsToGroups' }] });
+        // }
+        // if (req.i18n_lang == 'fa' || req.i18n_lang == 'ar') {
+        //     res.locals.i18n_layout = 'rtl';
+        // } else {
+        //     res.locals.i18n_layout = 'ltr';
+        // }
+        // res.locals.i18n_lang = req.i18n_lang;
+    
+        res.locals.user = req.user ? req.user : null;
+        res.locals.displayOptions = res.locals.displayOptions || {};
+        // res.locals.displayOptions.uglify=uglify_;
+    
+        if (res.locals.user) {
+            res.locals.identity.isAnonymous = false;
+            res.locals.identity.name = res.locals.user.userName;
+            res.locals.identity.firstName = res.locals.user.firstName;
+            res.locals.identity.lastName = res.locals.user.lastName;
+            res.locals.identity.email = res.locals.user.email;
+            res.locals.identity.id = res.locals.user.id;
+            //res.locals.identity.organizationId = res.locals.user.organizationId;
+    
+            var roles = res.locals.user.BelongsToGroups.map(v => {
+                return v.name;
+            });
+            res.locals.identity.roles = roles;
+    
+    
+            if (res.locals.identity.name.toLowerCase() === 'admin' ||
+                res.locals.identity.name.toLowerCase() === 'superadmin'
+            ) {
+                res.locals.identity.isAdministrator = true;
+                if (res.locals.identity.name.toLowerCase() === 'superadmin') {
+                    res.locals.identity.isSuperAdministrator = true;
+                }
+            } else {
+                res.locals.identity.isAdministrator = roles.includes('administrators');
+            }
+            res.locals.identity.isPowerUser = roles.includes('powerUsers');
+            res.locals.identity.isDataManager = roles.includes('dataManagers');
+            res.locals.identity.isDataAnalyst = roles.includes('dataAnalysts');
+    
+            res.locals.displayOptions.showMaps = true;
+    
+            if (await res.locals.user.checkPermissionAsync(models, {
+                    permissionName: 'Edit',
+                    contentType: 'Users'
+                })) {
+                res.locals.displayOptions.showUsers = true;
+                res.locals.displayOptions.showManagement = true;
+            }
+            if (await res.locals.user.checkPermissionAsync(models, {
+                    permissionName: 'Edit',
+                    contentType: 'Groups'
+                })) {
+                res.locals.displayOptions.editUsers = true;
+    
+            }
+            // if (await res.locals.user.checkPermissionAsync(models, {
+            //         permissionName: 'Edit',
+            //         contentType: 'Organizations'
+            //     })) {
+            //     res.locals.displayOptions.editOrganizations = true;
+    
+            // }
+    
+            // if(req.user.userName=='guest'){
+            //     req.user=null;
+            // }
+        }
+    
+        next();
     };
     /**
      * GET /login
@@ -207,6 +289,93 @@ module.exports = function (passportConfig) {
             });
         })(req, res, next);
     };
+
+    /**
+     * POST /api/login
+     */
+    module.api_loginPost = function (req, res, next) {
+         req.assert('userName',  'User name cannot be blank').notEmpty();
+         req.assert('password', 'Password cannot be blank').notEmpty();
+        //  if (process.env.LOGIN_CAPTCHA=='true') {
+        //      req.assert('captcha', 'Captcha check failed').equals(req.session.captcha);
+        //  }
+         var errors = req.validationErrors();
+ 
+         if (errors) {
+          return  res.status(500).json({ 
+                success:false,
+                error: "Error signing token",
+                raw: errors });  
+             
+         }
+         
+ 
+         passport.authenticate('local', {session: false},function (err, user, info) {
+             if (!user) {
+                return  res.status(500).json({ 
+                    success:false,
+                    error: "Error signing token",
+                    raw: info });  
+             }
+             if(user.status==='inactive'){
+                return  res.status(500).json({ 
+                    success:false,
+                    error: 'Account is deactivated.',
+                    raw: errors });
+             }
+             
+             req.logIn(user,{session: false}, async function (err) {
+                 var emailVerified=true;
+                 if(process.env.FORCE_EMAIL_VERIFICATION && process.env.FORCE_EMAIL_VERIFICATION=='true' ){
+                     if(user.email && !user.emailVerified && user.emailVerifyToken){
+                         emailVerified=false;
+                     }   
+                 }
+                 if(emailVerified){
+                    const payload ={
+                        id:user.id,
+                        userName:user.userName,
+                        firstName: user.firstName,
+                        lastName: user.lastName,
+                        email:user.email,
+                        organizationId:user.organizationId
+                    }  ;
+
+                    var roles = user.BelongsToGroups.map(v => {
+                        return v.name;
+                    });
+                    
+            
+            
+                    if (user.userName.toLowerCase() === 'admin' ||
+                    user.userName.toLowerCase() === 'superadmin'
+                    ) {
+                        payload.isAdministrator = true;
+                        if (user.userName.toLowerCase() === 'superadmin') {
+                            payload.isSuperAdministrator = true;
+                        }
+                    } else {
+                        payload.isAdministrator = roles.includes('administrators');
+                    }
+                    payload.isPowerUser = roles.includes('powerUsers');
+                    payload.isDataManager = roles.includes('dataManagers');
+                    payload.isDataAnalyst = roles.includes('dataAnalysts');
+            
+                   
+                    const token = jwt.sign(payload, process.env.JWT_SECRET);
+                     return res.json({success:true, user:payload,token:token});
+                 }else{
+                    
+                    return res.status(400).json({
+                        success:false,
+                        message: 'Email is not verified'
+                    });
+                     
+ 
+                 }
+             });
+         })(req, res, next);
+     };
 
     /**
      * GET /logout

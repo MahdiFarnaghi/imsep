@@ -17,6 +17,9 @@ module.exports = function () {
         if(req.query && 'format' in req.query){
             format=req.query.format;
         }
+        if(req.path.startsWith("/api/")){
+            format='json';
+        }
         var filterExpression= req.query.filterExpression || req.query.filterexpression;
         var start= req.query.start;
         var limit= req.query.limit;
@@ -458,7 +461,13 @@ module.exports = function () {
         var grantViewPermissionToAllUsers=false;
         var usersWhoCanViewMap=[];
         var groupsWhoCanViewMap=[];
-        
+        var format;
+        if(req.query && 'format' in req.query){
+            format=req.query.format;
+        }
+        if(req.path.startsWith("/api/")){
+            format='json';
+        }
         if (false && req.params.id && req.params.id == '-1') {
             var newMap = await models.Map.create({
                 name: 'Untitled',
@@ -692,30 +701,74 @@ module.exports = function () {
             
             }
             if (!item) {
+               
+                if(format=='json'){
+                    return res.json({
+                        status:false,
+                        message:'Map not found!'
+                    })
+                }else{
+                    req.flash('error', {
+                        msg: 'Map not found!'
+                    });
+                    return res.redirect('/');
+              }
+            }
+        }else
+        {
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Map not found!'
+                })
+            }else{
                 req.flash('error', {
                     msg: 'Map not found!'
                 });
                 return res.redirect('/');
             }
-        }else
-        {
-            req.flash('error', {
-                msg: 'Map not found!'
-            });
-            return res.redirect('/');
         }
 
-        item.thumbnail=undefined;
+       // item.thumbnail=undefined;
+        if(item.thumbnail){
+            try{
+                  const data = await sharp(item.thumbnail)
+                          .png()
+                          .toBuffer();
+              item.thumbnail   = 'data:image/png;base64,' + data.toString('base64');
+            }catch(ex){}
+        }
         var mapTitle=''
         if(item.name){
             mapTitle='-'+item.name;
         }
         if(!userHasViewPermission){
-            req.flash('error', {
-                msg: 'Map not found!'
-            });
-            return res.redirect('/');
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Map not found!'
+                })
+            }else{
+                req.flash('error', {
+                    msg: 'Map not found!'
+                });
+                return res.redirect('/');
+            }
         }
+        if(format=='json'){
+            return res.json({
+                status:true,
+                title: 'Map'+mapTitle,
+                map:item,
+                userHasViewPermission:userHasViewPermission,
+                userHasEditPermission:userHasEditPermission,
+                userIsOwnerOfMap:userIsOwnerOfMap,
+                grantViewPermissionToAllUsers:grantViewPermissionToAllUsers,
+                usersWhoCanViewMap:usersWhoCanViewMap,
+                groupsWhoCanViewMap:groupsWhoCanViewMap
+
+            })
+        }else{
         res.render('map/map', {
             title: 'Map'+mapTitle,
             map:item,
@@ -727,6 +780,7 @@ module.exports = function () {
             groupsWhoCanViewMap:groupsWhoCanViewMap
 
         });
+        }
     };
     /**
      * POST /map/:id
@@ -1106,6 +1160,12 @@ module.exports = function () {
      */
     module.mapDelete = async function (req, res, next) {
         var map;
+        if(req.query && 'format' in req.query){
+            format=req.query.format;
+        }
+        if(req.path.startsWith("/api/")){
+            format='json';
+        }
         if (req.params.id && req.params.id != '-1') {
             try {
                 // map = await models.Map.findOne({
@@ -1126,10 +1186,18 @@ module.exports = function () {
             }
         }
         if (!map) {
-            req.flash('error', {
-                msg: 'Map not found!'
-            });
-            return res.redirect('/');
+            
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Map not found!'
+                })
+            }else{
+                req.flash('error', {
+                    msg: 'Map not found!'
+                });
+                return res.redirect('/');
+            }
         }
         
         
@@ -1147,17 +1215,31 @@ module.exports = function () {
         }
   
         if(!isOwner && !res.locals.identity.isAdministrator  ){
-            req.flash('error', { msg: `Access denied.` });
-            return res.redirect('/maps');
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Access denied!'
+                })
+            }else{
+                req.flash('error', { msg: `Access denied!` });
+                return res.redirect('/maps');
+            }
         }
 
         try {
             await map.destroy();
         } catch (ex) {
-            req.flash('error', {
-                msg: 'Failed to delete map!'
-            });
-            return res.redirect('/maps');
+            if(format=='json'){
+                return res.json({
+                    status:false,
+                    message:'Failed to delete map!'
+                })
+            }else{
+                req.flash('error', {
+                    msg: 'Failed to delete map!'
+                });
+                return res.redirect('/maps');
+            }
         }
 
         try{
@@ -1169,11 +1251,18 @@ module.exports = function () {
                      }
             });
         }catch(ex){}
-        req.flash('info', {
-            msg: `Map has been permanently deleted.`
-        });
-
-        res.redirect('/maps');
+        if(format=='json'){
+            return res.json({
+                status:true,
+                message:'Map has been permanently deleted.'
+            })
+        }else{    
+            req.flash('info', {
+                msg: `Map has been permanently deleted.`
+            });
+    
+            res.redirect('/maps');
+         }
 
     };
 /**
