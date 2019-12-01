@@ -309,7 +309,20 @@ DlgVectorTableView.prototype.createUI=function(){
             var feature=row._row_;
             var d={_row_:feature};
             for(var i=0;i<columns.length;i++){
-              d[columns[i].field]=feature.get(columns[i].field );
+              //d[columns[i].field]=feature.get(columns[i].field );
+
+              if(columns[i].codedValues){
+
+                d[columns[i].field]=feature.get(columns[i].field );
+                var key=d[columns[i].field]+'';
+                if(columns[i].codedValues[key]){
+                  d[columns[i].field]=columns[i].codedValues[key];
+                }
+                
+              }else{
+                d[columns[i].field]=feature.get(columns[i].field );
+              }
+
             }
             
             d['_sys_featureid_']=row['_sys_featureid_'];
@@ -421,10 +434,18 @@ DlgVectorTableView.prototype.createUI=function(){
     if(fld.type !=='bytea'){
       var fldName=fld.name;
       var title= fld.alias|| fldName;
+      var codedValues=undefined;
+      if(fld.domain && fld.domain.type=='codedValues' && fld.domain.items){
+        codedValues={};
+        for(var j=0;j< fld.domain.items.length;j++){
+          codedValues[fld.domain.items[j].code]=fld.domain.items[j].value;
+        }
+      }
       columns.push({
         title:title,
         field: fldName,
         sortable:true,
+        codedValues:codedValues
       })
     }
   }
@@ -433,7 +454,17 @@ DlgVectorTableView.prototype.createUI=function(){
     var row= features[r];
     var d={_row_:row};
     for(var i=0;i<columns.length;i++){
-      d[columns[i].field]=row.get(columns[i].field );
+      if(columns[i].codedValues){
+
+        d[columns[i].field]=row.get(columns[i].field );
+        var key=d[columns[i].field]+'';
+        if(columns[i].codedValues[key]){
+          d[columns[i].field]=columns[i].codedValues[key];
+        }
+        
+      }else{
+        d[columns[i].field]=row.get(columns[i].field );
+      }
     }
     var fid=row.getId()
     d['_sys_featureid_']=fid;

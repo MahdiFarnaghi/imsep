@@ -3,6 +3,7 @@ function DlgVectorSearch(mapContainer,obj,options) {
   options.showApplyButton=true;
   options.applyButtonTitle='Validate';
   options.closable=false;
+  options.rtl=false;
   if(!options.title){
     if(obj.get && obj.get('title')){
       options.title='Search: '+ obj.get('title') ;
@@ -268,21 +269,49 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
   var sampleValueEl=content.find('#sampleValue');
   var expressionEl=content.find('#expression');
   var operatorEl= content.find('#operator');
+  var fieldsDic = {};
+  for (var i = 0; fields && i < fields.length; i++) {
+      var fld = fields[i];
+      var fldName = fld.name;
+      var title = fld.alias || fldName;
+      fieldsDic[fldName] = fld;
+      if(fld.domain && fld.domain.type=='codedValues' && fld.domain.items ){
+          var codedValues={};
+          for(var j=0;j<fld.domain.items.length;j++){
+            codedValues[fld.domain.items[j].code]= fld.domain.items[j].value;
+          }
+          fld.codedValues=codedValues;
+      }
+  }
   fieldNameEl.change(function(){
     
     var fldName= $(this).val();
     var source= layer.getSource();
     var features = source.getFeatures();
     var valueDic={};
-    for(var i=0;i< features.length;i++){
-      var value= features[i].get(fldName);
-      valueDic[value+'']= value;
-    }
     var valueArray=[];
-    for(var key in valueDic){
-      valueArray.push(valueDic[key]);
+    var fld= fieldsDic[fldName];
+    if(fld && fld.domain && fld.domain.type=='codedValues' && fld.domain.items ){
+      for(var j=0;j<fld.domain.items.length;j++){
+        valueArray.push({
+          label:fld.domain.items[j].value,
+          value:fld.domain.items[j].code
+        });
+      }
+    }else{
+      for(var i=0;i< features.length;i++){
+        var value= features[i].get(fldName);
+        valueDic[value+'']={label:value+'',value:value+''}
+      }
+      for(var key in valueDic){
+        valueArray.push(valueDic[key]);
+      }
     }
-    valueArray=valueArray.sort();
+    
+   
+    valueArray=valueArray.sort(function(a,b){
+      return (a['label'] < b['label']) ? -1 : (a['label'] > b['label']) ? 1 : 0;
+    });
     sampleValueEl.val(undefined);
     $(sampleValueEl).autocomplete({
       appendTo:content,
@@ -294,10 +323,10 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
                     var matcher = new RegExp( $.ui.autocomplete.escapeRegex(request.term), "i" );
                     var text = $( this ).text();
                     var mappedData=$.map(valueArray, function (item) {
-                      if ( item && ( !request.term || matcher.test(item) ) ){
+                      if ( item && ( !request.term || matcher.test(item.label) ) ){
                             return {
-                              label: item,
-                              value: item
+                              label: item.label,
+                              value: item.value
                             };
                       }
                     })
@@ -313,7 +342,13 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
       },
       open: function() {
           $("ul.ui-menu").width($(this).innerWidth());
-      }
+      },
+      select: function (event, ui) {
+        
+        $(this).data('selected_item',ui.item);
+        $(this).val(ui.item.label);
+        return false;
+     }
       // select: function (event, ui) {
       //     content.find('#sampleValue').val(ui.item.label);
 
@@ -373,6 +408,10 @@ DlgVectorSearch.prototype.setAttributesPanelUI_actions=function(content){
         newExp = '(' + fieldName + ' ' + operator + ')';
     } else {
       var v = sampleValueEl.val();
+      var selectedItem= sampleValueEl.data('selected_item');
+      if(selectedItem && selectedItem.label== v){
+        v= selectedItem.value;
+      }
       var s = new String();
       s = v + "";
     

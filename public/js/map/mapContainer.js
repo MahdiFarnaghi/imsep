@@ -532,18 +532,25 @@ map.addControl(printpdf);
         var fieldsDic={};
         var fields=null;
         var anyData=false;
-        if(featureAt.layer){
-            fields= LayerHelper.getFields(featureAt.layer);
-            if(fields){
-                fieldsDic={};
-                for(var i=0;i< fields.length;i++){
-                    var fld= fields[i];
-                    var fldName=fld.name;
-                    var title= fld.alias|| fldName;
-                    fieldsDic[fldName]= title;
-                  }
+        if (featureAt.layer) {
+            fields = LayerHelper.getFields(featureAt.layer);
+            if (fields) {
+                fieldsDic = {};
+                for (var i = 0; i < fields.length; i++) {
+                    var fld = fields[i];
+                    var fldName = fld.name;
+                    var title = fld.alias || fldName;
+                    fieldsDic[fldName] = title;
+                    if(fld.domain && fld.domain.type=='codedValues' && fld.domain.items ){
+                        var codedValues={};
+                        for(var j=0;j<fld.domain.items.length;j++){
+                          codedValues[fld.domain.items[j].code]= fld.domain.items[j].value;
+                        }
+                        fld.codedValues=codedValues;
+                    }
+                }
             }
-            
+
         }
        
             
@@ -576,6 +583,13 @@ map.addControl(printpdf);
                 if(typeof fld.hidden !=='undefined'){
                     visible= !fld.hidden;
                 }
+                var fldValue=properties[fldName];
+                    if(fld.codedValues){
+                        fldValue=fld.codedValues[fldValue];
+                        if(typeof fldValue=='undefined'){
+                            fldValue='';
+                        }
+                    }
                 if(visible){
                    
                     var key= fldName;
@@ -584,7 +598,7 @@ map.addControl(printpdf);
                     content +=  fieldsDic[key] || title;
                     content += '</td>';
                     content += '<td>';
-                    content += properties[key];
+                    content += fldValue;
                     content += '</td>';
                     content += '</tr>';
                 }
@@ -2478,31 +2492,35 @@ MapContainer.prototype.refreshLegend_addVectorLayer=function(layer){
           }
       });
     if(renderer.name=='uniqueValueRenderer'){
-        var items=renderer.getUniqueValueInfos();
-        var i=0;
-        legend.addRow({ 
-            title: renderer.field, 
+        var items = renderer.getUniqueValueInfos();
+        var i = 0;
+        legend.addRow({
+            title: renderer.field,
             style: undefined,
-            leftOffset:10,
-            data:{
-                layer:layer
+            leftOffset: 10,
+            data: {
+                layer: layer
             }
-            });
-        for(var key in items){
-          var item= items[key];
-          var style= StyleFactory.cloneStyle(item['style']);
-          legend.addRow({ 
-            title: item['value'], 
-            typeGeom: shapeType,
-            style: style,
-            leftOffset:10,
-            data:{
-                layer:layer,
-                style:item['style']
+        });
+
+        for (var key in items) {
+            if(i>100){
+                break;
             }
+            var item = items[key];
+            var style = StyleFactory.cloneStyle(item['style']);
+            legend.addRow({
+                title: item['label'] || item['value'],
+                typeGeom: shapeType,
+                style: style,
+                leftOffset: 10,
+                data: {
+                    layer: layer,
+                    style: item['style']
+                }
             });
 
-          i++;
+            i++;
         }
 
     }else if(renderer.name=='rangeValueRenderer'){

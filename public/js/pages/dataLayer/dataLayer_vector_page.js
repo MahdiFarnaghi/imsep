@@ -286,7 +286,16 @@ var pageTask={
           field.notNull=evt.field.notNull;
           field.isExpression=evt.field.isExpression;
           field.expression=evt.field.expression;
+         
+          field.domain=evt.field.domain;
+
           if(field._action.origField){
+           
+            // var origFieldStr=JSON.stringify(field._action.origField);
+            // var fieldStr=JSON.stringify(field);
+            // if(origFieldStr==fieldStr){
+            //   field._action.modified=false;
+            // }
             if(field.name === field._action.origField.name
               && field.alias == field._action.origField.alias
               && field.type === field._action.origField.type
@@ -625,6 +634,50 @@ EditFieldDlg.prototype.initFrom=function(){
   $content.find('#expression').change(function(){
     $content.find('#type').val('real');
   })
+  $content.find('#domain').change(function(){
+    var domainType=$(this).val();
+    
+    $content.find('.domainTypePanel').hide();
+    $content.find('#domainTypePanel_'+ domainType).removeClass('hidden');
+    $content.find('#domainTypePanel_'+ domainType).show();
+  });
+  var dv_counter=0;
+  function addCodeValue (code,value) {
+    var newRow = $("<tr>");
+   
+    var cols = "";
+
+    cols += '<td><input type="text" class="form-control codedValues_domainCode  nospinner" value="'+code+'"  name="domainCode' + dv_counter + '"  data-val="true" data-val-required="Code value is required"/><span class="field-validation-valid" data-valmsg-for="domainCode'+dv_counter+'" data-valmsg-replace="true"></span></td>';
+    cols += '<td><input type="text" class="form-control codedValues_domainValue nospinner" value="'+value+'"  name="domainValue' + dv_counter + '" ></td>';
+    cols +=' <td><button type="button" class="ibtnDel btn btn-xs btn-danger	"  title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button></td>';
+    newRow.append(cols);
+    $content.find("#tblCodedValues").append(newRow);
+    
+    dv_counter++;
+  };
+  $content.find("#addCodedValue").on("click", function () {
+    addCodeValue('','');
+  });
+  $content.find("#tblCodedValues").on("click", ".ibtnDel", function (event) {
+    $(this).closest("tr").remove();       
+    dv_counter -= 1
+  });
+  
+  if(me.field.domain && me.field.domain.type=='codedValues'){
+    for(var i=0;me.field.domain.items && i< me.field.domain.items.length;i++){
+        addCodeValue(me.field.domain.items[i].code,me.field.domain.items[i].value);
+    }
+    //$content.find('#domainTypePanel_'+ 'codedValues').show();
+  }
+  if(me.field.domain && me.field.domain.type=='range'){
+    $content.find("#minValue").val(me.field.domain.minValue);
+    $content.find("#maxValue").val(me.field.domain.maxValue);
+   // $content.find('#domainTypePanel_'+ 'range').show();
+  }
+  if(me.field.domain && me.field.domain.type){
+    $content.find('#domain').val(me.field.domain.type);
+    $content.find('#domain').trigger('change');
+  }
  }
 EditFieldDlg.prototype.updateUI=function(){
   var me= this;
@@ -731,6 +784,30 @@ EditFieldDlg.prototype.apply=function(){
   editField.expression=$form.find('#expression').val();
     
 
+  var domainType= $form.find('#domain').val();
+  if(domainType==='range'){
+    editField.domain={
+      type:'range',
+      minValue:$form.find('#minValue').val(),
+      maxValue:$form.find('#maxValue').val()
+    }
+  }
+  if(domainType==='codedValues'){
+    editField.domain={
+      type:'codedValues',
+      items:[]
+    };
+    $form.find('#tblCodedValues > tbody > tr').each(function() {
+      var codedValues_domainCode=$(this).find('.codedValues_domainCode').val();
+      var codedValues_domainValue=$(this).find('.codedValues_domainValue').val();
+      editField.domain.items.push({
+        code:codedValues_domainCode,
+        value:codedValues_domainValue
+      })
+    });
+
+  }
+  
   if(this.onValidate)
   {
     var arg={
