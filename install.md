@@ -31,6 +31,18 @@
      then start debuging  with the "Docker/Chrome1338" configuration
 
 
+# Manual backup of DB
+docker exec -t -i -e PGPASSWORD=d747db4520c046ccb5db14f39a014746 imsep_postgis  pg_dumpall -c -h 127.0.0.1 -U postgres > dumpall_result.sql
+
+docker exec -t -i -e PGPASSWORD=d747db4520c046ccb5db14f39a014746 imsep_postgis  pg_dump -h 127.0.0.1 imsep -U postgres > dump_imsep.sql
+
+docker exec -t -i -e PGPASSWORD=d747db4520c046ccb5db14f39a014746 imsep_postgis  pg_dump -h 127.0.0.1 imsep_gdb -U postgres > dump_imsep_gdb.sql
+
+docker exec -t -i -e PGPASSWORD=d747db4520c046ccb5db14f39a014746 imsep_postgis  pg_dump -F c -h 127.0.0.1 imsep -U postgres > dump_imsep.tar
+
+docker exec -t -i -e PGPASSWORD=d747db4520c046ccb5db14f39a014746 imsep_postgis  pg_dump -F c -h 127.0.0.1 imsep_gdb -U postgres > dump_imsep_gdb.tar 
+
+
 
 
 
