@@ -132,7 +132,7 @@ MapContainer.prototype.create = function() {
     //     })
     // } 
 });
-map.addInteraction(interactionSelectPointerMove);
+//map.addInteraction(interactionSelectPointerMove);
 
 var dragAndDropInteraction = new ol.interaction.DragAndDrop({
     formatConstructors: [
@@ -290,43 +290,10 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
   this.leftToolbar.addControl(this.btnLayerProperties);
   this.btnLayerProperties.setVisible(false);
 
-  var identifyTool = new ol.control.Toggle({
-    html: '<span style="display:block;line-height:28px;background-position:center center" class="identify_24_Icon" >&nbsp;</span>',
-    className:'myOlbutton24',
-    title: 'Identify features',
-    onToggle: function (toggle) {
-        if (!toggle) {
-            self.setCurrentTool(null);
-            return;
-        }
-        self.setCurrentTool({
-            name: 'identify_tool',
-            cursor:function(map,e){
-                //c='url("/css/images/identify_24_cursor.png")1 1,auto';
-                c='';
-                var pixel = map.getEventPixel(e.originalEvent);
-                var hit = map.hasFeatureAtPixel(pixel,{});
-                    if(hit){
-                       // c='url("/css/images/identify_24_cursor_hover.png")1 1,auto'; 
-                       c='url("/css/images/identify_24_cursor.png")1 1,auto'; 
-                    }
-                    return c;
-              },
-            onActivate: function (event) {
-                
-            },
-            onDeactivate: function (event) {
-                identifyTool.setActive(false);  
-                self.popup.hide();
-            }
-        });
-       
-    }
-    //,
-    // autoActivate: true,
-    // active: true
-});
-this.topToolbar.addControl(identifyTool);
+  this.identifyTask = new IdentifyTask(this.app, this, {});
+  this.identifyTask.OnActivated();
+
+
   this.measureTasks= new MeasureTasks(this.app,this,{});
   this.measureTasks.OnActivated();
  
@@ -498,174 +465,7 @@ map.addControl(printpdf);
   });
   map.on('singleclick', function(evt) {
       
-    var ct=self.getCurrentTool();
-    //if(!ct){
-    //    return;
-   // }
-    if(ct && ct.name !=='identify_tool'){
-        return;
-    }
-      var coordinate = evt.coordinate;
-      var pixel = map.getPixelFromCoordinate(coordinate);
-      popup.hide();
-     
-    //   if(self.getCurrentEditAction()=='draw' || self.getCurrentEditAction()=='edit')
-    //   {
-    //     return;
-    //   }
-      var featureAt = map.forEachFeatureAtPixel(pixel,
-       function(feature, layer) {
-          return {
-              feature: feature,
-              layer: layer
-          };
-      },{
-          layerFilter: function(layer){
-            if(layer.get('custom') && (layer.get('custom').type=='measure' || layer.get('custom').type=='temp' || layer.get('custom').hiddenInToc )) 
-                return false;
-            else
-                return true;
-          }
-        });
-
-      if (featureAt && featureAt.feature) {
-        var fieldsDic={};
-        var fields=null;
-        var anyData=false;
-        if (featureAt.layer) {
-            fields = LayerHelper.getFields(featureAt.layer);
-            if (fields) {
-                fieldsDic = {};
-                for (var i = 0; i < fields.length; i++) {
-                    var fld = fields[i];
-                    var fldName = fld.name;
-                    var title = fld.alias || fldName;
-                    fieldsDic[fldName] = title;
-                    if(fld.domain && fld.domain.type=='codedValues' && fld.domain.items ){
-                        var codedValues={};
-                        for(var j=0;j<fld.domain.items.length;j++){
-                          codedValues[fld.domain.items[j].code]= fld.domain.items[j].value;
-                        }
-                        fld.codedValues=codedValues;
-                    }
-                }
-            }
-
-        }
-       
-            
-          var feature = featureAt.feature;
-          var layer=featureAt.layer;
-          var content = "";
-          //content += "<img src='"+feature.get("img")+"'/>";
-          content += '<table class="table table-striped table-condensed">';
-          content += '<thead>';
-          if(layer && layer.get('title')){
-            content += '<tr><th colspan="2" style=" white-space: nowrap;overflow-x: hidden; max-width: 260px;text-overflow: ellipsis;">' + layer.get('title')+'</th></tr>';    
-          }else{
-            content += '<tr><th>Field</th><th>Value</th></tr>';
-          }
-          content += '</thead>';
-          content += '<tbody>';
-          var properties = feature.getProperties();
-          var geom = feature.getGeometry();
-          
-          if(fields){
-            anyData=true;
-            for(var i=0;i< fields.length;i++){
-                var fld= fields[i];
-                var fldName=fld.name;
-                var title= fld.alias|| fldName;
-                var visible=true;
-                if(typeof fld.visible !=='undefined'){
-                    visible= fld.visible;
-                }
-                if(typeof fld.hidden !=='undefined'){
-                    visible= !fld.hidden;
-                }
-                var fldValue=properties[fldName];
-                    if(fld.codedValues){
-                        fldValue=fld.codedValues[fldValue];
-                        if(typeof fldValue=='undefined'){
-                            fldValue='';
-                        }
-                    }
-                if(visible){
-                   
-                    var key= fldName;
-                    content += '<tr>';
-                    content += '<td>';
-                    content +=  fieldsDic[key] || title;
-                    content += '</td>';
-                    content += '<td>';
-                    content += fldValue;
-                    content += '</td>';
-                    content += '</tr>';
-                }
-            }
-          }else{
-            for (var key in properties) {
-                if (key !== 'geometry') {
-                    anyData=true;
-                    content += '<tr>';
-                    content += '<td>';
-                    content +=  fieldsDic[key] || key;
-                    content += '</td>';
-                    content += '<td>';
-                    content += properties[key];
-                    content += '</td>';
-                    content += '</tr>';
-                }
-            }
-          }
-         if(false){ 
-            if (geom instanceof ol.geom.Polygon || geom instanceof ol.geom.MultiPolygon) {
-                var shapeArea = MapContainer.formatArea(geom);
-                content += '<tr>';
-                content += '<td><i class="text-info">';
-                content += 'ShapeArea' ;
-                content += '</i></td>';
-                content += '<td>';
-                content += shapeArea;
-                content += '</td>';
-                content += '</tr>';
-                var shapeLength = MapContainer.formatLength(geom);
-                content += '<tr>';
-                content += '<td><i class="text-info">';
-                content += 'ShapeLength' ;
-                content += '</i></td>';
-                content += '<td>';
-                content += shapeLength;
-                content += '</td>';
-                content += '</tr>';
-            } else if (geom instanceof ol.geom.LineString) {
-                var shapeLength = MapContainer.formatLength(geom);
-                content += '<tr>';
-                content += '<td><i class="text-info">';
-                content += 'ShapeLength' ;
-                content += '</i></td>';
-                content += '<td>';
-                content += shapeLength;
-                content += '</td>';
-                content += '</tr>';
-            }
-          }
-          content += '</tbody>';
-          content += '</table>';
-
-        
-          var labelPoint = geom.getFirstCoordinate();
-          if (geom.getCenter)
-              labelPoint = geom.getCenter();
-          else if (geom.getExtent) {
-              labelPoint = ol.extent.getCenter(geom.getExtent());
-          }
-          //popup.show(labelPoint, content); 
-          if(anyData){
-            popup.show(coordinate, content);
-            popup.getElement().parentNode.style.zIndex= 500 + map.getOverlays().getLength();
-          }
-      }
+   
   });
 }
 MapContainer.formatLength = function (line) {

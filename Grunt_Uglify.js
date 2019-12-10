@@ -90,6 +90,7 @@ module.exports = {
             'public/js/map/tasks/dlgOSMTagSelection.js',
             'public/js/map/tasks/dlgAddGeoJSON.js',
             'public/js/map/tasks/dlgWCS.js',
+            'public/js/map/tasks/identifyTask.js',
             
         
         

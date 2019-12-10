@@ -222,10 +222,17 @@
                        <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
                     </div>
             </div>
+           
             <div class="form-group">
                     <label class="col-sm-3" for="alias">Alias</label>
                     <div class="col-sm-8">
                        <input type="text" name="alias" id="alias" value=""  placeholder="Alias" class="form-control"/>
+                    </div>
+            </div>
+              <div class="form-group">
+                    <label class="col-sm-3" for="description">Description</label>
+                    <div class="col-sm-8">
+                       <textarea type="text" name="description" rows="2" id="description"  placeholder="Description" class="form-control"></textarea>
                     </div>
             </div>
              <div class="form-group" style="    margin-bottom:0;">

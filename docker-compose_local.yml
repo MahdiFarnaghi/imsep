@@ -4,12 +4,14 @@ services:
   imsep_postgis:
     container_name: imsep_postgis
     restart: unless-stopped
-    image: kartoza/postgis:latest 
+    image: kartoza/postgis:11.0-2.5
+    #image: kartoza/postgis:latest
     ports: 
       - "25432:5432"
     volumes:  
       #- imsepdb:/var/lib/postgresql/data
-      - c:\docker\imsep\db_data:/var/lib/postgresql/data
+      #- c:\docker\imsep\db_data:/var/lib/postgresql/11/main  
+      - imsepdb:/var/lib/postgresql/11/main  
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746

@@ -714,6 +714,15 @@ pageTask.create_Layer_AutoSearch=function(){
          });
 
      }
+     $('#autoSearchLayers_clear').click(function(){
+    
+        var autoSearchEl=$('#autoSearchLayers') ;
+        var autoSearchResultsEl=$('#autoSearchLayers_results') ;
+        
+        $(autoSearchResultsEl).html('');
+        $(autoSearchResultsEl).val('');
+        $(autoSearchEl).val('');
+      });
 }
 
   
@@ -966,4 +975,13 @@ pageTask.create_BaseLayer_AutoSearch=function(){
                 $('#autoSearchBaseLayers').val('');
              });
          }
+         $('#autoSearchBaseLayers_clear').click(function(){
+    
+            var autoSearchEl=$('#autoSearchBaseLayers') ;
+            var autoSearchResultsEl=$('#autoSearchBaseLayers_results') ;
+            
+            $(autoSearchResultsEl).html('');
+            $(autoSearchResultsEl).val('');
+            $(autoSearchEl).val('');
+          });
 }

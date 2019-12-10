@@ -42,6 +42,9 @@ docker exec -t -i -e PGPASSWORD=d747db4520c046ccb5db14f39a014746 imsep_postgis  
 
 docker exec -t -i -e PGPASSWORD=d747db4520c046ccb5db14f39a014746 imsep_postgis  pg_dump -F c -h 127.0.0.1 imsep_gdb -U postgres > dump_imsep_gdb.tar 
 
+or
+docker exec -it imsep_pgbackups /backup.sh
+
 
 
 

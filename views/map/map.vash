@@ -321,7 +321,11 @@
                                 <div id="pnlAddLayerContent" class="panel-collapse collapse">
                                     <div class="panel-body">
                                         <label><p style="padding-left:1em;">Add from existing data layers:</p></label>
-                                        <input id="autoSearchLayers" class="mySearch-searchinput form-control background-position-right" placeholder="Search..." type="search" />
+                                        
+                                        <div class="input-group">
+                                            <input id="autoSearchLayers" class="mySearch-searchinput form-control background-position-right" placeholder="Search..." type="search" />
+                                            <span class="input-group-addon"><i id="autoSearchLayers_clear" title="Clear" style=" cursor: pointer;" class="glyphicon glyphicon-remove"></i></span>
+                                        </div>
                                         <div id="autoSearchLayers_results" class="autocomplete-custom-results">
 
                                         </div>
@@ -371,7 +375,11 @@
                                 <div id="pnlAddBaseLayerContent" class="panel-collapse collapse" >
                                     <div class="panel-body">
                                         
-                                        <input id="autoSearchBaseLayers" class="mySearch-searchinput form-control background-position-right" placeholder="Search base layers..." type="search" />
+                                        
+                                        <div class="input-group">
+                                            <input id="autoSearchBaseLayers" class="mySearch-searchinput form-control background-position-right" placeholder="Search base layers..." type="search" />
+                                            <span class="input-group-addon"><i id="autoSearchBaseLayers_clear" title="Clear" style=" cursor: pointer;" class="glyphicon glyphicon-remove"></i></span>
+                                        </div>
                                         <div id="autoSearchBaseLayers_results" class="autocomplete-custom-results">
 
                                         </div>

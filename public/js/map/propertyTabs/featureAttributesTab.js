@@ -486,6 +486,9 @@ FeatureAttributesTab.prototype.getTextInput=function(fld,properties,fldKey){
    }else{
      htm+='    />';
    }
+   if(fld.description){
+     htm+='      <small class="text-muted">'+fld.description+'</small>';
+   }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
 
@@ -536,6 +539,9 @@ FeatureAttributesTab.prototype.getDateTimeInput=function(fld,properties,fldKey){
      htm+=' data-val="true"';
    }
    htm+='    />';
+   if(fld.description){
+     htm+='      <small class="text-muted">'+fld.description+'</small>';
+   }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
 
@@ -586,6 +592,9 @@ FeatureAttributesTab.prototype.getDateInput=function(fld,properties,fldKey){
      htm+=' data-val="true"';
    }
    htm+='    />';
+   if(fld.description){
+     htm+='      <small class="text-muted">'+fld.description+'</small>';
+   }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
 
@@ -684,6 +693,9 @@ FeatureAttributesTab.prototype.getIntegerInput=function(fld,properties,fldKey){
      htm+=' data-val="true"';
    }
    htm+='    />';
+   if(fld.description){
+     htm+='      <small class="text-muted">'+fld.description+'</small>';
+   }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
 
@@ -774,6 +786,9 @@ FeatureAttributesTab.prototype.getNumberInput=function(fld,properties,fldKey){
      htm+=' data-val="true"';
    }
    htm+='    />';
+   if(fld.description){
+     htm+='      <small class="text-muted">'+fld.description+'</small>';
+   }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
 
@@ -837,7 +852,9 @@ FeatureAttributesTab.prototype.getBoolInput=function(fld,properties,fldKey){
      htm+='    <option value="" '+ ((value=='Null') ? 'selected="selected"':'' ) +' >Null</option>';
      htm+='    </select>';
  } 
-  
+ if(fld.description){
+   htm+='      <small class="text-muted">'+fld.description+'</small>';
+ }
    htm+='  </div>';
 
    return htm;
@@ -894,6 +911,9 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,fldKey){
  htm+='  </div>';
  htm+='  <div class="form-group" id="'+fldKey+'-panel">';
  htm+= self.getFileListContent(fileInfos,fldKey);
+ if(fld.description){
+   htm+='      <small class="text-muted">'+fld.description+'</small>';
+ }
  htm+='  </div>';
  if(editable){
    htm+='<button  type="button" data-field-name="'+fld.name+'" data-field-key="'+fldKey+'"  class="btn btn-primary form-control___ uploadfile "><span class="glyphicon glyphicon-plus"></span></button>';
@@ -1134,7 +1154,9 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
        htm+='    <option value="" '+ ((value=='Null') ? 'selected="selected"':'' ) +' >Null</option>';
      }
      htm+='    </select>';
-  
+     if(fld.description){
+       htm+='      <small class="text-muted">'+fld.description+'</small>';
+     }
   
    htm+='  </div>';
 

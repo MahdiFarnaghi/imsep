@@ -171,11 +171,18 @@ module.exports = function () {
         var [, dataAnalysts] = await util.call(models.Group.findOne({ where: { name: 'dataAnalysts' } }));
 
         if (userId == -1) {
+            var emailToken =null;
+            try{
+                emailToken =await util.generateUrlSafeToken();
+            }catch(ex){}
+                   
             try {
                 var newUser = await models.User.create({
                     userName: req.body.userName,
                     email: req.body.email,
                     emailVerified:false,
+                    emailVerifyToken:emailToken,
+                    emailVerifyExpires:new Date(Date.now() + (30*24*3600000)),
                     firstName: req.body.firstName,
                     lastName: req.body.lastName,
                     location: req.body.location,
@@ -224,6 +231,38 @@ module.exports = function () {
                     } else {
                     }
                 } catch (ex) { }
+
+                
+                try {
+                    var transporter = nodemailer.createTransport({
+                        service: process.env.EMAIL_SENDER_SERVICE,
+                        secure: false,
+                        auth: {
+                            user: process.env.EMAIL_SENDER_USERNAME,
+                            pass: process.env.EMAIL_SENDER_PASSWORD
+                        },
+                        tls: {
+                            rejectUnauthorized: false //https://github.com/nodemailer/nodemailer/issues/406
+                        }
+                    });
+                   
+                    var mailOptions = {
+                        to: newUser.email,
+                        from: process.env.SUPPORT_EMAIL,
+                        subject: '✔ Verify your email on ' + process.env.SITE_NAME,
+                        text: 'You are receiving this email because this email address is linked to an account in this site.\n\n' +
+                            'Please click on the following link, or paste this into your browser to complete email verification process:\n\n' +
+                            'http://' + req.headers.host + '/verifyemail/' + emailToken + '\n\n' +
+                            ''
+                        };
+                    var info = await transporter.sendMail(mailOptions);
+                } catch (ex) {
+                    req.flash('info', {
+                        msg: 'Failed to send inform email to the user!'
+                    });
+        
+                }
+
                 return res.redirect('/admin/user/' + newUser.id);
             } catch (ex) {
                 if (ex && ex.errors) {
@@ -370,6 +409,33 @@ module.exports = function () {
                     notify:true,
                     delay:3000
                 });
+                try {
+                    var transporter = nodemailer.createTransport({
+                        service: process.env.EMAIL_SENDER_SERVICE,
+                        secure: false,
+                        auth: {
+                            user: process.env.EMAIL_SENDER_USERNAME,
+                            pass: process.env.EMAIL_SENDER_PASSWORD
+                        },
+                        tls: {
+                            rejectUnauthorized: false //https://github.com/nodemailer/nodemailer/issues/406
+                        }
+                    });
+                   
+                    var mailOptions = {
+                        to: user.email,
+                        from: process.env.SUPPORT_EMAIL,
+                        subject: '✔ Account is modified (' + process.env.SITE_NAME+')',
+                        text: 'You are receiving this email because your account in this site is modified by "' + req.user.userName+'".\n\n' +
+                            ''
+                        };
+                    var info = await transporter.sendMail(mailOptions);
+                } catch (ex) {
+                    req.flash('info', {
+                        msg: 'Failed to send inform email to the user!'
+                    });
+        
+                }
                 return res.redirect('/admin/user/' + userId);
             } catch (err) {
                 if (err.original && err.original.code == 'SQLITE_CONSTRAINT') {

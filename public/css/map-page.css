@@ -399,3 +399,67 @@ span.route-step-distance-value {
 .table-striped>tbody>tr:nth-of-type(odd) {
   background-color: #f3f3f3;
 }
+
+.ol-popup .ol-count {
+  float: right;
+  margin: .25em 0;
+  direction: ltr;
+}
+.ol-popup  .ol-prev, .ol-popup .ol-next {
+  border-style: solid;
+  border-color: transparent rgba(0,60,136,.5);
+  border-width: .5em 0 .5em .5em;
+  display: inline-block;
+  vertical-align: bottom;
+  margin: 0 .5em;
+  cursor: pointer;
+}
+.ol-popup .ol-prev {
+  border-width: .5em .5em .5em 0;
+}
+
+.ol-popup .ol-zoombt {
+  border: 0;
+  width: 2em;
+  height: 2em;
+  display: inline-block;
+  color: rgba(0,60,136,.5);
+  position: relative;
+  background: transparent;
+  outline: none;
+
+  font-size: 1.4em;
+}
+/* .ol-popup .ol-zoombt:before {
+  content: "";
+  position: absolute;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  width: 1em;
+  height: 1em;
+  background-color: transparent;
+  border: .17em solid currentColor;
+  border-radius: 100%;
+  top: .3em;
+  left: .3em;
+}
+.ol-popup .ol-zoombt:after {
+  content: "";
+  position: absolute;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  top: 1.35em;
+  left: 1.15em;
+  border-width: .1em .3em;
+  border-style: solid;
+  border-radius: .03em;
+  -webkit-transform: rotate(45deg);
+  transform: rotate(45deg);
+  -webkit-box-shadow: -0.2em 0 0 -0.04em;
+  box-shadow: -0.2em 0 0 -0.04em;
+} */
+
+.identifyTask-results table{
+  margin-bottom: 0px;
+  min-width: 8em;
+}

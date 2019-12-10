@@ -240,6 +240,7 @@ var pageTask={
         field._action.origField={
           name: field.name,
           alias:field.alias,
+          description:field.description,
           type: field.type,
           length:field.length,
           default:field.default,
@@ -279,6 +280,7 @@ var pageTask={
           field._action.modified=true;
           field.name=evt.field.name;
           field.alias=evt.field.alias;
+          field.description=evt.field.description;
           field.type=evt.field.type;
           field.length= evt.field.length;
           field.scale= evt.field.scale;
@@ -584,6 +586,8 @@ EditFieldDlg.prototype.initFrom=function(){
     return;
     $content.find('#name').val(typeof me.field.name==='undefined'?'':me.field.name);
     $content.find('#alias').val(typeof me.field.alias==='undefined'?'':me.field.alias);
+    $content.find('#description').val(typeof me.field.description==='undefined'?'':me.field.description);
+    
     var $type= $content.find('#type');
   $type.val(typeof me.field.type==='undefined'?'varchar':me.field.type);
   var selType=$type.val();
@@ -771,6 +775,9 @@ EditFieldDlg.prototype.apply=function(){
   };  
   if($form.find('#alias').val())
     editField.alias=$form.find('#alias').val();
+  if($form.find('#description').val())
+    editField.description=$form.find('#description').val();  
+      
   if(_length)
     editField.length=_length;
   if(_scale)
