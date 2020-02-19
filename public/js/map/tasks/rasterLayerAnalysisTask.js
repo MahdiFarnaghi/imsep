@@ -56,8 +56,24 @@ RasterLayerAnalysisTask.prototype.init = function (dataObj) {
         html: '<i class="fa fa-tasks"></i>',
         className:'myOlbutton24',
         title: "Analysis toolbar",
-        bar:this._toolbar
+        bar:this._toolbar,
+        onToggle: function (toggle) {
+            if(toggle){
+                if(mapContainer._registeredToolbars){
+                    for(var ic=0;ic<mapContainer._registeredToolbars.length;ic++){
+                        var otherCtrl=mapContainer._registeredToolbars[ic];
+                        if(otherCtrl!== self.mainCtrl && otherCtrl.setActive){
+                            otherCtrl.setActive(false);
+                        }
+                    }
+                }
+            }
+        }
     });
+    if(!mapContainer._registeredToolbars){
+        mapContainer._registeredToolbars=[];
+    }
+    mapContainer._registeredToolbars.push(this.mainCtrl);
    
    this.mapContainer.leftToolbar.addControl(this.mainCtrl);
   

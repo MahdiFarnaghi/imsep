@@ -29,6 +29,8 @@ module.exports = function (postgresWorkspace) {
         if(req.path.startsWith("/api/")){
             format='json';
         }
+        req.sanitizeQuery('filterExpression').escape();
+        req.sanitizeQuery('filterexpression').escape();
         var filterExpression= req.query.filterExpression || req.query.filterexpression;
         var start= req.query.start;
         var limit= req.query.limit;
@@ -371,7 +373,7 @@ module.exports = function (postgresWorkspace) {
                 start:start,
                 orderby:orderby,
                 
-                filterExpression:filterExpression,
+                filterExpression:util.unescape(filterExpression),
                 extent:extent,
                 authors:authors,
                 datasetTypes:datasetTypes,
@@ -394,7 +396,7 @@ module.exports = function (postgresWorkspace) {
                         start:start,
                         orderby:orderby,
                         
-                        filterExpression:filterExpression,
+                        filterExpression:util.unescape(filterExpression),
                         extent:extent,
                         authors:authors,
                         datasetTypes:datasetTypes,

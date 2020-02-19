@@ -146,7 +146,7 @@ var pageTask={
     html+=' <th class="hidden-xs hidden-sm">Type</th>';
     html+=' <th class="hidden-xs ">Length</th>';
     html+=' <th class="hidden-xs ">Default value</th>';
-    html+=' <th> <button type="button" class="btn btn-xs btn-primary	" onclick="javascript:pageTask.editField(-1);"><span class="glyphicon glyphicon-plus"></span> Add</button></th>'; 
+    html+=' <th> <button type="button" class="btn btn-xs btn-primary	" onclick="javascript:pageTask.editField(-1,-1);"><span class="glyphicon glyphicon-plus"></span> Add</button></th>'; 
     html+=' <th></th>';
     html+=' </tr></thead>';
     html+=' <tbody id="tblItems">';
@@ -169,11 +169,19 @@ var pageTask={
       html+=' <td class="hidden-xs hidden-sm">'+fieldTypeCaption +'</td>';    
       html+=' <td class="hidden-xs ">'+((typeof fld.length!=='undefined')?fld.length:'')+'</td>';    
       html+=' <td class="hidden-xs ">'+((typeof fld.default!=='undefined')?fld.default:'')+ '</td>';    
+      // if(!fld._action.delete){
+      //   html+=' <td> <button type="button" class="btn btn-xs btn-info	" onclick="javascript:pageTask.editField('+i+');"><span class="glyphicon glyphicon-edit"></span> Edit</button></td>'; 
+      // }else{
+      //   html+=' <td> <button type="button" class="btn btn-xs btn-info disabled	" disabled onclick="javascript:"><span class="glyphicon glyphicon-edit"></span> Edit</button></td>'; 
+      // }
+      html+=' <td>';
       if(!fld._action.delete){
-        html+=' <td> <button type="button" class="btn btn-xs btn-info	" onclick="javascript:pageTask.editField('+i+');"><span class="glyphicon glyphicon-edit"></span> Edit</button></td>'; 
+        html+='<button type="button" class="btn btn-xs btn-info	" onclick="javascript:pageTask.editField('+i+');"><span class="glyphicon glyphicon-edit"></span> Edit</button>'; 
       }else{
-        html+=' <td> <button type="button" class="btn btn-xs btn-info disabled	" disabled onclick="javascript:"><span class="glyphicon glyphicon-edit"></span> Edit</button></td>'; 
+        html+='<button type="button" class="btn btn-xs btn-info disabled	" disabled onclick="javascript:"><span class="glyphicon glyphicon-edit"></span> Edit</button>'; 
       }
+      html+=' <button type="button" class="btn btn-xs btn-primary	" onclick="javascript:pageTask.editField(-1,'+i+');"><span class="glyphicon glyphicon-plus"></span> Add</button></th>'; 
+      html+=' </td>';
       if(fld._action.delete){
         html+=' <td><button type="button" class="btn btn-xs btn-danger	" title="Undelete" style=" text-decoration: line-through;" class="btn-link  glyphicon glyphicon-remove" onclick="javascript:pageTask.deleteField('+i+');"><span class="glyphicon glyphicon-remove"></span> Undelete</button>'+'</td>';    
       }else
@@ -181,15 +189,15 @@ var pageTask={
       html+=' </tr>';
     }
     if(fields.length>0){
-      html+=' <tr>';    
-      html+=' <td></td>';    
-      html+=' <td class="hidden-xs hidden-sm"></td>';
-      html+=' <td class="hidden-xs hidden-sm"></td>';
-      html+=' <td class="hidden-xs "></td>';
-      html+=' <td class="hidden-xs "></td>';
-      html+=' <td> <button type="button" class="btn btn-xs btn-primary	" onclick="javascript:pageTask.editField(-1);"><span class="glyphicon glyphicon-plus"></span> Add</button></td>'; 
-      html+=' <td></td>';
-      html+=' </tr>';
+      // html+=' <tr>';    
+      // html+=' <td></td>';    
+      // html+=' <td class="hidden-xs hidden-sm"></td>';
+      // html+=' <td class="hidden-xs hidden-sm"></td>';
+      // html+=' <td class="hidden-xs "></td>';
+      // html+=' <td class="hidden-xs "></td>';
+      // html+=' <td> <button type="button" class="btn btn-xs btn-primary	" onclick="javascript:pageTask.editField(-1);"><span class="glyphicon glyphicon-plus"></span> Add</button></td>'; 
+      // html+=' <td></td>';
+      // html+=' </tr>';
     }
     html+=' </tbody>';
     html+=' </table>';
@@ -215,7 +223,7 @@ var pageTask={
     } 
     me.fillFieldList();
   },
-  editField:function (index){
+  editField:function (index,insertAfter){
     var me=this;
     var fields= this.fields;
     var field;
@@ -314,7 +322,15 @@ var pageTask={
             if(field.expression){
               field.isExpression=true;
             }
-            fields.push (field);          
+            if(typeof insertAfter !=='undefined'){
+              if(insertAfter==-1){
+                fields.unshift(field);  
+              }else{
+                fields.splice(insertAfter+1,0, field);  
+              }
+            }else{
+              fields.push (field);          
+            }         
           }
         me.fillFieldList();
       }
@@ -693,11 +709,22 @@ EditFieldDlg.prototype.updateUI=function(){
   if(this.field && this.field._action && this.field._action.isNew){
     isNew=true;
   }
+
+var isNumber=false;
+var isInteger=false;
+if(selType=='smallint' || selType=='integer' || selType=='bigint' || selType=='numeric' || selType=='real' || selType=='double precision'){
+  isNumber=true;
+}
+if(selType=='smallint' || selType=='integer' || selType=='bigint' ){
+  isNumber=true;
+  isInteger=true;
+}
+ 
   if(selType=='varchar'|| selType=='numeric')
   {
-     // $content.find('.form-group:has(#length)').show();
-     $content.find('.form-group').has('#length').show();
-  }else{
+      // $content.find('.form-group:has(#length)').show();
+      $content.find('.form-group').has('#length').show();
+   }else{
     //$content.find('.form-group:has(#length)').hide();
     $content.find('.form-group').has('#length').hide();
   }
@@ -718,20 +745,34 @@ EditFieldDlg.prototype.updateUI=function(){
       $content.find('.form-group').has('#length').hide();
 
       
-    }else if (isNew)
+    }else // if (isNew)
     {
-      $content.find('.form-group').has('#expression').show();
+      if(isNew && isNumber){
+        $content.find('.form-group').has('#expression').show();
+      }else{
+        $content.find('.form-group').has('#expression').hide();
+      }
       $content.find('.form-group').has('#default').show();
       $content.find('.form-group').has('#type').show();
       $content.find('.form-group').has('#typeTip').show();
-      $content.find('.form-group').has('#length').show();
-    }else //if (isNew)
-    {
-      $content.find('.form-group').has('#expression').hide();
-      $content.find('.form-group').has('#default').show();
-      $content.find('.form-group').has('#type').show();
-      $content.find('.form-group').has('#typeTip').show();
-      $content.find('.form-group').has('#length').show();
+     // $content.find('.form-group').has('#length').show();
+    }
+    // else //if (isNew)
+    // {
+    //   $content.find('.form-group').has('#expression').hide();
+    //   $content.find('.form-group').has('#default').show();
+    //   $content.find('.form-group').has('#type').show();
+    //   $content.find('.form-group').has('#typeTip').show();
+    //  // $content.find('.form-group').has('#length').show();
+    // }
+    if(isNumber){
+      $content.find('.form-group').has('#domain').show();
+      $content.find('#domain').trigger('change');
+    }else{
+      $content.find('.form-group').has('#domain').hide();
+      $content.find('#domainTypePanel_codedValues').hide();
+      $content.find('#domainTypePanel_range').hide();
+      
     }
  }
 EditFieldDlg.prototype.create=function(){

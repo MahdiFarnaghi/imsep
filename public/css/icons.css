@@ -149,3 +149,35 @@
     background-image: url(images/identify_raster_24.png) !important;
     background-repeat: no-repeat;
 }
+
+.save24Icon
+{
+    background-image: url(images/save_24.png) !important;
+    background-repeat: no-repeat;
+}
+.save16Icon
+{
+    background-image: url(images/save_16.png) !important;
+    background-repeat: no-repeat;
+}
+
+.refresh16Icon
+{
+    background-image: url(images/refresh_16.png) !important;
+    background-repeat: no-repeat;
+}
+.undo16Icon
+{
+    background-image: url(images/undo_16.png) !important;
+    background-repeat: no-repeat;
+}
+.stop16Icon
+{
+    background-image: url(images/stop_16.png) !important;
+    background-repeat: no-repeat;
+}
+.deleteVertexIcon
+{
+    background-image: url(images/deleteVertex.png) !important;
+    background-repeat: no-repeat;
+}

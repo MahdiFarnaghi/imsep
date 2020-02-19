@@ -44,4 +44,20 @@ exports.hashString = function (string) {
     var hash = crypto.createHash('md5').update(String(string)).digest('hex');
     return hash;
 };
-
+exports.escape= function(str) {
+    var isString = typeof str === 'string' || str instanceof String;
+    if(isString){
+        return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/\//g, '&#x2F;').replace(/\\/g, '&#x5C;').replace(/`/g, '&#96;');
+    }else{
+        return str
+    }
+  };
+  
+  exports.unescape= function(str) {
+    var isString = typeof str === 'string' || str instanceof String;
+    if(isString){
+        return str.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#x27;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&#x2F;/g, '/').replace(/&#x5C;/g, '\\').replace(/&#96;/g, '`');
+    }else{
+        return str
+    }
+  }

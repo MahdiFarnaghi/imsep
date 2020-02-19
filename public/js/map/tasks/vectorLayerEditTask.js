@@ -304,14 +304,26 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
         className:'myOlbutton24',
         title: "Edit toolbar",
         bar:this._toolbar,
+        
         onToggle: function (toggle) {
             if(toggle){
-                self.selectCtrl.setActive(true);
-                self.selectCtrl.raiseOnToggle();
+              //  self.selectCtrl.setActive(true);
+               // self.selectCtrl.raiseOnToggle();
+                if(mapContainer._registeredToolbars){
+                    for(var ic=0;ic<mapContainer._registeredToolbars.length;ic++){
+                        var otherCtrl=mapContainer._registeredToolbars[ic];
+                        if(otherCtrl!== self.mainCtrl && otherCtrl.setActive){
+                            otherCtrl.setActive(false);
+                        }
+                    }
+                }
             }
         }
-        
-    })
+    });
+    if(!mapContainer._registeredToolbars){
+        mapContainer._registeredToolbars=[];
+    }
+    mapContainer._registeredToolbars.push(this.mainCtrl);
    // this.mapContainer.leftToolbar.addControl(this._toolbar);
    this.mapContainer.leftToolbar.addControl(this.mainCtrl);
     // Add selection tool:
@@ -694,14 +706,18 @@ this._toolbar.addControl(editAttribute);
         // })
         ,bar: new ol.control.Bar({
             controls: [new ol.control.TextButton({
-                    html: 'Undo', //'<i class="fa fa-mail-reply"></i>',
+                   // html: 'Undo', //'<i class="fa fa-mail-reply"></i>',
+                   className:'myOlbutton24',
+                   html: '<span style="display:block;line-height:28px;background-position:center center" class="undo16Icon" >&nbsp;</span>',
                     title: "Undo last point",
                     handleClick: function() {
                         if (self.interaction.nbpts > 1) self.interaction.removeLastPoint();
                     }
                 }),
                 new ol.control.TextButton({
-                    html: 'Finish',
+                    //html: 'Finish',
+                    className:'myOlbutton24',
+                    html: '<span style="display:block;line-height:28px;background-position:center" class="stop16Icon" >&nbsp;</span>',
                     title: "Finish",
                     handleClick: function() { // Prevent null objects on finishDrawing
                         if (self.interaction.nbpts > 2) self.interaction.finishDrawing();
@@ -825,14 +841,19 @@ this._toolbar.addControl(editAttribute);
         // Options bar ssociated with the control
         bar: new ol.control.Bar({
             controls: [new ol.control.TextButton({
-                    html: 'Undo', //'<i class="fa fa-mail-reply"></i>',
+                    //html: 'Undo', //'<i class="fa fa-mail-reply"></i>',
+                    className:'myOlbutton24',
+                    html: '<span style="display:block;line-height:28px;background-position:center center" class="undo16Icon" >&nbsp;</span>',
+
                     title: "Undo last point",
                     handleClick: function() {
                         if (self.interaction.nbpts > 1) self.interaction.removeLastPoint();
                     }
                 }),
                 new ol.control.TextButton({
-                    html: 'Finish',
+                    //html: 'Finish',
+                    className:'myOlbutton24',
+                    html: '<span style="display:block;line-height:28px;background-position:center" class="stop16Icon" >&nbsp;</span>',
                     title: "Finish",
                     handleClick: function() { // Prevent null objects on finishDrawing
                         if (self.interaction.nbpts > 3) self.interaction.finishDrawing();
@@ -951,7 +972,9 @@ this._toolbar.addControl(editAttribute);
 
     self.deleteShapeVertexButton=new ol.control.TextButton({
         //html: 'Delete vertex', 
-        html: '<span style="white-space: nowrap;color:red">Delete vertex</span>',
+        //html: '<span style="white-space: nowrap;color:red">Delete vertex</span>',
+        className:'myOlbutton24',
+        html: '<span style="display:block;line-height:28px;background-position:center center" class="deleteVertexIcon" >&nbsp;</span>',
 
         title: "Delete selected vertex",
         handleClick: function() {

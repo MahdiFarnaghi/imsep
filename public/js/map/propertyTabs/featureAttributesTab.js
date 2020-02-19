@@ -1151,6 +1151,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
        htm+='    <option value="'+item.code+'" '+ (((value+'')==(item.code+'')) ? 'selected="selected"' : '' ) +' >'+ item.value+'</option>';  
      }
      if(!isRequired){
+       htm+='<option disabled ="disabled" role="separator" />';
        htm+='    <option value="" '+ ((value=='Null') ? 'selected="selected"':'' ) +' >Null</option>';
      }
      htm+='    </select>';

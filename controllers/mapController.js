@@ -20,6 +20,8 @@ module.exports = function () {
         if(req.path.startsWith("/api/")){
             format='json';
         }
+        req.sanitizeQuery('filterExpression').escape();
+        req.sanitizeQuery('filterexpression').escape();
         var filterExpression= req.query.filterExpression || req.query.filterexpression;
         var start= req.query.start;
         var limit= req.query.limit;
@@ -331,7 +333,7 @@ module.exports = function () {
                   start:start,
                   orderby:orderby,
                   
-                  filterExpression:filterExpression,
+                  filterExpression:util.unescape(filterExpression),
                   extent:extent,
                   authors:authors,
                   keywords:keywords
@@ -352,7 +354,7 @@ module.exports = function () {
                           start:start,
                           orderby:orderby,
                           
-                          filterExpression:filterExpression,
+                          filterExpression:util.unescape(filterExpression),
                           extent:extent,
                           authors:authors,
                           
@@ -824,7 +826,16 @@ module.exports = function () {
             result.message= errors;
             return res.json(result) ;
         }
-
+        if(mapId!==-1){
+            var testMap = await models.Map.findOne({
+                where: {
+                    id: mapId
+                }
+            });
+            if(!testMap){
+                mapId=-1;
+            }
+        }
         var owner = req.user;
         if (mapId == -1) {
             try {
@@ -944,6 +955,7 @@ module.exports = function () {
                 }
                 result.status=true;
                 result.id=newMap.id;
+                result.message='New map saved';
                 return res.json(result) ;
             } catch (ex) {
                 result.status=false;

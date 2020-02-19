@@ -17,7 +17,7 @@
                 <div class="form-group">
                     <label class="col-sm-3" for="name">Name</label>
                     <div class="col-sm-7">
-                       <input type="text" name="name" id="name" value="@model.dataLayer.name" autofocus placeholder="Name" class="form-control" data-val="true" data-val-required="Name is required"                               />
+                       <input type="text" name="name" id="name" value="@html.raw(model.dataLayer.name)" autofocus placeholder="Name" class="form-control" data-val="true" data-val-required="Name is required"                               />
                         <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
                          <input type="hidden" name="updatedAt" id="updatedAt" value="@model.dataLayer.updatedAt.getTime()" readonly class="form-control">
                     </div>
