@@ -1,8 +1,9 @@
-function FeatureShapeTab() {
-     var self=this;    
-     this.tabId='tabFeatureShape';
-    
-  }
+function FeatureShapeTab(options) {
+  var self=this;    
+  options=options||{};  
+  this.tabId='tabFeatureShape' +(options.id?options.id:'');
+ 
+}
   FeatureShapeTab.prototype.init=function(parentDialog){
     this.parentDialog=parentDialog;
   }

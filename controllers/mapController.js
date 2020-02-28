@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 var models = require('../models/index');
 var util = require('./util');
 var sharp= require('sharp');
-
+var dataRelationshipController=require('./dataRelationshipController')();
 module.exports = function () {
     var module = {};
 
@@ -506,8 +506,11 @@ module.exports = function () {
                         layer=null;
                         [err, layer] = await util.call(models.DataLayer.findByPk(layerIds[i],{
                                            include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
-                        if(layer)
-                            preview.push(layer);
+                        if(layer){
+                            var layerJson= layer.toJSON();
+                            layerJson.dataRelationships= await dataRelationshipController._getDataset_DataRelationships(layer.id,true);
+                            preview.push(layerJson);
+                        }
                     }
                 }
             }

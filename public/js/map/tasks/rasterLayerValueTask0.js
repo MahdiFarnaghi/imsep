@@ -36,15 +36,8 @@ RasterLayerValueTask.prototype.init = function (dataObj) {
     if (!source)
         return;
     var details = source.get('details');
-    var vatInfo;
-    var vatInfoDic={}
     if (details) {
         oidField = details.oidField
-        if(details.vatInfo && details.vatInfo.rows){
-            for(var i=0;i<details.vatInfo.rows.length;i++){
-                vatInfoDic[details.vatInfo.rows[i]['value']]=details.vatInfo.rows[i];
-            }
-        }
     }
     self.interactionPointer = new ol.interaction.Pointer({
         handleDownEvent: function(e){
@@ -83,27 +76,6 @@ RasterLayerValueTask.prototype.init = function (dataObj) {
                                         content += '</td>';
                                         content += '</tr>';
                                     
-                                        if(vatInfoDic && vatInfoDic[data[key]]){
-                                            var vat=vatInfoDic[data[key]];
-
-                                            if(vat){
-                                                
-                                                for (var vatKey in vat) { 
-                                                    if(vatKey==='value'){
-                                                        continue;
-                                                    }
-                                                    content += '<tr>';
-                                                    content += '<td>';
-                                                    content += vatKey;
-                                                    content += '</td>';
-                                                    content += '<td>';
-                                                    content += vat[vatKey];
-                                                    content += '</td>';
-                                                    content += '</tr>';
-
-                                                }
-                                            }
-                                        }
                                 }
                                 content += '</tbody>';
                                 content += '</table>';

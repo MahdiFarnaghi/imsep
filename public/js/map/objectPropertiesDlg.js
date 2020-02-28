@@ -8,6 +8,7 @@ function ObjectPropertiesDlg(mapContainer,obj,options) {
       this.isNew= options.isNew;
       this.title=options.title;
       var _closable=(typeof options.closable !=='undefined')?options.closable:true;
+      this._closeWithBackButton=(typeof options.closeWithBackButton !=='undefined')?options.closeWithBackButton:true;
       this.activeTabIndex=options.activeTabIndex;
       if(!this.title){
         if(obj.get && obj.get('title')){
@@ -89,7 +90,7 @@ function ObjectPropertiesDlg(mapContainer,obj,options) {
         var hash = self.title;
         window.location.hash = hash;
         window.onhashchange = function() {
-          if (!location.hash){
+          if (!location.hash && self._closeWithBackButton ){
             dialogRef.close();
           }
         }

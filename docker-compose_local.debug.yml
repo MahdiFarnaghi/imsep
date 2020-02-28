@@ -8,7 +8,10 @@ services:
     ports: 
       - "25432:5432"
     volumes:  
-      - imsepdb:/var/lib/postgresql/data  
+      #- imsepdb:/var/lib/postgresql/data  
+       #- imsepdb:/var/lib/postgresql/data
+      #- c:\docker\imsep\db_data:/var/lib/postgresql/11/main  
+      - imsepdb:/var/lib/postgresql/11/main  
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
@@ -46,7 +49,7 @@ services:
       - ./views:/usr/src/app/views
       - ./log:/usr/src/app/log
       - ./app_data:/usr/src/app/app_data   
-      - ./uploads:/usr/src/app/app_data/uploads
+      - ./app_data/uploads:/usr/src/app/app_data/uploads
       
 volumes:
   imsepdb:

@@ -570,6 +570,9 @@ MapContainer.prototype.OnActiveLayerChanged=function(){
                                 source.set('loading_status','out_of_date');
                             }
                         }else{
+                            if(custom && custom.dataObj){
+                                custom.dataObj.dataRelationships= data.dataRelationships;
+                            }
                             var source=activeLayer.getSource();
                             if(source.get('loading_status')=='out_of_date'){
                                 source.set('loading_status','');

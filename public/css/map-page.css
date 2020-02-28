@@ -463,3 +463,95 @@ span.route-step-distance-value {
   margin-bottom: 0px;
   min-width: 8em;
 }
+
+
+.feature-attributes .document_item_   img,
+.feature-attributes .document_item_   .avatar{
+  float:left;
+  margin-right: 0.2em;
+  height: 2em;
+  
+}  
+.feature-attributes .document_item_   .avatar{
+  font-size: 2em;
+  height: 1em;
+} 
+
+.featureAttributes_row_inserted{
+  background-color: #cdf7cd;
+}
+.featureAttributes_row_deleted {
+  background-color: #f9c9c9;
+  background-image: url(images/red_wave.gif) !important;
+  background-repeat:repeat-x  !important;
+  background-position:bottom ;
+}
+.featureAttributes_row_modified {
+  
+  background-image: url(images/blue_wave.gif) !important;
+  background-repeat:repeat-x  !important;
+  background-position:bottom ;
+  background-color: #cbe3f7;
+}
+
+.panel-field-group{
+  padding: 5px;
+}
+.panel-field-group .form-group{
+  margin-left: 5px;
+  margin-right: 15px;
+}
+
+.attribute-value-changed{
+  border: 1px solid #aeb3b9!important;
+  background-color: #f3aeab61;
+  border-style: dashed!important;
+}
+.checkbox-attribute-value-changed {
+  background-color: #fbe0df;
+  /* background-image: url(images/blue_wave.gif) !important; */
+  background-repeat: repeat-x !important;
+  background-position: bottom;
+}
+.attribute-value-changed .select2-selection{
+  background-color: transparent;
+}
+
+#tabFeatureAttributes_form .collapsible-panel{
+  margin-left: -15px;
+  margin-right: -15px;
+}
+
+.collapsible-panel .panel-heading h5{
+  white-space: initial;
+}
+
+.form-group .font-weight-light{
+  font-weight: lighter;
+  display: contents;
+}
+.form-group small.text-muted{
+  display: inline-block;
+}
+.text-bg-muted {
+  background-color: #c3bdbd;
+}
+
+.has-validation-error > .panel-heading{
+  border: 1px solid #e80c4d!important;
+}
+.select2-selection__choice{
+  white-space: initial;
+}
+
+.panel-field-group {
+  margin-left: 15px;
+  margin-right: 15px;
+}
+hr.field-sep{
+  
+  margin-top: -5px;
+    margin-bottom: 10px;
+    border: 0;
+    border-top: 1px solid #dedada;
+}

@@ -1,0 +1,211 @@
+@html.extend('layout', function(model) {
+     @html.block('styles', function(model) {
+      
+        <style>
+           .dual-list .list-group {
+            margin-top: 8px;
+        }
+
+        .list-left li, .list-right li {
+            cursor: pointer;
+        }
+
+        .list-arrows {
+            padding-top: 100px;
+        }
+
+            .list-arrows button {
+                margin-bottom: 20px;
+            }
+
+        </style>
+        
+    })
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" class="form-horizontal" action="/datarelationship/@(model.item.id)">
+                <legend>@(model.title)
+                
+                <a title="Help" class="close help-link" style=" " target="_blank" href="/help#relationship">?</a>
+                </legend>
+                <div class="form-group">
+                    <label class="col-sm-3" for="name">@('Name')</label>
+                    @if(model.item.id && !html.equals(model.item.id, -1)){
+                    <div class="col-sm-7">
+                        <input type="text" name="name" id="name" value="@model.item.name" readonly class="form-control">
+                        <input type="hidden" name="updatedAt" id="updatedAt" value="@model.item.updatedAt.getTime()" readonly class="form-control">
+
+                    </div>
+                    }else{
+                    <div class="col-sm-7">
+                        <input type="text" name="name" id="name" value="@model.item.name" autofocus placeholder="Name" class="form-control" data-val="true" data-val-required="Name is required"
+                               
+                                />
+                        <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                    </div>
+                    }
+
+                </div>
+                 
+                 <div class="form-group">
+                            <label class="col-sm-12" for="description">Description</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="description" rows="5" id="description" autofocus placeholder="Description" class="form-control">@html.raw(model.item.description)</textarea>
+                            </div>
+                </div>
+                
+              
+                <div class="form-group">
+                    <label class="col-sm-3" for="originDatasetId">OriginDatasetId</label>
+                   <div class="col-sm-7">
+                        <input type="number" name="originDatasetId" id="originDatasetId" value="@model.item.originDatasetId" autofocus placeholder="OriginDatasetId" class="form-control" data-val="true" data-val-required="OriginDatasetId is required"
+                          />
+                        <span class="field-validation-valid" data-valmsg-for="originDatasetId" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="backwardLabel">@('BackwardLabel')</label>
+                    <div class="col-sm-7">
+                        <input type="text" name="backwardLabel" id="backwardLabel" value="@model.item.backwardLabel" autofocus placeholder="BackwardLabel" class="form-control"  />
+                        <span class="field-validation-valid" data-valmsg-for="backwardLabel" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="destinationDatasetId">@'DestinationDatasetId')</label>
+                   <div class="col-sm-7">
+                        <input type="number" name="destinationDatasetId" id="destinationDatasetId" value="@model.item.destinationDatasetId" autofocus placeholder="DestinationDatasetId" class="form-control" data-val="true" data-val-required="DestinationDatasetId is required"
+                          />
+                        <span class="field-validation-valid" data-valmsg-for="destinationDatasetId" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="forwardLabel">@('ForwardLabel')</label>
+                    <div class="col-sm-7">
+                        <input type="text" name="forwardLabel" id="forwardLabel" value="@model.item.forwardLabel" autofocus placeholder="ForwardLabel" class="form-control"  />
+                        <span class="field-validation-valid" data-valmsg-for="forwardLabel" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="cardinality">@('Cardinality')</label>
+                                     
+                    <div class="col-sm-7">
+                        <select class="form-control "   name="cardinality" id="cardinality"  
+                                        data-val="true" data-val-required="Cardinality is required" >
+                              <option value="OneToOne" @(html.equals(model.item.cardinality,'OneToOne') ? 'selected="selected"' : '' ) >One to One</option>          
+                              <option value="OneToMany" @(html.equals(model.item.cardinality,'OneToMany') ? 'selected="selected"' : '' ) >One to Many</option>          
+                              <option value="ManyToMany" @(html.equals(model.item.cardinality,'ManyToMany') ? 'selected="selected"' : '' ) >Many to Many</option>          
+
+                        </select>  
+                     
+                    </div>
+
+                </div>
+
+
+
+                
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="originPrimaryKey">@('OriginPrimaryKey')</label>
+                   <div class="col-sm-7">
+                        <input type="text" name="originPrimaryKey" id="originPrimaryKey" value="@model.item.originPrimaryKey" autofocus placeholder="OriginPrimaryKey" class="form-control" data-val="true" data-val-required="OriginPrimaryKey is required"
+                          />
+                        <span class="field-validation-valid" data-valmsg-for="originPrimaryKey" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3" for="originForeignKey">@('OriginForeignKey')</label>
+                   <div class="col-sm-7">
+                        <input type="text" name="originForeignKey" id="originForeignKey" value="@model.item.originForeignKey" autofocus placeholder="OriginForeignKey" class="form-control" data-val="true" data-val-required="OriginForeignKey is required"
+                          />
+                        <span class="field-validation-valid" data-valmsg-for="originForeignKey" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-sm-3" for="relationDatasetId">@('RelationDatasetId')</label>
+                   <div class="col-sm-7">
+                        <input type="number" name="relationDatasetId" id="relationDatasetId" value="@model.item.relationDatasetId" autofocus placeholder="RelationDatasetId" class="form-control" 
+                        data-val="true" data-val-requiredif="RelationDatasetId is required" data-val-requiredif-dependentproperty="cardinality" data-val-requiredif-targetvalue="ManyToMany"
+                          />
+                        <span class="field-validation-valid" data-valmsg-for="relationDatasetId" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3" for="destinationPrimaryKey">@('DestinationPrimaryKey')</label>
+                   <div class="col-sm-7">
+                        <input type="text" name="destinationPrimaryKey" id="destinationPrimaryKey" value="@model.item.destinationPrimaryKey" autofocus placeholder="DestinationPrimaryKey" class="form-control"
+                         data-val="true" data-val-requiredif="DestinationPrimaryKey is required" data-val-requiredif-dependentproperty="cardinality" data-val-requiredif-targetvalue="ManyToMany"
+                          />
+                        <span class="field-validation-valid" data-valmsg-for="destinationPrimaryKey" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3" for="destinationForeignKey">@('DestinationForeignKey')</label>
+                   <div class="col-sm-7">
+                        <input type="text" name="destinationForeignKey" id="destinationForeignKey" value="@model.item.destinationForeignKey" autofocus placeholder="DestinationForeignKey" class="form-control" 
+                        data-val="true" data-val-requiredif="DestinationForeignKey is required" data-val-requiredif-dependentproperty="cardinality" data-val-requiredif-targetvalue="ManyToMany"
+                          />
+                        <span class="field-validation-valid" data-valmsg-for="destinationForeignKey" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+
+
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-4"><button type="submit" class="btn btn-primary btn-success">Save</button></div>
+                    </div>
+
+</form>
+
+        </div>
+    </div>
+    @if(model.item.id && !html.equals(model.item.id, -1)){
+     
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" action="/datarelationship/@model.item.id/delete?_method=DELETE" class="form-horizontal">
+                <legend>Delete</legend>
+                <div class="form-group">
+                    <p class="col-sm-offset-3 col-sm-9">You can delete this relationship, but keep in mind this action is irreversible..</p>
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-danger glyphicon glyphicon-trash"
+                                onclick="return confirm('Delete?');">
+                            Delete this relationship
+                        </button>
+                        
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+     
+    }
+
+</div>
+
+  })
+
+ @html.block('scripts', function(model) {
+   
+    
+    @if(process.env.NODE_ENV=='development'){
+       @model.uglify.group_page.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        })
+   }else{
+       <script src="/dist/js/group_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+
+    
+   })
+
+})
+
+

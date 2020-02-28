@@ -512,7 +512,7 @@ function LayerSourceTab() {
       var features = source.getFeatures();
       if(!features.length){
        content.find('#downloadGeoJSON').hide();
-       content.find('#downloadGeoShapefile').hide();
+       content.find('#downloadShapefile').hide();
        content.find('#createLayerFromGeoJSON').hide();
       }
       // var format = new ol.format.GeoJSON({

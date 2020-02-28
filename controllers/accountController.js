@@ -116,6 +116,7 @@ module.exports = function (passportConfig) {
                 res.locals.identity.name.toLowerCase() === 'superadmin'
             ) {
                 res.locals.identity.isAdministrator = true;
+                res.locals.identity.isAdmin = true;
                 if (res.locals.identity.name.toLowerCase() === 'superadmin') {
                     res.locals.identity.isSuperAdministrator = true;
                 }
@@ -351,6 +352,7 @@ module.exports = function (passportConfig) {
                     user.userName.toLowerCase() === 'superadmin'
                     ) {
                         payload.isAdministrator = true;
+                        payload.isAdmin = true;
                         if (user.userName.toLowerCase() === 'superadmin') {
                             payload.isSuperAdministrator = true;
                         }

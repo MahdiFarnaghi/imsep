@@ -4,9 +4,18 @@
     <div class="panel">
         <div class="panel-body">
             <form id="mainForm" method="POST" class="form-horizontal" action="/datalayer/@(model.dataLayer.id)?dataType=@(model.dataLayer.dataType)">
-                <legend>Vector Data Layer<a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#newVectorLayer">?</a>
-                        </legend>
-            
+               
+             @if(model.dataLayer.dataType=='vector'){
+                <legend>
+                   @(model.title)
+                   <a title="Help" class="close help-link" style=" " target="_blank" href="/help#newVectorLayer">?</a>
+                 </legend>
+               }else{
+                   <legend>
+                    @('Data Table')
+                     <a title="Help" class="close help-link" style=" " target="_blank" href="/help#newTable">?</a>
+                   </legend>
+               }
                 @if (model.dataLayer.thumbnail){
                     <img class="avatar" src="/datalayer/@model.dataLayer.id/thumbnail" />
                     <hr />
@@ -162,6 +171,7 @@
            <div class="panel">
                 <div class="panel-body">
                     <form id="frmDetail" class="form-horizontal">
+                     @if(model.dataLayer.dataType=='vector'){
                          <div class="form-group">
                             <label class="col-sm-3" for="shapeType">Shape type:</label>
                             
@@ -189,6 +199,7 @@
                             </div>
                         </div>
                         <div id="spatialreferenceInfo" class="form-group" ></div>
+                        }
                        <div class="form-group">
 
                             <legend>Fields</legend>
@@ -205,6 +216,34 @@
                         <div class=" col-sm-4"><button id="cmdSave" type="submit" class="btn btn-primary btn-success">Save</button></div>
              </div>
         </div>
+        
+         @if(model.identity.isAdmin || model.identity.isSuperAdministrator ){
+
+        <div id="pnlDetails"  class="panel-group">
+            <div class="panel panel-default collapsible-panel"  >
+                <div class="panel-heading">
+                    <button type="button" data-toggle="collapse" data-target="#pnlDetailsContent"     aria-expanded="false" class="btn btn-link btn-block collapsed">
+                            <i class="collapse-action glyphicon"></i>
+                            <h4 class="title"><span class="	glyphicon glyphicon-book"></span> Fields Detail </h4>
+                    </button>
+                </div>
+                <div id="pnlDetailsContent" style="direction:ltr;" class="panel-collapse collapse ">
+                    <div  class="panel-body ">
+                        <div  class="form-horizontal">
+                            <div class="form-group">
+                                <div class="col-sm-12">
+                                    <textarea type="text" name="detailsJSON" rows="10" id="detailsJSON"  class="form-control"></textarea>
+                                </div>
+                            </div>    
+                            <div class="form-group">
+                                <div class=" col-sm-12"><button id="cmdSaveJSON" class="btn btn-primary btn-success">Apply</button></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        }
     </div>
 </div>
 
@@ -235,6 +274,25 @@
                        <textarea type="text" name="description" rows="2" id="description"  placeholder="Description" class="form-control"></textarea>
                     </div>
             </div>
+              @if(model.identity.isAdmin){
+            <div class="form-group">
+                    <label class="col-sm-3" for="hint">Hint</label>
+                    <div class="col-sm-8">
+                       <textarea type="text" name="hint" rows="1" id="hint"  placeholder="Hint" class="form-control"></textarea>
+                    </div>
+            </div>
+             <div class="form-group">
+                    <label class="col-sm-3" for="group">Group</label>
+                    <div class="col-sm-8">
+                       <input type="text" name="group" id="group" value=""  placeholder="Group" class="form-control"/>
+                    </div>
+            </div>
+             <div  class="form-group">
+                    <label class=" col-sm-11 checkbox">
+                    <input type="checkbox" name="hidden" id="hidden"  value="" /> Hidden
+                    </label>
+             </div>
+            }
              <div class="form-group" style="    margin-bottom:0;">
                 <label class="col-sm-3" for="type">Data type:</label>
                 <div class="col-sm-4">
@@ -327,13 +385,23 @@
                         </tfoot>
                     </table>
                 </div>
+                <div id="multipleChoiceCodedValuesPanel" class="form-group">
+                    <label class="col-sm-offset-3 col-sm-8 checkbox">
+                    <input type="checkbox" id="multipleChoiceCodedValues"  value="" /> Multiple choice
+                    </label>
+                </div>
+                <div id="editableCodedValuesPanel" class="form-group">
+                    <label class="col-sm-offset-3 col-sm-8 checkbox">
+                    <input type="checkbox" id="editableCodedValues"  value="" /> Editable
+                    </label>
+                </div>
             </div>
             <div id="domainTypePanel_range" class="domainTypePanel hidden form-group">
                 <div class="form-group">
                     <label class="col-sm-3"></label>
                     <label class="col-sm-3" for="minValue">Minimum</label>
                     <div class="col-sm-3">
-                        <input type="text" name="minValue" id="minValue" value=""  placeholder="Minimum" class="form-control" data-val="true" data-val-required="Minimum is required"/>
+                        <input type="text" name="minValue" id="minValue" value=""  placeholder="Minimum" class="form-control" data-val="false" data-val-required="Minimum is required"/>
                         <span class="field-validation-valid" data-valmsg-for="minValue" data-valmsg-replace="true"></span>
                     </div>
                 </div>
@@ -341,7 +409,7 @@
                     <label class="col-sm-3"></label>
                     <label class="col-sm-3" for="maxValue">Maximum</label>
                     <div class="col-sm-3">
-                        <input type="text" name="maxValue" id="maxValue" value=""  placeholder="Maximum" class="form-control" data-val="true" data-val-required="Maximum is required"/>
+                        <input type="text" name="maxValue" id="maxValue" value=""  placeholder="Maximum" class="form-control" data-val="false" data-val-required="Maximum is required"/>
                         <span class="field-validation-valid" data-valmsg-for="maxValue" data-valmsg-replace="true"></span>
                     </div>
                 </div>

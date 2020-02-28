@@ -9,6 +9,9 @@
                 <li class="@(html.equals('Maps',model.title)?'active':'')"><a href="/maps"><span class="glyphicon glyphicon-globe"></span> Maps</a> </li>
 
                 <li class="@(html.equals('Data layers',model.title)?'active':'')"><a href="/datalayers"><span class="fa fa-layer-group"></span> Data layers</a> </li>    
+                  @if(false && (model.identity.isSuperAdministrator || model.identity.isAdmin )){
+                            <li class="@(html.equals('Relations',model.title)?'active':'')"><a href="/datarelationship/relations"><span class="fa fa-chain"></span> Relations</a> </li>    
+                }
                 @* <li class="dropdown">
                      <a class="dropdown-toggle " data-toggle="dropdown" href="#"><span class="fa fa-database"></span> Layers<i class="caret"></i></a>
                      <ul class="dropdown-menu">

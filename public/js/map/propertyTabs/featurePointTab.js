@@ -1,8 +1,9 @@
-function FeaturePointTab() {
-     var self=this;    
-     this.tabId='tabFeaturePoint';
-    
-  }
+function FeaturePointTab(options) {
+  var self=this;   
+  options=options||{}; 
+  this.tabId='tabFeaturePoint' +(options.id?options.id:'');
+ 
+}
   FeaturePointTab.prototype.init=function(parentDialog){
     this.parentDialog=parentDialog;
   }

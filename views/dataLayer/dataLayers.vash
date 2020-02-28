@@ -80,8 +80,11 @@
                                 <br/>
                                 <div class="form-group">
                                 <a href="/datalayer/-1?dataType=vector" class="btn btn-primary form-control "><span class="glyphicon glyphicon-plus"></span> New Vector layer</a>
-                                
+                                @if(model.identity.isAdmin){
+                                <a href="/datalayer/-1?dataType=table" class="btn btn-primary form-control "><span class="glyphicon glyphicon-plus"></span> New Data Table</a>
+                                }
                                 <a href="/datalayer/uploadshapefile" class="btn btn-primary form-control "><span class="glyphicon glyphicon-plus"></span> Upload Shapefile</a>
+                                
                             
                                 <a href="/datalayer/uploadraster" class="btn btn-primary  form-control "><span class="glyphicon glyphicon-plus"></span> Upload Raster</a>
                                 </div>

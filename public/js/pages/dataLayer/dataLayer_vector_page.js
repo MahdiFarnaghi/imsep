@@ -2,6 +2,35 @@ $(function () {
   
   pageTask.init();
 
+  var keywordArray= $('#keywordArray').val();
+  var keywords=[];
+  if(keywordArray){
+    keywords=keywordArray.split(';');
+  }
+  $('#keywords').select2({
+    data: keywords,
+    dir: app.layout,
+    tags: true,tokenSeparators: [';', '؛']
+ });
+ 
+//   $.ajax( {    url: '/permissiontypes?accesstype=data', dataType: 'json', success: function (data) {
+//     if( data && data.items){
+//         var mappedData=$.map(data.items, function (item) {
+//                 return {
+//                     id: item.id,
+//                     text: item.caption || item.contentType,
+//                     data:item
+//                 };
+//         });
+//         $('#permissionTypes').select2({
+//             data: mappedData,
+//             dir: app.layout
+//         });
+      
+//     }
+// }
+// });
+
   $.ajax( {    url: '/users', dataType: 'json', success: function (data) {
     if(data){
         var mappedData=$.map(data, function (item) {
@@ -12,10 +41,12 @@ $(function () {
                 };
         });
         $('#usersWhoCanViewData').select2({
-            data: mappedData
+            data: mappedData,
+            dir: app.layout
         });
         $('#usersWhoCanEditData').select2({
-          data: mappedData
+          data: mappedData,
+          dir: app.layout
        });
     }
 }
@@ -26,15 +57,17 @@ $.ajax( {    url: '/groups', dataType: 'json', success: function (data) {
       var mappedData=$.map(data, function (item) {
               return {
                 id: item.id,
-                text: item.name,
+                text: (item.caption ||item.name),
                 data:item
               };
       });
       $('#groupsWhoCanViewData').select2({
-          data: mappedData
+          data: mappedData,
+          dir: app.layout
       });
       $('#groupsWhoCanEditData').select2({
-        data: mappedData
+        data: mappedData,
+        dir: app.layout
      });
   }
 }
@@ -55,7 +88,9 @@ var pageTask={
       'boolean':'Boolean',
       'bytea':'BLOB',
       'date':'Date',
-      'timestamp with time zone':'DateTime'
+      'timestamp with time zone':'DateTime',
+      '_filelink':'File',
+      '_documentslink':'Link to documents'
     }
     var detailsStr=$('#details').val();
     var details= {};
@@ -76,13 +111,20 @@ var pageTask={
     this.details=details;
     this.fields=fields;
     var shapeType=$('#shapeType');
-    if(details.shapeType)
-      shapeType.val(details.shapeType);
-    if(!details.isNew)  {
-      shapeType.prop('disabled', true);
+    if(shapeType && shapeType.length){
+      this.isFeatureClass=true;
+    }else{
+      this.isFeatureClass=false;
     }
+    if(this.isFeatureClass){
+      if(details.shapeType)
+        shapeType.val(details.shapeType);
+      if(!details.isNew)  {
+        shapeType.prop('disabled', true);
+      }
+     }
     var htm='';
-    if(details.spatialReference){
+    if(this.isFeatureClass && details.spatialReference){
      // htm+='<div class="form-group">';
       htm+='  <label class="col-sm-12" for="">Spatial reference:</label>';
       
@@ -126,15 +168,126 @@ var pageTask={
       
     //  htm+='</div>';
     }
-
-    $('#spatialreferenceInfo').html(htm);
-
+    if(this.isFeatureClass){
+      $('#spatialreferenceInfo').html(htm);
+    }
     this.fillFieldList();
+   // this.fillJSON_details();
+  },
+  fillJSON_details:function(){
+    var self=this;
+    try{
+      var strTemp=  JSON.stringify(this.details);
+      var cloned= JSON.parse(strTemp);
+      // delete cloned['workspace'];
+      // delete cloned['styles'];
+      // delete cloned['defaultField'];
+      // //delete cloned['datasetName'];
+      // delete cloned['history'];
+      // delete cloned['fileName'];
+      if(cloned.fields){
+        for(var i=0;i< cloned.fields.length;i++){
+       //   delete cloned.fields[i]['_action'];
+        }
+      }
+      //var str=  JSON.stringify(cloned, null, "\t");
+      var str=  JSON.stringify(cloned.fields, null, "\t");
+
+      $('#detailsJSON').val(str);
+      $('#cmdSaveJSON').unbind().click(function(){
+        var data=$('#detailsJSON').val();
+        var dataJson;
+        try{
+         var dataJson= JSON.parse(data);
+        }catch(ex){
+          alert('Error in parsing JSON');
+          return;
+        }
+        self.details.fields= dataJson;
+        self.fillUI(self.details);
+      });
+      $('#cmdSaveJSON_').unbind().click(function(){
+         var data=$('#detailsJSON').val();
+         var dataJson;
+         try{
+          var dataJson= JSON.parse(data);
+         }catch(ex){
+           alert('Error in parsing JSON');
+           return;
+         }
+         if(!dataJson){
+          alert('Error in parsing JSON');
+          return;
+         }
+         var name= dataJson.filebaseName ||  dataJson.name;
+         if(!name){
+          alert('No name specified in JSON');
+          return;
+         }
+
+        var formData={
+          name:name,
+          overwrite_file:'true',
+          data:data
+        };
+         $.ajax({
+          url: '/jsonfile',
+          type: "POST",
+          dataType: 'json',
+          data:JSON.stringify(formData),
+          contentType: 'application/json; charset=utf-8',
+          cache: false
+          }).done(function(respond){
+                 // waitingDialog.hide();
+                  
+                  if(respond.status)  { 
+                      $.notify({
+                          message:'Saved successfully'
+      
+                      },{
+                          type:'info',
+                          delay:2000,
+                          animate: {
+                              enter: 'animated fadeInDown',
+                              exit: 'animated fadeOutUp'
+                          }
+                      });
+                    }else{
+                        $.notify({
+                           message:  respond.message ||"Failed to save Template."
+                         
+                        },{
+                            type:'danger',
+                            delay:2000,
+                            animate: {
+                                enter: 'animated fadeInDown',
+                                exit: 'animated fadeOutUp'
+                            }
+                        });
+                    }
+          }).fail(function( jqXHR, textStatus, errorThrown) {
+            
+              
+              $.notify({
+                  message: "Failed to save Template"
+                 // message: app.i18n['Dataset.FailedToSaveTemplate']
+              },{
+                  type:'danger',
+                  delay:2000,
+                  animate: {
+                      enter: 'animated fadeInDown',
+                      exit: 'animated fadeOutUp'
+                  }
+              });
+          });
+
+      })
+    }catch(ex){}
   },
    fillFieldList:function(){
     var details= this.details; 
     var fields= this.fields;
-
+    this.fillJSON_details();
     var fieldsContainer= $('#fieldsContainer');
    
    
@@ -169,11 +322,6 @@ var pageTask={
       html+=' <td class="hidden-xs hidden-sm">'+fieldTypeCaption +'</td>';    
       html+=' <td class="hidden-xs ">'+((typeof fld.length!=='undefined')?fld.length:'')+'</td>';    
       html+=' <td class="hidden-xs ">'+((typeof fld.default!=='undefined')?fld.default:'')+ '</td>';    
-      // if(!fld._action.delete){
-      //   html+=' <td> <button type="button" class="btn btn-xs btn-info	" onclick="javascript:pageTask.editField('+i+');"><span class="glyphicon glyphicon-edit"></span> Edit</button></td>'; 
-      // }else{
-      //   html+=' <td> <button type="button" class="btn btn-xs btn-info disabled	" disabled onclick="javascript:"><span class="glyphicon glyphicon-edit"></span> Edit</button></td>'; 
-      // }
       html+=' <td>';
       if(!fld._action.delete){
         html+='<button type="button" class="btn btn-xs btn-info	" onclick="javascript:pageTask.editField('+i+');"><span class="glyphicon glyphicon-edit"></span> Edit</button>'; 
@@ -229,26 +377,40 @@ var pageTask={
     var field;
     var addField=false;
     if(index<0){
+      
+     
       addField=true;
       field={
         _action:{
           isNew:true
         }
       }
+      
+      if(typeof insertAfter !=='undefined'){
+        var insertAfterField=fields[insertAfter];
+        if(insertAfterField){
+          field.group= insertAfterField.group;
+        }
+      }
     }else if (index< fields.length){
        field= fields[index];
     }
+
     if(!field)
       return;
     if(!field._action){
       field._action={};
     }
+    
     if(!field._action.isNew){
       if(!field._action.origField){
         field._action.origField={
           name: field.name,
-          alias:field.alias,
           description:field.description,
+          hint:field.hint,
+          hidden: field.hidden,
+          group:field.group,
+          alias:field.alias,
           type: field.type,
           length:field.length,
           default:field.default,
@@ -289,6 +451,9 @@ var pageTask={
           field.name=evt.field.name;
           field.alias=evt.field.alias;
           field.description=evt.field.description;
+          field.hint=evt.field.hint;
+          field.hidden= evt.field.hidden,
+          field.group=evt.field.group,
           field.type=evt.field.type;
           field.length= evt.field.length;
           field.scale= evt.field.scale;
@@ -296,7 +461,7 @@ var pageTask={
           field.notNull=evt.field.notNull;
           field.isExpression=evt.field.isExpression;
           field.expression=evt.field.expression;
-         
+          
           field.domain=evt.field.domain;
 
           if(field._action.origField){
@@ -330,7 +495,7 @@ var pageTask={
               }
             }else{
               fields.push (field);          
-            }         
+            }
           }
         me.fillFieldList();
       }
@@ -360,9 +525,9 @@ var pageTask={
       return;
     }
     //mainForm.submit();
-    waitingDialog.show('Saving Datalayer', { progressType: ''});
+    waitingDialog.show('Saving Dataset', { progressType: ''});
     var datasetName= this.details.datasetName;
-    if(this.details.isNew){
+    if(this.isFeatureClass && this.details.isNew){
       
       this.details.shapeType=$('#shapeType').val();
     }
@@ -370,6 +535,23 @@ var pageTask={
       datasetName='';
     }
     
+    // var fields=[];
+    
+    // for(var j=0;j<100;j++){
+    //   var tFields=JSON.parse(JSON.stringify(this.details.fields));
+    //   for(var i=0;i<tFields.length;i++){
+    //     var fld= tFields[i];
+    //     fld.name =fld.name +'_'+j;
+    //     if(fld.alias){
+    //       fld.alias= fld.alias+' '+j;
+    //     }
+    //     fields.push(fld);
+    //   }
+    // } 
+    // this.details.fields=fields;
+
+
+
   
     $form.find('#details').val( JSON.stringify( this.details));
 
@@ -378,7 +560,7 @@ var pageTask={
         url: $form.attr('action'),
         data: $form.serialize(),
         success: function (data) {
-            var layerId=data.id;
+         
             waitingDialog.hide();
 
           var clean_uri = location.protocol + '//' + location.host + location.pathname;
@@ -390,7 +572,7 @@ var pageTask={
           
           if(data.status){
             $.notify({
-                message: "Data Layer saved successfully"
+                message: "Dataset saved successfully"
             },{
                 type:'success',
                 delay:2000,
@@ -404,7 +586,7 @@ var pageTask={
                 self.fillUI(JSON.parse(data.item.details));
               }catch(ex){}
             }
-            //window.location.href=location.protocol + '//' + location.host + '/datalayers';
+            //window.location.href=location.protocol + '//' + location.host + '/datasets';
             //#region validating
             var url = '/datalayer/' + data.id + '/geojson';
             var settings=encodeURIComponent(JSON.stringify({filter:{},validate:true}));
@@ -480,7 +662,7 @@ var pageTask={
             });
             //#endregion validating
           }else{
-            var msg=data.errors || data.error|| data.message || "Failed to save Data Layer";
+            var msg=data.errors || data.error|| data.message || "Failed to save Dataset";
             msg=msg+'';
             msg=msg.replace(new RegExp(datasetName, 'g'), '');
             $.notify({
@@ -500,7 +682,7 @@ var pageTask={
             waitingDialog.hide();
             console.log('An error occurred.');
             $.notify({
-                message: "Failed to save Data Layer"
+                message: "Failed to save Dataset"
             },{
                 type:'danger',
                 delay:2000,
@@ -529,7 +711,9 @@ function EditFieldDlg(options) {
     'double precision':'8 bytes	variable-precision, inexact	15 decimal digits precision',
     'date':'4 bytes date (no time of day)',
     'timestamp with time zone':'8 bytes	both date and time with time zone, example:2018-08-28 12:22:01.673<span class="label label-info">+04:30</span>',
-    'bytea':'BLOB, Binary Large OBject'
+    'bytea':'BLOB, Binary Large OBject',
+    '_filelink':'Keeps a link to an uploaded file',
+    '_documentslink':'Keeps links to uploaded document files'
   }    
 
     this.options = options || {};
@@ -603,6 +787,9 @@ EditFieldDlg.prototype.initFrom=function(){
     $content.find('#name').val(typeof me.field.name==='undefined'?'':me.field.name);
     $content.find('#alias').val(typeof me.field.alias==='undefined'?'':me.field.alias);
     $content.find('#description').val(typeof me.field.description==='undefined'?'':me.field.description);
+    $content.find('#hint').val(typeof me.field.hint==='undefined'?'':me.field.hint);
+    $content.find('#group').val(typeof me.field.group==='undefined'?'':me.field.group);
+    $content.find('#hidden').prop('checked',me.field.hidden?true:false);
     
     var $type= $content.find('#type');
   $type.val(typeof me.field.type==='undefined'?'varchar':me.field.type);
@@ -619,41 +806,51 @@ EditFieldDlg.prototype.initFrom=function(){
    srid= me.parent_details.spatialReference.srid;
  }
  var expressionOptions='';
- if(me.parent_shapeType=='MultiPolygon' || me.parent_shapeType=='Polygon'){
-    
-    if(srid== 4326){
-      expressionOptions+='<option value="ST_Area(geom::geography)" > Area</option>';
-      expressionOptions+='<option value="ST_Perimeter(geom::geography)" > Perimeter</option>';
-    }else{
-      expressionOptions+='<option value="ST_Area(geom)" > Area</option>';
-      expressionOptions+='<option value="ST_Perimeter(geom)" > Perimeter</option>';
+    if(me.parent_shapeType){
+    if(me.parent_shapeType=='MultiPolygon' || me.parent_shapeType=='Polygon'){
+        
+        if(srid== 4326){
+          expressionOptions+='<option value="ST_Area(geom::geography)" > Area</option>';
+          expressionOptions+='<option value="ST_Perimeter(geom::geography)" > Perimeter</option>';
+        }else{
+          expressionOptions+='<option value="ST_Area(geom)" > Area</option>';
+          expressionOptions+='<option value="ST_Perimeter(geom)" > Perimeter</option>';
+        }
+        //expressionOptions+='<option value="ST_AsText(ST_Centroid(geom))" > Centroid</option>';
+        expressionOptions+='<option value="ST_X(ST_Centroid(geom))" > Centroid.X</option>';
+        expressionOptions+='<option value="ST_Y(ST_Centroid(geom))" > Centroid.Y</option>';
     }
-    //expressionOptions+='<option value="ST_AsText(ST_Centroid(geom))" > Centroid</option>';
-    expressionOptions+='<option value="ST_X(ST_Centroid(geom))" > Centroid.X</option>';
-    expressionOptions+='<option value="ST_Y(ST_Centroid(geom))" > Centroid.Y</option>';
- }
- if(me.parent_shapeType=='MultiLineString' || me.parent_shapeType=='LineString'){
-    if(srid== 4326){
-      expressionOptions+='<option value="ST_Length(geom::geography)" > Length</option>';
-    }else{
-      expressionOptions+='<option value="ST_Length(geom)" > Length</option>';
+    if(me.parent_shapeType=='MultiLineString' || me.parent_shapeType=='LineString'){
+        if(srid== 4326){
+          expressionOptions+='<option value="ST_Length(geom::geography)" > Length</option>';
+        }else{
+          expressionOptions+='<option value="ST_Length(geom)" > Length</option>';
+        }
+        //expressionOptions+='<option value="ST_AsText(ST_Centroid(geom))" > Centroid</option>';
+        expressionOptions+='<option value="ST_X(ST_Centroid(geom))" > Centroid.X</option>';
+        expressionOptions+='<option value="ST_Y(ST_Centroid(geom))" > Centroid.Y</option>';
     }
-    //expressionOptions+='<option value="ST_AsText(ST_Centroid(geom))" > Centroid</option>';
-    expressionOptions+='<option value="ST_X(ST_Centroid(geom))" > Centroid.X</option>';
-    expressionOptions+='<option value="ST_Y(ST_Centroid(geom))" > Centroid.Y</option>';
- }
- if(me.parent_shapeType=='Point'){
-    expressionOptions+='<option value="ST_X(geom)" > X</option>';
-    expressionOptions+='<option value="ST_Y(geom)" > Y</option>';
- }
+    if(me.parent_shapeType=='Point'){
+        expressionOptions+='<option value="ST_X(geom)" > X</option>';
+       
+        expressionOptions+='<option value="ST_Y(geom)" > Y</option>';
+        
+        if(srid!== 4326){
+          expressionOptions+='<option value="ROUND(ST_X(ST_Transform(geom,4326))::numeric,4)" > Longitude</option>';
+          expressionOptions+='<option value="ROUND(ST_Y(ST_Transform(geom,4326))::numeric,4)" > Latitude</option>';
+        }
+    }
+}
    //ST_Centroid 
   
-
-  $content.find('#expression').append(expressionOptions);
-  $content.find('#expression').val(me.field.expression);
-  $content.find('#expression').change(function(){
-    $content.find('#type').val('real');
-  })
+  if(expressionOptions){
+    $content.find('#expression').append(expressionOptions);
+    $content.find('#expression').val(me.field.expression);
+    $content.find('#expression').change(function(){
+      $content.find('#type').val('real');
+    })
+  }
+  
   $content.find('#domain').change(function(){
     var domainType=$(this).val();
     
@@ -687,6 +884,13 @@ EditFieldDlg.prototype.initFrom=function(){
     for(var i=0;me.field.domain.items && i< me.field.domain.items.length;i++){
         addCodeValue(me.field.domain.items[i].code,me.field.domain.items[i].value);
     }
+    if(me.field.type=='varchar'){
+      $content.find('#multipleChoiceCodedValues').prop('checked', me.field.domain.multipleChoice?true:false);
+      $content.find('#editableCodedValues').prop('checked', me.field.domain.editable?true:false);
+    }else{
+      $content.find('#multipleChoiceCodedValues').prop('checked', false);
+      $content.find('#editableCodedValues').prop('checked', false);
+    }
     //$content.find('#domainTypePanel_'+ 'codedValues').show();
   }
   if(me.field.domain && me.field.domain.type=='range'){
@@ -712,6 +916,7 @@ EditFieldDlg.prototype.updateUI=function(){
 
 var isNumber=false;
 var isInteger=false;
+var isText=false
 if(selType=='smallint' || selType=='integer' || selType=='bigint' || selType=='numeric' || selType=='real' || selType=='double precision'){
   isNumber=true;
 }
@@ -719,12 +924,14 @@ if(selType=='smallint' || selType=='integer' || selType=='bigint' ){
   isNumber=true;
   isInteger=true;
 }
- 
+ if(selType=='varchar'){
+   isText=true;
+ }
   if(selType=='varchar'|| selType=='numeric')
   {
-      // $content.find('.form-group:has(#length)').show();
-      $content.find('.form-group').has('#length').show();
-   }else{
+     // $content.find('.form-group:has(#length)').show();
+     $content.find('.form-group').has('#length').show();
+  }else{
     //$content.find('.form-group:has(#length)').hide();
     $content.find('.form-group').has('#length').hide();
   }
@@ -765,9 +972,16 @@ if(selType=='smallint' || selType=='integer' || selType=='bigint' ){
     //   $content.find('.form-group').has('#typeTip').show();
     //  // $content.find('.form-group').has('#length').show();
     // }
-    if(isNumber){
+    if(isNumber || isText){
       $content.find('.form-group').has('#domain').show();
       $content.find('#domain').trigger('change');
+      if(isText){
+        $content.find('#multipleChoiceCodedValuesPanel').show();
+        $content.find('#editableCodedValuesPanel').show();
+      }else{
+        $content.find('#multipleChoiceCodedValuesPanel').hide();
+        $content.find('#editableCodedValuesPanel').hide();
+      }
     }else{
       $content.find('.form-group').has('#domain').hide();
       $content.find('#domainTypePanel_codedValues').hide();
@@ -811,14 +1025,30 @@ EditFieldDlg.prototype.apply=function(){
     //length: _length,
     //scale:_scale,
     //default: $form.find('#default').val(),
+    hint: me.field.hint,
+    group:me.field.group,
+    hidden:me.field.hidden,
+
     notNull:me.field.notNull
     ,isExpression:me.field.isExpression
   };  
   if($form.find('#alias').val())
     editField.alias=$form.find('#alias').val();
   if($form.find('#description').val())
-    editField.description=$form.find('#description').val();  
-      
+    editField.description=$form.find('#description').val();   
+  
+  if($form.find('#hint').length){
+    editField.hint=$form.find('#hint').val();   
+  }
+  
+  if($form.find('#group').length){
+    editField.group=$form.find('#group').val();   
+  }
+  
+  if($form.find('#hidden').length){
+    editField.hidden=$form.find('#hidden').prop('checked');   
+  }
+
   if(_length)
     editField.length=_length;
   if(_scale)
@@ -830,8 +1060,7 @@ EditFieldDlg.prototype.apply=function(){
     editField.length='';
   
   editField.expression=$form.find('#expression').val();
-    
-
+  
   var domainType= $form.find('#domain').val();
   if(domainType==='range'){
     editField.domain={
@@ -845,17 +1074,47 @@ EditFieldDlg.prototype.apply=function(){
       type:'codedValues',
       items:[]
     };
+    var totalCodesLen=0;
+    var maxLen=0;
     $form.find('#tblCodedValues > tbody > tr').each(function() {
       var codedValues_domainCode=$(this).find('.codedValues_domainCode').val();
       var codedValues_domainValue=$(this).find('.codedValues_domainValue').val();
+      if(codedValues_domainCode && (codedValues_domainCode+'').indexOf(';')){
+        codedValues_domainCode= codedValues_domainCode.replace(new RegExp(';', 'g'), ' ');
+      }
+      totalCodesLen+= codedValues_domainCode.length+1;
+      
+      if(maxLen < codedValues_domainCode.length ){
+        maxLen=codedValues_domainCode.length;
+      }
+
       editField.domain.items.push({
         code:codedValues_domainCode,
         value:codedValues_domainValue
       })
     });
+    if(editField.type=='varchar'){
+      editField.domain.multipleChoice= $form.find('#multipleChoiceCodedValues').prop("checked");
+      editField.domain.editable= $form.find('#editableCodedValues').prop("checked");
+      if(editField.domain.multipleChoice){
+        maxLen= totalCodesLen;
+      }
+      if(editField.length ){
+        if(editField.length < maxLen){
+          editField.length=maxLen;
+        }
+      }
+      
+      if(editField.length  && editField.domain.editable ){
+        if(editField.length < (2*maxLen)){
+          editField.length= (2*maxLen);
+        }
+      }
+    }
 
   }
-  
+ 
+
   if(this.onValidate)
   {
     var arg={

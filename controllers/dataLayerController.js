@@ -9,6 +9,8 @@ var models = require('../models/index');
 var sharp= require('sharp');
 var ogr2ogr= require('../ogr2ogr');
 
+var dataRelationshipController=require('./dataRelationshipController')();
+
 module.exports = function (postgresWorkspace) {
     var module = {};
     /**
@@ -565,7 +567,15 @@ module.exports = function (postgresWorkspace) {
                 });
                 
             }
-
+            item.dataRelationships= await dataRelationshipController._getDataset_DataRelationships(item.id,true);
+            if(item.thumbnail){
+                try{
+                    const data = await sharp(item.thumbnail)
+                            .png()
+                            .toBuffer();
+                item.thumbnail   = 'data:image/png;base64,' + data.toString('base64');
+                }catch(ex){}
+            }
             return res.json(item);
         }else{
             return res.json({status:false});
@@ -604,7 +614,7 @@ module.exports = function (postgresWorkspace) {
         //     return res.redirect('/');
         // }
         //#region getitem
-        if (req.params.id && req.params.id == '-1' && dataType=='vector') {
+        if (req.params.id && req.params.id == '-1' && (dataType=='vector' || dataType=='table')) {
             
             if (!(res.locals.identity.isAdministrator || res.locals.identity.isPowerUser ||  res.locals.identity.isDataManager || res.locals.identity.isDataAnalyst )) {
                 if(format=='json'){
@@ -863,8 +873,22 @@ module.exports = function (postgresWorkspace) {
             details={}
         }
         isNew= details.isNew;
+        if(dataType=='table'){
+            details.datasetType='table';
 
-        if(dataType=='vector'){
+            if(!details.workspace)
+                details.workspace='postgres';
+            delete details.shapeType;
+            if(!details.fields)
+                details.fields=[];
+            
+            if(!details.defaultField)
+                details.defaultField='';
+            delete details.shapeField;
+            if(!details.oidField)
+                details.oidField='gid';   
+            delete details.spatialReference;
+        }else   if(dataType=='vector'){
             details.datasetType='vector';
 
             if(!details.workspace)
@@ -905,6 +929,10 @@ module.exports = function (postgresWorkspace) {
             if(!details.spatialReference)
                 details.spatialReference={name: 'EPSG:3857',alias:'Google Maps Global Mercator',srid:3857};
         }
+        var view=dataType.toLowerCase();
+        if(view=='table'){
+            view='vector';
+        }
         if(format=='json'){
             return res.json({
                 status:true,
@@ -924,7 +952,7 @@ module.exports = function (postgresWorkspace) {
                 groupsWhoCanEditData:groupsWhoCanEditData
             })
         }else{
-        res.render('dataLayer/dataLayer_'+ dataType , {
+        res.render('dataLayer/dataLayer_'+ view , {
             title: 'Data layer'
             , dataLayer: item,
             details:details,
@@ -1126,8 +1154,23 @@ module.exports = function (postgresWorkspace) {
       details= JSON.parse( req.body.details);
     }catch(ex){}
     isNew= details.isNew;
+    if(dataType=='table'){
+        details.datasetType='table';
 
-    if(dataType=='vector'){
+        if(!details.workspace)
+            details.workspace='postgres';
+         delete details.shapeType;
+        if(!details.fields)
+            details.fields=[];
+   
+        if(!details.defaultField)
+            details.defaultField='';
+        delete details.shapeField;
+        if(!details.oidField)
+            details.oidField='gid';   
+        delete details.spatialReference;
+                            
+    }else if(dataType=='vector'){
         details.datasetType='vector';
 
         if(!details.workspace)
@@ -1170,7 +1213,7 @@ module.exports = function (postgresWorkspace) {
     }
     if(isNew){
         var creationSucceeded=false;
-        if(dataType=='vector'){
+        if(dataType=='vector' || dataType=='table'){
             try{
                  var createResult=await postgresWorkspace.createVectorTable(details);
                 if(!createResult.status){
@@ -1402,7 +1445,7 @@ module.exports = function (postgresWorkspace) {
     } // alter
     {
         var alterSucceeded=false;
-        if(dataType=='vector'){
+        if(dataType=='vector' || dataType=='table'){
             try{
                  var alterResult=await postgresWorkspace.alterVectorTable(details);
                 if(!alterResult.status){
@@ -2312,6 +2355,10 @@ module.exports = function (postgresWorkspace) {
         var itemId=req.params.id;
         var settings= req.query.settings;
         var itemId=req.params.id;
+        var format=undefined;
+        if(req.query && 'format' in req.query){
+            format=req.query.format;
+        }
         if(settings){
             try{
                 settings= JSON.parse(settings);
@@ -2412,6 +2459,7 @@ module.exports = function (postgresWorkspace) {
 
              var tableName= details.datasetName || item.name;
              var oidField= details.oidField || 'gid';
+             var datasetType=details.datasetType || 'vector';
              var shapeField=details.shapeField || 'geom';
              var filter= settings.filter || details.filter || {};
              var validate= settings.validate?true:false;
@@ -2448,6 +2496,7 @@ module.exports = function (postgresWorkspace) {
                     var result=await postgresWorkspace.getGeoJson({
                         tableName:tableName,
                         oidField:oidField,
+                        datasetType:datasetType,
                         shapeField:shapeField,
                         filter:filter,
                         onlyIds:onlyIds,
@@ -2464,7 +2513,165 @@ module.exports = function (postgresWorkspace) {
                             rowCount:rowCount
                         });
                     }else{
-                        return res.json(result);
+                        if (format=='xlsx' || format=='csv'){
+                            var fileName=filebaseName;
+                            var rows=[];
+                            var fields=details.fields.map(function(fld){
+                                return fld.name;
+                            });
+                            fields.unshift('id');// details.oidField || 'gid')
+                            if(result && result.features){
+                                rows= result.features.map(function(f){
+                                    f.properties['id']=f.id;
+                                    return f.properties;
+                                });
+                            }
+                            var XLSX = require('xlsx');
+                            var ws = XLSX.utils.json_to_sheet(rows, {header:fields, skipHeader:false});
+                            var wb = XLSX.utils.book_new();
+                            XLSX.utils.book_append_sheet(wb, ws, fileName.substring(0,31));
+
+                            var fieldInfoRows=details.fields.map(function(field){
+                                return {
+                                    name: field.name,
+                                    alias:field.alias,
+                                    description:field.description,
+                                    hint:field.hint,
+                                    hidden: field.hidden,
+                                    group:field.group,
+                                    type: field.type,
+                                    length:field.length,
+                                    default:field.default,
+                                    notNull:field.notNull,
+                                    isExpression:field.isExpression,
+                                    expression:field.expression
+                                }
+                            });
+                            var ws_fields = XLSX.utils.json_to_sheet(fieldInfoRows, {skipHeader:false});
+                            XLSX.utils.book_append_sheet(wb, ws_fields, 'Columns_Info');
+
+                            res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+                            res.setHeader('Content-Disposition', 'attachment; filename=' +encodeURIComponent(fileName)+ '.'+format);
+                            return res.status(200).send(XLSX.write(wb, {type:'buffer', bookType:format}));
+
+                        }else{
+                            var t_item;
+                            var dataRelationships= await dataRelationshipController._getDataset_DataRelationships(item.id,true);
+                            if(result  && result.features && result.features.length && dataRelationships && dataRelationships.length){
+                                result.dataRelationships=dataRelationships;
+                                for(var r=0;r<dataRelationships.length;r++){
+                                    var dataRelationship= dataRelationships[r];
+                                    if(dataRelationship.cardinality==='OneToOne' || dataRelationship.cardinality==='OneToMany'){
+                                        var isReverse=false;
+                                    
+                                        if(dataRelationship.destinationDatasetId== item.id){
+                                            isReverse=true;
+                                        }
+                                        dataRelationship.isReverse=isReverse;
+                                        var targetDatasetId= dataRelationship.destinationDatasetId;
+                                    
+                                        if(isReverse){
+                                            targetDatasetId= dataRelationship.originDatasetId;
+                                        }
+
+                                        [err, t_item] = await util.call(models.DataLayer.findOne({
+                                            where: {  id: targetDatasetId }
+                                        }));
+                                        if(!t_item){
+                                            continue;
+                                        }
+                                        var t_details={};
+                                        try{
+                                            t_details= JSON.parse( t_item.details);
+                                        }catch(ex){}
+                                        if(!t_details){
+                                            t_details={};
+                                        }
+                                        var t_tableName= t_details.datasetName || t_item.name;
+                                        var t_filebaseName=t_details.filebaseName || t_details.fileName || t_item.name;
+                                        var t_oidField= t_details.oidField || 'gid';
+                                        var t_shapeField=t_details.shapeField || 'geom';
+                                        var t_datasetType=t_details.datasetType || 'vector';
+                                        var t_srid=3857;
+                                        if(t_details.spatialReference){
+                                            t_srid=  t_details.spatialReference.srid || 3857;
+                                        }
+                                        var sourceKey=dataRelationship.originPrimaryKey;
+                                        if(sourceKey==oidField)
+                                        {
+                                                sourceKey='id';
+                                        }
+                                        var targetKey= dataRelationship.originForeignKey;
+                                        if(targetKey==t_oidField){
+                                            targetKey='id';
+                                        }
+                                        
+                                        if(isReverse){
+                                            var tmpKeyName=targetKey;
+                                            targetKey= sourceKey;
+                                            sourceKey=tmpKeyName;
+                                        }
+                                        var t_result=await postgresWorkspace.getGeoJson({
+                                            tableName:t_tableName,
+                                            datasetType:t_datasetType,
+                                            oidField:t_oidField,
+                                            shapeField:t_shapeField,
+                                            filter:{},
+                                            onlyIds:null,
+                                            srid:t_srid,
+                                            fields:t_details.fields
+                                        });
+                                        if(!t_result){
+                                            continue;
+                                        }
+                                        var targetRowsDic={};
+                                        if(t_result.features){
+                                            for(var f=0;f< t_result.features.length;f++){
+                                            var t_feature=t_result.features[f];
+                                            var t_key;
+                                            if(targetKey=='id'){
+                                                t_key=t_feature.id;
+                                            } else{
+                                                if(t_feature.properties){
+                                                    t_key=t_feature.properties[targetKey];
+                                                }
+                                            }
+                                            if(typeof t_key!=='undefined') {
+                                                targetRowsDic[t_key]=targetRowsDic[t_key] || {rows:[]};
+                                                targetRowsDic[t_key].rows.push(t_feature);
+                                            }
+                                            }
+                                        }
+
+                                        for(var s=0;s< result.features.length;s++){
+                                            var s_feature=result.features[s];
+                                            s_feature.properties['_dataRelationships']=s_feature.properties['_dataRelationships']|| [];
+                                            var s_dataRelationship= JSON.parse(JSON.stringify( dataRelationship));
+                                            s_dataRelationship.rows=[];
+                                            s_feature.properties['_dataRelationships'].push(s_dataRelationship);
+
+                                            var s_key;
+                                            if(sourceKey=='id'){
+                                            s_key=s_feature.id;
+                                            } else{
+                                                if(s_feature.properties){
+                                                s_key=s_feature.properties[sourceKey];
+                                                }
+                                            }
+                                            if(typeof s_key!=='undefined') {
+                                                if(targetRowsDic[s_key]){
+                                                    s_dataRelationship.rows=targetRowsDic[s_key].rows || [];
+                                                }
+                                            }
+                                        }
+
+                                    }
+                                }
+
+                            }
+
+                            return res.json(result);
+                        }
                     }
                 
             }catch(ex){
@@ -2608,6 +2815,101 @@ module.exports = function (postgresWorkspace) {
         }
     };
 
+    module.updateGeoJSON_relationships = async function (req, res,fromDwtails,geoJSON) {
+        var result={
+            status:true,
+            message:'',
+            applyed:false
+        }
+        if(!geoJSON){
+            return result;
+        }
+        var dataRelationships=geoJSON.properties?geoJSON.properties._dataRelationships:null;
+        if(dataRelationships && dataRelationships.length){
+            for(var r=0;r<dataRelationships.length;r++){
+                var dataRelationship= dataRelationships[r];
+                if(dataRelationship.cardinality==='OneToOne' || dataRelationship.cardinality==='OneToMany'){
+                    var isReverse=dataRelationship.isReverse;
+                   
+                    var targetDatasetId= dataRelationship.destinationDatasetId;
+                    var t_details=dataRelationship.destinationDatasetDetails
+                    if(isReverse){
+                        targetDatasetId= dataRelationship.originDatasetId;
+                        t_details=dataRelationship.originDatasetDetails
+                    }
+                    if(!targetDatasetId){ // target dataset does not exist
+                        continue;
+                    }
+                    //var t_tableName= t_details.datasetName ;
+                    //var t_filebaseName=t_details.filebaseName || t_details.fileName ;
+                    var t_oidField= t_details.oidField || 'gid';
+                    //var t_shapeField=t_details.shapeField || 'geom';
+                    //var t_datasetType=t_details.datasetType || 'vector';
+                    //var t_srid=3857;
+                    if(t_details.spatialReference){
+                        t_srid=  t_details.spatialReference.srid || 3857;
+                    }
+                    var sourceKey=dataRelationship.originPrimaryKey;
+                    if(sourceKey==fromDwtails.oidField)
+                     {
+                            sourceKey='id';
+                    }
+                    var targetKey= dataRelationship.originForeignKey;
+                    if(targetKey==t_oidField){
+                        targetKey='id';
+                    }
+                    if(isReverse){
+                        var tmpKeyName=targetKey;
+                        targetKey= sourceKey;
+                        sourceKey=tmpKeyName;
+                    }
+                    var s_feature=geoJSON;
+                    var s_key;
+                        if(sourceKey=='id'){
+                          s_key=s_feature.id;
+                        } else{
+                            if(s_feature.properties){
+                              s_key=s_feature.properties[sourceKey];
+                            }
+                        }
+                    if(typeof s_key =='undefined'){
+                        continue;
+                    }
+                    for(var ri=0;dataRelationship.rows && ri< dataRelationship.rows.length;ri++){
+                        try{
+                            var relRow=dataRelationship.rows[ri];
+                            if(!(relRow && relRow.properties)){
+                                continue;
+                            }
+                            relRow.properties[targetKey]=s_key;
+                            var _editInfo= relRow.properties['_editInfo'];
+                            if(!_editInfo){
+                                continue;
+                            }
+                            var rel_result;
+                            if(_editInfo.action=='insert'){
+                                rel_result=await postgresWorkspace.insertVector(t_details,relRow);
+                                
+                            }else if(_editInfo.action==='update' || _editInfo.modified)
+                            {
+                                rel_result=await postgresWorkspace.updateVector(t_details,relRow);
+                            }else if (_editInfo.action==='delete'){ 
+                                rel_result=await postgresWorkspace.deleteRow(t_details,relRow.id);
+                            }
+
+                        }catch(ex){
+                            result.status=false;
+                            result.message+= ex.message;
+                        }
+
+                    }
+
+                }
+            }
+
+        }
+        return result;
+    }
      /**
      * POST /datalayer/:id/geojson/:row
     */
@@ -2721,6 +3023,11 @@ module.exports = function (postgresWorkspace) {
             {
                result=await postgresWorkspace.updateVector(details,geoJSON);
                succeeded=true;
+               var rel_result=  await module.updateGeoJSON_relationships(req,res,details,geoJSON);
+               if(!rel_result.status){
+                   result.status=false;
+                   result.message= rel_result.message;
+               }
                //return res.json(result);
                
             }else if (action==='delete'){ 
@@ -2880,12 +3187,23 @@ module.exports = function (postgresWorkspace) {
                     try{
                         if(action=='insert'){
                             _cacheInfo.result=await postgresWorkspace.insertVector(details,geoJSON);
+                            geoJSON.id= _cacheInfo.result.id;
+                            var rel_result=  await module.updateGeoJSON_relationships(req,res,details,geoJSON);
+                            if(!rel_result.status){
+                                _cacheInfo.result.status=false;
+                                _cacheInfo.result.message= rel_result.message;
+                            }
                             if(_cacheInfo.result.status){
                                 insert_count++;
                             }
                         }else if(action==='update')
                         {
                             _cacheInfo.result=await postgresWorkspace.updateVector(details,geoJSON);
+                            var rel_result=  await module.updateGeoJSON_relationships(req,res,details,geoJSON);
+                            if(!rel_result.status){
+                                _cacheInfo.result.status=false;
+                                _cacheInfo.result.message= rel_result.message;
+                            }
                             if(_cacheInfo.result.status){
                                 update_count++;
                             }

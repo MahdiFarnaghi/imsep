@@ -10,7 +10,7 @@ $(function () {
     //   'showUpload':false,
     uploadAsync: false,
     'previewFileType': 'any',
-    'allowedFileExtensions': ['zip', 'tiff', 'tif', 'tfw', 'tifw', 'tiffw', 'aux.xml', 'tab','jpg','jgw','png','pgw'],
+    'allowedFileExtensions': ['zip', 'tiff', 'tif', 'tfw', 'tifw', 'tiffw', 'aux.xml', 'tab','jpg','jgw','png','pgw','vat.dbf','vat.cpg'],
     'allowedPreviewTypes': ['image', 'html', 'text'],
     maxFileCount: 40,
     'maxFileSize': app.UPLOAD_RASTER_MAX_SIZE_MB? (app.UPLOAD_RASTER_MAX_SIZE_MB*1024): 100000 //kb

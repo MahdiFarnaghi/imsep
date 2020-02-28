@@ -23,9 +23,6 @@ IdentifyTask.prototype.init = function (dataObj) {
         multi: true,
         condition: ol.events.condition.singleClick,
         filter: function(feature,layer) {
-            if(!layer){
-                return false;
-            }
             if (layer.get('custom') && (layer.get('custom').type == 'measure' || layer.get('custom').type == 'temp' || layer.get('custom').hiddenInToc))
                 return false;
             else{
@@ -195,7 +192,6 @@ IdentifyTask.prototype._getHtml=function(feature){
             for (var i = 0; i < fields.length; i++) {
                 var fld = fields[i];
                 var fldName = fld.name;
-                var fldType= fld.type;
                 var title = fld.alias || fldName;
                 var visible = true;
                 if (typeof fld.visible !== 'undefined') {
@@ -206,52 +202,20 @@ IdentifyTask.prototype._getHtml=function(feature){
                 }
                 var fldValue=properties[fldName];
                 if(fld.codedValues){
-                    
-                    if(typeof fld.codedValues[fldValue]!=='undefined'){
-                        fldValue=fld.codedValues[fldValue];
-                    }else if ((fldValue+'').indexOf(';')>-1){
-                        var fldValue_array= (fldValue+'').split(';');
-                        var fldValue_array_t=[];
-                        for(var j=0;j< fldValue_array.length;j++){
-                            if(typeof fld.codedValues[fldValue_array[j]]!=='undefined'){
-                                fldValue_array_t.push(fld.codedValues[fldValue_array[j]]);
-                            }else{
-                                fldValue_array_t.push(fldValue_array[j]);
-                            }
-                        }
-                        fldValue= fldValue_array_t.join(';');
+                    fldValue=fld.codedValues[fldValue];
+                    if(typeof fldValue=='undefined'){
+                        fldValue='';
                     }
                 }
                 if (visible) {
-                    
+
                     var key = fldName;
                     html += '<tr>';
                     html += '<td>';
                     html += fieldsDic[key] || title;
                     html += '</td>';
                     html += '<td>';
-                    if (fldType=='_documentslink'){
-                        var docIds=[];
-                        if(fldValue){
-                          try{
-                            docIds= fldValue.split(',');
-                          }catch(ex){}
-                        }
-                        html+='  <div style="margin-bottom:0;" class="form-group docListPanel" >';
-                        for(var j=0;docIds && j<docIds.length;j++){
-                            var docId= docIds[j];
-                            html+='<div style="margin-bottom: 5px;"  class="form-group row">';
-                            html+='<div class="col-sm-11 document_item_" data-doc-id="'+docId+'" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;"">';
-                            html+='    <a  target="_blank" data-doc-id="'+docId+'" href="/document/'+ docId+'">'+ docId+ '</a>';
-                            html+='</div>';
-                            html+='</div>';
-                            
-                          }
-                        html+='  </div>';
-
-                    }else{
-                        html += fldValue;
-                    }
+                    html += fldValue;
                     html += '</td>';
                     html += '</tr>';
                 }
@@ -283,7 +247,7 @@ IdentifyTask.prototype._getHtml=function(feature){
         //popup.show(labelPoint, content); 
         if (anyData) {
              contentEl=$(html);
-             this.updateDocumenListContent(contentEl)  ;
+
              //counter
              if (this._features.length > 1) {
                 var countHtml=$('<div class="ol-count"></div>');
@@ -346,39 +310,12 @@ IdentifyTask.prototype._getHtml=function(feature){
     // Use select interaction
   if (this.selectInteraction) {
     this._noselect = true;
-    try{
-        this.selectInteraction.getFeatures().clear();
-    }catch(ex){}
-    try{
-        this.selectInteraction.getFeatures().push(feature);
-    }catch(ex){}
+    this.selectInteraction.getFeatures().clear();
+    this.selectInteraction.getFeatures().push(feature);
     this._noselect = false;
   }
   return   contentEl;
 }
-IdentifyTask.prototype.updateDocumenListContent=function(docListPanel){
-    var items=docListPanel.find('.document_item_');
-    items.each(function(index){
-      var item=$(this);
-      var docId= item.data('doc-id');
-      $.ajax( {    url: '/document/'+docId+'/info', dataType: 'json', success: function (data) {
-          if(data && data.id){
-            var html='    <a  target="_blank" data-doc-id="'+docId+'" href="/document/'+ docId+'">';
-            if(data.thumbnail){
-                html+='<img style=" " src="'+data.thumbnail+'" />';
-            }else if(data.icon){
-              html+='     <i style="" class="avatar fa fa-file-o fa-file-'+data.icon+'-o" > </i>'
-            }
-            html+= data.name+ '</a>';
-              item.html(html);
-          }else{
-            item.parent().remove();
-          }
-        }
-      });
-    });
-
-  }
 IdentifyTask.prototype.show = function (coordinate,features) {
     var self=this;
     var map = this.mapContainer.map;

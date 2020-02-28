@@ -112,6 +112,8 @@ var adminController = require('./controllers/adminController')();
 var mapController = require('./controllers/mapController')();
 var dataLayerController = require('./controllers/dataLayerController')(postgresWorkspace);
 
+var dataRelationshipController = require('./controllers/dataRelationshipController')(postgresWorkspace);
+
 //#endregion Controllers 
 var Authenticated = accountController.ensureAuthenticated;
 var authorize = accountController.makeAuthorizeMiddleware;
@@ -535,6 +537,43 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     }).single('file'),
     handleErrors(dataLayerController.thumbnailPost));
 
+    app.get('/dataRelationships', [Authenticated], handleErrors(dataRelationshipController.allDataRelationshipsGet));
+    app.get('/api/dataRelationships', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataRelationshipController.allDataRelationshipsGet));
+    
+    app.get('/datarelationship/relations', [Authenticated, authorize({
+            users: 'superadmin,admin', //or 👇
+            permissionName: 'Edit',
+            contentType: 'DataRelationships'
+        })],
+        handleErrors(dataRelationshipController.relations));
+    
+    app.get('/datarelationship/:id', [Authenticated, authorize({
+            users: 'superadmin,admin', //or 👇
+            
+            permissionName: 'Edit',
+            contentType: 'DataRelationships'
+        })],
+        handleErrors(dataRelationshipController.get));
+    
+    app.post('/datarelationship/:id', [Authenticated, authorize({
+            users: 'superadmin,admin', //or 👇
+            
+            permissionName: 'Edit',
+            contentType: 'DataRelationships'
+        })],
+        handleErrors(dataRelationshipController.post));
+    
+    
+    app.delete('/datarelationship/:id/delete', [Authenticated, authorize({
+            users: 'superadmin,admin', //or 👇
+            
+            permissionName: 'Edit',
+            contentType: 'DataRelationships'
+        })],
+        handleErrors(dataRelationshipController.delete));
+    
+    
+
 app.get('/validate/user/username', validateController.noCache, handleErrors(validateController.validateUserUsernameGet));
 app.get('/validate/user/:id/email', validateController.noCache, handleErrors(validateController.validateUserEmailGet));
 
@@ -675,6 +714,7 @@ app.set('port', process.env.PORT || 3000);
       console.log('');
     });
     server.timeout = 60000*10;// 10 minutes
+    //server.timeout = 60000*60;// 60 minutes
 
 })();
 

@@ -71,27 +71,36 @@ class PostgresWorkspace {
     async createVectorTable(layerInfo) {
         var errors = '';
         var datasetName = layerInfo.datasetName;
-        if (!datasetName) {
-            datasetName = 'vector_' + uuidv4().replace(new RegExp('-', 'g'), '');
-            layerInfo.datasetName = datasetName;
-        }
         if (!layerInfo.fields) {
             layerInfo.fields = [];
         }
-
-        layerInfo.datasetType = 'vector';
-        if (!layerInfo.shapeType)
-            layerInfo.shapeType = 'Point';
-        if (!layerInfo.shapeField)
-            layerInfo.shapeField = 'geom';
+        if(!layerInfo.datasetType){
+            layerInfo.datasetType= 'vector';
+        }
+        if (!datasetName) {
+            datasetName = layerInfo.datasetType +'_' + uuidv4().replace(new RegExp('-', 'g'), '');
+            layerInfo.datasetName = datasetName;
+        }
         if (!layerInfo.oidField)
             layerInfo.oidField = 'gid';
-        if (!layerInfo.spatialReference)
-            layerInfo.spatialReference = {
-                name: 'EPSG:3857',
-                alias:'Google Maps Global Mercator',
-                srid: 3857
-            };
+        if(layerInfo.datasetType== 'vector'){
+            if (!layerInfo.shapeType)
+                layerInfo.shapeType = 'Point';
+            if (!layerInfo.shapeField)
+                layerInfo.shapeField = 'geom';
+            
+            if (!layerInfo.spatialReference)
+                layerInfo.spatialReference = {
+                    name: 'EPSG:3857',
+                    alias:'Google Maps Global Mercator',
+                    srid: 3857
+                };
+        }else{
+            delete layerInfo.shapeType;
+            delete layerInfo.shapeField;
+            delete layerInfo.spatialReference;
+        } 
+        
 
         var namesArray = [];
         if (layerInfo.fields) {
@@ -117,8 +126,9 @@ class PostgresWorkspace {
             }
             return result;
         };
-
-        layerInfo.shapeField = ensureNonDuplicatedName(layerInfo.shapeField, namesArray);
+        if(layerInfo.datasetType== 'vector'){
+            layerInfo.shapeField = ensureNonDuplicatedName(layerInfo.shapeField, namesArray);
+        }
         layerInfo.oidField = ensureNonDuplicatedName(layerInfo.oidField, namesArray);
 
 
@@ -127,25 +137,29 @@ class PostgresWorkspace {
         var gid = layerInfo.oidField;
         var geom = layerInfo.shapeField;
         var geomType = layerInfo.shapeType;
-        var srid = layerInfo.spatialReference.srid;
+        var srid = layerInfo.spatialReference?(layerInfo.spatialReference.srid?layerInfo.spatialReference.srid:3857):3857;
         var fieldsExpression = '';
         var sequenceName = tbl + '_seq';
         for (var i = 0; i < fields.length; i++) {
             var fld = fields[i];
-
-            fieldsExpression += '"' + fld.name + '" ' + fld.type;
-            if ((fld.type == 'varchar' || fld.type == 'numeric') && fld.length > 0) {
-                if (fld.type == 'numeric' && typeof fld.scale !== 'undefined') {
-                    fieldsExpression += '(' + fld.length + ',' + fld.scale + ')';
+            var fldType= fld.type;
+            var fldLength=fld.length;
+            if(fldType=='_filelink' || fldType=='_documentslink'){
+                fldType= 'varchar';
+            }
+            fieldsExpression += '"' + fld.name + '" ' + fldType;
+            if ((fldType == 'varchar' || fldType == 'numeric') && fldLength > 0) {
+                if (fldType == 'numeric' && typeof fld.scale !== 'undefined') {
+                    fieldsExpression += '(' + fldLength + ',' + fld.scale + ')';
                 } else {
-                    fieldsExpression += '(' + fld.length + ')';
+                    fieldsExpression += '(' + fldLength + ')';
                 }
             }
             if (fld.notNull) {
                 fieldsExpression += ' NOT NULL ';
             }
             if (typeof fld.default != 'undefined') {
-                if (fld.type == 'varchar' || fld.type == 'timestamp with time zone' || fld.type == 'date') {
+                if (fldType == 'varchar' || fldType == 'timestamp with time zone' || fldType== 'date') {
                     if ((!fld.default && !fld.notNull) || fld.default) {
                         fieldsExpression += ' DEFAULT \'' + fld.default+'\'';
                     }
@@ -158,7 +172,9 @@ class PostgresWorkspace {
 
             delete fld._action;
         }
-        var createTemplate = `
+        var createTemplate;
+        if(layerInfo.datasetType== 'vector'){
+            createTemplate = `
             DROP TABLE if exists public."${tbl}";
             
             drop sequence if exists "${sequenceName}";
@@ -187,7 +203,26 @@ class PostgresWorkspace {
                 ON public."${tbl}" USING gist
                 (${geom})
                 TABLESPACE pg_default;`;
+        }else{
+            createTemplate = `
+            DROP TABLE if exists public."${tbl}";
+            
+            drop sequence if exists "${sequenceName}";
+            create sequence "${sequenceName}";
 
+            CREATE TABLE public."${tbl}"
+            (
+            ${gid} integer NOT NULL DEFAULT nextval('${sequenceName}'::regclass),
+            ${fieldsExpression}
+            CONSTRAINT "${tbl}_pkey" PRIMARY KEY (${gid})
+            -- CONSTRAINT enforce_geometry_type CHECK (geometrytype(geom) = 'MULTIPOLYGON'::text OR geometrytype(geom) = 'POLYGON'::text OR geom IS NULL)
+            )
+            WITH (
+                OIDS = FALSE
+            )
+            TABLESPACE pg_default;
+            `;
+        }
         var tableCreated = false;
         try {
             var qResult = await this.query(createTemplate);
@@ -236,17 +271,20 @@ class PostgresWorkspace {
             };
         }
 
-        if (layerInfo.datasetType !== 'vector') {
+        if (!(layerInfo.datasetType === 'vector' || layerInfo.datasetType === 'table')) {
             return {
                 status: false,
                 details: layerInfo,
-                message: 'datasetType is not vector'
+                message: 'datasetType is not vector or table'
             };
         }
-        if (!layerInfo.shapeField)
-            layerInfo.shapeField = 'geom';
+        if(layerInfo.datasetType === 'vector'){
+            if (!layerInfo.shapeField)
+                layerInfo.shapeField = 'geom';
+        }
         if (!layerInfo.oidField)
             layerInfo.oidField = 'gid';
+        
         // if(!layerInfo.spatialReference)
         //     layerInfo.spatialReference={name:'EPSG:3857',srid:3857}; 
 
@@ -271,13 +309,14 @@ class PostgresWorkspace {
 
             return isDup;
         };
-
-        if (fieldExists(layerInfo.shapeField, namesArray)) {
-            return {
-                status: false,
-                details: layerInfo,
-                message: layerInfo.shapeField + ' field is reserved for shape field.'
-            };
+        if(layerInfo.datasetType === 'vector'){
+            if (fieldExists(layerInfo.shapeField, namesArray)) {
+                return {
+                    status: false,
+                    details: layerInfo,
+                    message: layerInfo.shapeField + ' field is reserved for shape field.'
+                };
+            }
         }
         if (fieldExists(layerInfo.oidField, namesArray)) {
             return {
@@ -308,22 +347,26 @@ class PostgresWorkspace {
                 continue;
             }
             if(!fld.isExpression){
-
+                var fldType= fld.type;
+                var fldLength=fld.length;
+                if(fldType=='_filelink'|| fldType=='_documentslink'){
+                    fldType= 'varchar';
+                }
             
                 if (fld._action.isNew) {
-                    fieldExpression += 'ADD COLUMN "' + fld.name + '" ' + fld.type;
-                    if ((fld.type == 'varchar' || fld.type == 'numeric') && fld.length > 0) {
-                        if (fld.type == 'numeric' && typeof fld.scale !== 'undefined') {
-                            fieldExpression += '(' + fld.length + ',' + fld.scale + ')';
+                    fieldExpression += 'ADD COLUMN "' + fld.name + '" ' + fldType;
+                    if ((fldType == 'varchar' || fldType == 'numeric') && fldLength > 0) {
+                        if (fldType == 'numeric' && typeof fld.scale !== 'undefined') {
+                            fieldExpression += '(' + fldLength + ',' + fld.scale + ')';
                         } else {
-                            fieldExpression += '(' + fld.length + ')';
+                            fieldExpression += '(' + fldLength + ')';
                         }
                     }
                     if (fld.notNull) {
                         fieldExpression += ' NOT NULL ';
                     }
                     if (typeof fld.default != 'undefined') {
-                        if (fld.type == 'varchar' || fld.type == 'timestamp with time zone' || fld.type == 'date') {
+                        if (fldType == 'varchar' || fldType == 'timestamp with time zone' || fldType == 'date') {
                             if ((!fld.default && !fld.notNull) || fld.default) {
                                 fieldExpression += ' DEFAULT \'' + fld.default+'\'';
                             }
@@ -344,17 +387,17 @@ class PostgresWorkspace {
                     }
 
                     if (origFld.type !== fld.type || origFld.length !== fld.length) {
-                        var newFieldType = fld.type;
-                        if ((fld.type == 'varchar' || fld.type == 'numeric') && fld.length > 0) {
-                            if (fld.type == 'numeric' && typeof fld.scale !== 'undefined') {
-                                newFieldType += '(' + fld.length + ',' + fld.scale + ')';
+                        var newFieldType = fldType;
+                        if ((fldType == 'varchar' || fldType == 'numeric') && fldLength > 0) {
+                            if (fldType == 'numeric' && typeof fld.scale !== 'undefined') {
+                                newFieldType += '(' + fldLength + ',' + fld.scale + ')';
                             } else {
-                                newFieldType += '(' + fld.length + ')';
+                                newFieldType += '(' + fldLength + ')';
                             }
 
                         }
                         fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET DATA TYPE ' + newFieldType;
-                        fieldExpression += ' USING ("' + origFld.name + '"::' + fld.type + ')';
+                        fieldExpression += ' USING ("' + origFld.name + '"::' + fldType + ')';
 
                     }
                     if (origFld.default !== fld.default) {
@@ -363,7 +406,7 @@ class PostgresWorkspace {
                         }
 
                         if (typeof fld.default != 'undefined') {
-                            if (fld.type == 'varchar' || fld.type == 'timestamp with time zone' || fld.type == 'date') {
+                            if (fldType == 'varchar' || fldType == 'timestamp with time zone' || fldType == 'date') {
                                 fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET  DEFAULT \'' + fld.default+'\'';
                             } else {
                                 fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET  DEFAULT ' + fld.default;
@@ -465,12 +508,12 @@ class PostgresWorkspace {
             //throw ex;
 
         }
-        if (layerInfo.datasetType !== 'vector') {
+        if (!(layerInfo.datasetType === 'vector' || layerInfo.datasetType === 'table')) {
             return {
                 status: false,
                 details: layerInfo,
                 geoJsonFeature: geoJsonFeature,
-                message: 'datasetType is not vector'
+                message: 'datasetType is not vector or table'
             };
         }
         if (!layerInfo.fields) {
@@ -514,6 +557,7 @@ class PostgresWorkspace {
         var bulkSize = 1000;
         var bulkRows = [];
         var status = false;
+        var createdId;
         if (true) {
             var f = {
                 value: geoJsonFeature
@@ -521,12 +565,16 @@ class PostgresWorkspace {
             var endLoop = true;
 
             if (f.value) {
-                var geometry;
-                if (f.value.geometry) {
-                    geometry = `ST_Force_2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
-                }
+                
                 var row = {};
-                row[geom] = geometry;
+                if(layerInfo.datasetType === 'vector'){
+                    var geometry;
+                    if (f.value.geometry) {
+                        geometry = `ST_Force_2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
+                    }
+                    row[geom] = geometry;
+                }
+                
                 if (!f.value.properties)
                     f.value.properties = {};
                 if (f.value.properties) {
@@ -574,7 +622,9 @@ class PostgresWorkspace {
                 const chunks = []
                 bulkRows.forEach(row => {
                     const valueClause = [];
-                    valueClause.push(row[geom]);
+                    if(layerInfo.datasetType === 'vector'){
+                        valueClause.push(row[geom]);
+                    }
                     for (var i = 0; i < fieldNames.length; i++) {
                         var fldName = fieldNames[i];
                         values.push(row[fldName]);
@@ -584,21 +634,41 @@ class PostgresWorkspace {
                 })
 
                 var fieldNamesExpr = fieldNames_safe.join(',');
-                if (fieldNamesExpr)
-                    fieldNamesExpr = ',' + fieldNamesExpr;
-
-                var insertQuery = {
-                    text: `INSERT INTO public.${tbl}(
-                         ${geom}
-                         ${fieldNamesExpr}
-                        )
-                        VALUES ` + chunks.join(', ') + `;`,
-                    values: values,
+                if(layerInfo.datasetType === 'vector'){
+                    if (fieldNamesExpr)
+                        {
+                            fieldNamesExpr = ',' + fieldNamesExpr;
+                        }
                 }
+                
+                var insertQuery=undefined;
+                if(layerInfo.datasetType === 'vector'){
+                    insertQuery = {
+                        text: `INSERT INTO public.${tbl}(
+                             ${geom}
+                             ${fieldNamesExpr}
+                            )
+                            VALUES ` + chunks.join(', ') + ` RETURNING ${gid} ;`,
+                        values: values,
+                    }
+                }else{
+                    insertQuery = {
+                        text: `INSERT INTO public.${tbl}(
+                             ${fieldNamesExpr}
+                            )
+                            VALUES ` + chunks.join(', ') + ` RETURNING ${gid};`,
+                        values: values,
+                    }
+
+                }
+                
                 try {
                     var result = await this.query(insertQuery);
                     if (result) {
                         n += bulkRows.length;
+                    }
+                    if(result.rows && result.rows.length){
+                        createdId= result.rows[0][gid];
                     }
                 } catch (ex) {
                     var s = 1;
@@ -615,6 +685,7 @@ class PostgresWorkspace {
 
         return {
             status: status,
+            id:createdId,
             message: errors
         }
 
@@ -652,12 +723,12 @@ class PostgresWorkspace {
             //throw ex;
 
         }
-        if (layerInfo.datasetType !== 'vector') {
+        if (!(layerInfo.datasetType === 'vector' || layerInfo.datasetType === 'table')) {
             return {
                 status: false,
                 details: layerInfo,
                 geoJsonFeature: geoJsonFeature,
-                message: 'datasetType is not vector'
+                message: 'datasetType is not vector or table'
             };
         }
         if (!layerInfo.fields) {
@@ -721,8 +792,10 @@ class PostgresWorkspace {
 
             if (f.value) {
                 var geometry;
-                if (f.value.geometry) {
-                    geometry = `ST_Force_2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
+                if(layerInfo.datasetType === 'vector'){
+                    if (f.value.geometry) {
+                        geometry = `ST_Force_2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
+                    }
                 }
                 var row = {};
                 // row[geom]=geometry;
@@ -784,16 +857,31 @@ class PostgresWorkspace {
 
 
             var fieldNamesExpr = valueClause.join(',');
-            if (fieldNamesExpr)
-                fieldNamesExpr = ',' + fieldNamesExpr;
-
-            var updateQuery = {
-                text: `UPDATE  public.${tbl} SET
-                         ${geom}= ${geometry}
-                         ${fieldNamesExpr}
-                        WHERE  ${gid}= ${gid_value} ;`,
-                values: values,
+            if(layerInfo.datasetType === 'vector'){
+                if (fieldNamesExpr){
+                    fieldNamesExpr = ',' + fieldNamesExpr;
+                }
             }
+            var updateQuery=undefined;
+            if(layerInfo.datasetType === 'vector'){
+                updateQuery = {
+                    text: `UPDATE  public.${tbl} SET
+                             ${geom}= ${geometry}
+                             ${fieldNamesExpr}
+                            WHERE  ${gid}= ${gid_value} ;`,
+                    values: values,
+                }
+
+            }else{
+                updateQuery = {
+                    text: `UPDATE  public.${tbl} SET
+                             ${fieldNamesExpr}
+                            WHERE  ${gid}= ${gid_value} ;`,
+                    values: values,
+                }
+
+            }
+            
             try {
                 var result = await this.query(updateQuery);
                 if (result) {
@@ -893,12 +981,15 @@ class PostgresWorkspace {
     }
     async getGeoJson(options) {
         var tableName = options.tableName;
+        var datasetType= options.datasetType || 'vector';
         var oidField = options.oidField || 'gid';
         var shapeField = options.shapeField || 'geom';
         var filter = options.filter || {};
         var onlyIds= options.onlyIds || false;
         var where= filter.expression;
         var srid= options.srid || 3857;
+        var out_srid=options.out_srid;
+        var gmlOutput=options.gmlOutput?true:false;
         var fields=options.fields || [];
 
         var selectFrom;
@@ -921,7 +1012,7 @@ class PostgresWorkspace {
         if (fields && fields.length) {
             var fieldNames=[];
             fieldNames.push(oidField);
-            if(shapeField){
+            if(shapeField && datasetType=='vector'){
                 fieldNames.push(shapeField);
             }
 
@@ -944,7 +1035,7 @@ class PostgresWorkspace {
             selectFields = fieldNames.join(',');
         }
        // selectFrom=`(SELECT a.* FROM ${selectFrom}) as j`;
-        if(filter.spatialFilter){
+        if(datasetType=='vector' && filter.spatialFilter){
             if( filter.spatialFilter.searchArea && filter.spatialFilter.searchArea.geometry && !filter.spatialFilter.byFeaturesOfLayerItem_details ){
                 var searchAreaGeometry= filter.spatialFilter.searchArea.geometry;
                 var searchAreaSrid=filter.spatialFilter.searchAreaSrid || 3857;
@@ -1095,22 +1186,48 @@ class PostgresWorkspace {
                 FROM ${selectFrom}; `
 
         }else{
-            queryText = `SELECT jsonb_build_object(
-                'type',     'FeatureCollection',
-                'features', jsonb_agg(feature)
-            )
-            FROM (
-                SELECT jsonb_build_object(
-                'type',       'Feature',
-                'id',         ${oidField},
-                'geometry',   ST_AsGeoJSON(${shapeField})::jsonb,
-                'properties', to_jsonb(inputs) - '${oidField}' - '${shapeField}'
-                ) AS feature
+            var shapeExpr=shapeField;
+            if(out_srid && out_srid!==srid){
+                shapeExpr=`ST_Transform(${shapeField},${out_srid})`
+            }
+            var geomExpr=`ST_AsGeoJSON(${shapeExpr})::jsonb`;
+            if(gmlOutput){
+                geomExpr=`ST_AsGml(3,${shapeExpr})`;
+            }
+            if(datasetType=='vector'){
+                queryText = `SELECT jsonb_build_object(
+                    'type',     'FeatureCollection',
+                    'features', jsonb_agg(feature)
+                )
                 FROM (
-                SELECT ${selectFields} FROM ${selectFrom} 
-                LIMIT ${all_recordsLimit}
-                ) inputs
-            ) features;`
+                    SELECT jsonb_build_object(
+                    'type',       'Feature',
+                    'id',         ${oidField},
+                    'geometry',   ${geomExpr},
+                    'properties', to_jsonb(inputs) - '${oidField}' - '${shapeField}'
+                    ) AS feature
+                    FROM (
+                    SELECT ${selectFields} FROM ${selectFrom} 
+                    LIMIT ${all_recordsLimit}
+                    ) inputs
+                ) features;`
+            }else{
+                queryText = `SELECT jsonb_build_object(
+                    'type',     'FeatureCollection',
+                    'features', jsonb_agg(feature)
+                )
+                FROM (
+                    SELECT jsonb_build_object(
+                    'type',       'Feature',
+                    'id',         ${oidField},
+                    'properties', to_jsonb(inputs) - '${oidField}'
+                    ) AS feature
+                    FROM (
+                    SELECT ${selectFields} FROM ${selectFrom} 
+                    LIMIT ${all_recordsLimit}
+                    ) inputs
+                ) features;`
+            }
             }
         var results = await this.query({
             text: queryText
@@ -1129,6 +1246,9 @@ class PostgresWorkspace {
         var tableName = options.tableName;
         var shapeField = options.shapeField || 'geom';
         var where = options.where || '';
+        var from_srid= options.srid || 3857;
+        var out_srid=options.out_srid;
+
         var whereStr = ''
         if (where) {
             var checkSQlExpression_res= this.checkSQlExpression(where);
@@ -1137,8 +1257,13 @@ class PostgresWorkspace {
            }
             whereStr = ` WHERE ${where}`;
         }
-
-        var queryText = `SELECT ST_AsGeoJSON(ST_Extent(${shapeField})) as bextent FROM ${tableName} ${whereStr};`
+        var queryText;
+        if(typeof out_srid !='undefined'){
+            
+          queryText = `SELECT ST_AsGeoJSON( ST_Transform(ST_SetSRID (ST_Extent(${shapeField}),${from_srid}),${out_srid}) ) as bextent FROM ${tableName} ${whereStr};`
+        }else{
+            queryText = `SELECT ST_AsGeoJSON(ST_Extent(${shapeField})) as bextent FROM ${tableName} ${whereStr};`
+        }
         var results = await this.query({
             text: queryText
         });
@@ -1153,6 +1278,7 @@ class PostgresWorkspace {
             return null;
 
     }
+
     async importZipfile(zipfilePath, DataLayer, ownerUserId, options) {
         var results = [];
         var unzip = require('unzip');
@@ -1181,6 +1307,10 @@ class PostgresWorkspace {
                         filelist.push(path.join(dir, file));
                     } else if (ext === '.tif' || ext === '.tiff' || ext === '.geotif' || ext === '.geotiff' || ext === '.jpg' || ext === '.jpeg' || ext === '.png') {
                         if (importRasters) {
+                            filelist.push(path.join(dir, file));
+                        }
+                    } else if (ext==='.csv'|| ext==='.xls' || ext==='.xlsx'){
+                        if (options.importExcel) {
                             filelist.push(path.join(dir, file));
                         }
                     }
@@ -1232,6 +1362,16 @@ class PostgresWorkspace {
                     }catch(ex){
                         console.log(ex);
                     }
+                }  else if (ext==='.csv'|| ext==='.xls' || ext==='.xlsx'){
+                    try{
+                         var importResult=await this.importExcelWorkbook(file,DataLayer,options );
+                        if(importResult && importResult.length>0){
+                            results.push(... importResult); 
+                        }
+                    }catch(ex){
+                        console.log(ex);
+                    }
+
                 }
 
             } catch (ex) {
@@ -1242,7 +1382,154 @@ class PostgresWorkspace {
 
         return results;
     }
+    async importExcelWorkbook(excelfilePath, DataLayer, ownerUserId, options) {
+        var results = [];
+        var ext = path.extname(excelfilePath).toLowerCase();
+        var filename = path.basename(excelfilePath);
+        var filebaseName = path.basename(excelfilePath, ext);
 
+        var XLSX = require('xlsx');
+        var workbook;
+        try{
+          workbook = XLSX.readFile(excelfilePath);
+        }catch(ex0){
+            return results;
+        }
+        
+        //workbook.SheetNames.forEach(function(sheetName,index){
+        for(var s=0; s< workbook.SheetNames.length;s++)  {  
+            var sheetName=workbook.SheetNames[s];
+            var sheet= workbook.Sheets[sheetName];
+            var jsonArray=XLSX.utils.sheet_to_json(sheet);
+            var tags={};
+            var geoJSON={
+                features:[]
+            };
+            for(var i=0;jsonArray && i<jsonArray.length;i++){
+                var row= jsonArray[i];
+                geoJSON.features.push({
+                    type:'Row',
+                    properties:row
+                });
+                 var order=0;
+                for (var key0 in row) {
+                    var key= key0.toLowerCase();
+                    order++;
+                    var keyValue = row[key0];
+                    row[key]=keyValue;
+                    if(key0!==key){
+                        delete row[key0];
+                    }
+                    if (!(typeof keyValue === 'object') || keyValue == null) {
+                        if (row.hasOwnProperty(key) ) {
+                            if (typeof tags[key] === 'undefined') {
+                                tags[key] = {
+                                    alias:key0,
+                                    order:order,
+                                    count: 0,
+                                    length: 8
+                                };
+                            }
+                            tags[key].count += 1;
+                            tags[key].length = Math.max(tags[key].length, ((row[key] + '').length));
+                            if(typeof keyValue !=='undefined'){
+                                if(!isNaN(keyValue) && keyValue!==''){
+                                    keyValue= parseFloat(keyValue);
+                                }
+                                if(typeof tags[key].min =='undefined'){
+                                    tags[key].min= keyValue;
+                                }
+                                if (typeof tags[key].min === 'string' || tags[key].min instanceof String)
+                                {
+                                    if((keyValue+'') < tags[key].min){
+                                        tags[key].min= keyValue+'';
+                                    }
+                                }else{
+                                    if(keyValue < tags[key].min){
+                                        tags[key].min= keyValue;
+                                    }
+                                }
+        
+                                if(typeof tags[key].max =='undefined'){
+                                    tags[key].max= keyValue;
+                                }
+                                if (typeof tags[key].max === 'string' || tags[key].max instanceof String)
+                                {
+                                    if((keyValue +'')> tags[key].max){
+                                        tags[key].max= keyValue+'';
+                                    } 
+                                }else{
+                                    if(keyValue > tags[key].max){
+                                        tags[key].max= keyValue;
+                                    } 
+                                }
+                            }  
+                        }
+                    }
+                }
+            }
+            
+            var tagsArray = [];
+            for (var key in tags) {
+                if (tags.hasOwnProperty(key)) {
+                    var tag = tags[key];
+                    tag.name = key;
+                    tagsArray.push(tag);
+                }
+            }
+            tagsArray= tagsArray.sort(function(a,b){
+                return a.order - b.order;
+            });
+             var fields=[];
+             for (var i = 0; i < tagsArray.length; i++) {
+                var tag = tagsArray[i];
+                if (tag.name) {
+                    if(tag.max !=='' && !isNaN(tag.max)){
+                        fields.push({
+                            name: tag.name,
+                            alias: tag.alias,
+                            type: 'numeric'
+                        });
+                    }else{
+                        fields.push({
+                            name: tag.name,
+                            alias: tag.alias,
+                            type: 'varchar',
+                            length: tag.length || 8
+                        });
+                    }
+                }
+            }
+
+           
+
+            var layerInfo = {
+                datasetType:'table',
+                fields: fields,
+                name: sheetName || filename,
+                fileName: filename,
+                filebaseName:filebaseName,
+                description:'Imported from ' + filename
+            };
+            try{
+                await this.applyTemplate(layerInfo,filename);
+            }catch(ex){
+
+            }
+            try{
+                var importResult=await this.importGeoJSON(layerInfo,geoJSON,DataLayer, ownerUserId,options);
+                if(importResult){
+                    results.push(importResult);
+                }
+            }catch(ex){
+                
+            }
+
+            
+        }
+
+        return results;
+    }
     async importShapefile(shpfilePath, DataLayer, ownerUserId, options) {
         options = options || {};
         var shapefile = require("shapefile");
@@ -1290,6 +1577,7 @@ class PostgresWorkspace {
         var errors = '';
         var layerInfo = {
             shapefileName: filename,
+            filebaseName:filebaseName,
             //datasetName: 'shp_' + uuidv4().replace(new RegExp('-', 'g'), ''),
             datasetName: uniqueTableName,
             workspace: 'postgres',
@@ -1666,20 +1954,30 @@ class PostgresWorkspace {
                  }
              });
              layerInfo.history=history;
+             try{
+                await this.applyTemplate(layerInfo);
+            }catch(ex){
 
+            }
             var newLayer = await DataLayer.create({
                 name: layerInfo.shapefileName,
+                projectId:options.projectId,
+                keywords:options.keywords?options.keywords:null,
                 dataType: 'vector',
+                subType:layerInfo.shapeType,
                 description: 'Imported from ' + filebaseName + errors,
                 ownerUser: ownerUserId,
                 thumbnail: thumbnail,
+                
                 details: JSON.stringify(layerInfo)
             });
+            await this.updateVectorLayerExtent(newLayer); 
         }
         return {
             status: status,
             fileName: filename,
-            message: errors
+            message: errors,
+            details:layerInfo
         }
     }
     async importRaster(filePath, DataLayer, ownerUserId, options) {
@@ -1704,6 +2002,8 @@ class PostgresWorkspace {
 
         var filePathFolder = path.dirname(filePath);
 
+        var vat_dbfFile = filePath + '.vat.dbf';
+        var vat_encodingFile = filePath + '.vat.cpg';
         
         var thumbnailFile_png = path.join(filePathFolder, filebaseName + '.png');
         if (thumbnailFile_png.toLowerCase() == filePath.toLowerCase()) {
@@ -1822,7 +2122,7 @@ try {
                 const {
                     stdout,
                     stderr
-                } = await execFile(importBatchFile);
+                } = await execFile(importBatchFile,{maxBuffer:1024 * 1000});
             } catch (ex) {
                 status = false;
                 errors += '<br/>' + ex.message;
@@ -1869,7 +2169,7 @@ try {
                       stdout,
                       stderr
                   //} = await exec( '/var/run/docker.sock/docker exec postgis '+ importBatchFile);
-              } = await exec( 'sh '+ importBatchFile);
+              } = await exec( 'sh '+ importBatchFile,{maxBuffer:1024 * 1000});
               } catch (ex) {
                   status = false;
                   errors += '<br/>' + ex.message;
@@ -1928,6 +2228,50 @@ try {
       }
         errors = (errors ? ('<br /> <span style="color:red;">' + errors + '</span>') : '');
         if (status) {
+            try{
+                if (fs.existsSync(vat_dbfFile)) {
+                    var vatInfo= await this.readRasterVat(vat_dbfFile,vat_encodingFile);
+                    layerInfo.vatInfo=vatInfo;
+                }
+
+            }catch(ex){
+
+            }
+            try {
+                var maxSize= Math.max(layerInfo.rasterWidth,layerInfo.rasterHeight);
+                var overview_factor=1;
+                if(maxSize>256){
+                    var sizeFactor=Math.log2(maxSize/256);
+                    sizeFactor= Math.floor(sizeFactor);
+                    overview_factor= Math.pow(2,sizeFactor);
+                    if(overview_factor<1){
+                        overview_factor=1;
+                    }
+                    if(overview_factor>16){
+                        overview_factor=16
+                    }
+                }
+
+                
+                layerInfo.metadata_4326 = await this.getRasterMetadata({
+                    tableName: layerInfo.datasetName,
+                    oidField: layerInfo.oidField,
+                    rasterField: layerInfo.rasterField,
+                    srid: 4326,
+                    overview_factor:overview_factor
+                });
+                layerInfo.metadata_4326.overview_factor=overview_factor;
+                
+                layerInfo.metadata_3857 = await this.getRasterMetadata({
+                    tableName: layerInfo.datasetName,
+                    oidField: layerInfo.oidField,
+                    rasterField: layerInfo.rasterField,
+                    srid: 3857,
+                    overview_factor:overview_factor
+                });
+                layerInfo.metadata_3857.overview_factor=overview_factor;
+            } catch (ex) {}
+
             var thumbnailFile;
             if (fs.existsSync(thumbnailFile_png)) {
                 thumbnailFile = thumbnailFile_png;
@@ -2019,13 +2363,36 @@ try {
 
                     layerInfo.display = display;
 
-                    var resultThumbnail = await this.getRasterAsPng({
+                   
+                    // var resultThumbnail = await this.getRasterAsPng({
+                    //     tableName: layerInfo.datasetName,
+                    //     oidField: layerInfo.oidField,
+                    //     rasterField: layerInfo.rasterField,
+                    //     srid: srid,
+                    //     bands: layerInfo.bands,
+                    //     display: display
+                    // });
+                    var extent = [  layerInfo.metadata_4326.upperleftx ,
+                        layerInfo.metadata_4326.upperlefty+  (layerInfo.metadata_4326.scaley* layerInfo.metadata_4326.height) ,
+                        layerInfo.metadata_4326.upperleftx + (layerInfo.metadata_4326.scalex * layerInfo.metadata_4326.width),
+                        layerInfo.metadata_4326.upperlefty];
+
+                      var imageWidth=256;  
+                      var imageHeight= Math.floor(imageWidth* layerInfo.rasterHeight/layerInfo.rasterWidth);
+                    
+                    var resultThumbnail = await this.getRasterImageAsPng({
                         tableName: layerInfo.datasetName,
                         oidField: layerInfo.oidField,
                         rasterField: layerInfo.rasterField,
-                        srid: srid,
+                        srid: 4326,
+                        origRaster_srid:layerInfo.spatialReference.srid || 3857,
                         bands: layerInfo.bands,
-                        display: display
+                        display: display,
+                        overview_factor:overview_factor,
+                        west: extent[0],south:extent[1],east:extent[2],north:extent[3],
+                    
+                        imageWidth:imageWidth,
+                        imageHeight:imageHeight,
                     });
                     thumbnail = await sharp(resultThumbnail.output)
                     .resize(160,100,{
@@ -2038,20 +2405,7 @@ try {
                 }
             }
 
-            try {
-                layerInfo.metadata_4326 = await this.getRasterMetadata({
-                    tableName: layerInfo.datasetName,
-                    oidField: layerInfo.oidField,
-                    rasterField: layerInfo.rasterField,
-                    srid: 4326
-                });
-                layerInfo.metadata_3857 = await this.getRasterMetadata({
-                    tableName: layerInfo.datasetName,
-                    oidField: layerInfo.oidField,
-                    rasterField: layerInfo.rasterField,
-                    srid: 3857
-                });
-            } catch (ex) {}
+            
 
             var history= history=[];
             history.push({
@@ -2061,21 +2415,146 @@ try {
                  }
              });
              layerInfo.history=history;
+             try{
+                await this.applyTemplate(layerInfo);
+            }catch(ex){
 
+            }
             var newLayer = await DataLayer.create({
                 name: layerInfo.fileName,
+                projectId:options.projectId,
+                keywords:options.keywords?options.keywords:null,
                 dataType: 'raster',
+                subType:layerInfo.rasterType,
                 description: 'Imported from ' + filebaseName + errors,
                 ownerUser: ownerUserId,
                 thumbnail: thumbnail,
                 details: JSON.stringify(layerInfo)
             });
+            await this.updateRasterLayerExtent(newLayer);
         }
         return {
             status: status,
             fileName: filename,
             message: errors
         }
+    }
+    async readRasterVat(dbfFilePath, encodingFilePath, options) {
+        options = options || {};
+        var shapefile = require("shapefile");
+        var fs = require('fs');
+        var status = false;
+        
+        var encoding = options.defaultEncoding || process.env.IMPORTED_SHAPEFILE_DEFAULT_ENCODING || 'windows-1252';
+        //encoding ='windows-1256';
+        //encoding='utf8';
+        if (fs.existsSync(encodingFilePath)) {
+            try {
+                var codePage = fs.readFileSync(encodingFilePath).toString().trim();
+                if (codePage)
+                    encoding = codePage;
+            } catch (ex) {
+
+            }
+        }
+        var geoJsonSource_dbf ;
+        var fields = [];
+        var fieldNames = [];
+        var fieldNames_safe=[];
+        var dbfData=[];
+        try {
+            geoJsonSource_dbf = await shapefile.openDbf(dbfFilePath, {
+                encoding: encoding
+            });
+            
+            if (geoJsonSource_dbf && geoJsonSource_dbf._fields) {
+                
+                
+
+               
+
+
+                for (var i = 0; i < geoJsonSource_dbf._fields.length; i++) {
+                    var shpField = geoJsonSource_dbf._fields[i];
+                    var fld = {
+                        name: shpField.name.toLowerCase(),
+                        origName: shpField.name,
+                        alias: '',
+                        type: 'varchar',
+                        length: shpField.length,
+                        default: undefined,
+                        notNull: false
+                    };
+                    switch (shpField.type) {
+                        case 'M':
+                            fld.type = 'numeric';
+                            fld.default = 0;
+                            break;
+
+                        case 'B':
+                            fld.type = 'numeric';
+                            fld.default = 0;
+                            break;
+                        case 'N':
+                            // fld.type='integer';
+                            fld.type = 'numeric';
+                            if (fld.length <= 4)
+                                fld.type = 'smallint'
+                            fld.default = 0;
+                            break;
+                        case 'C':
+                            fld.type = 'varchar';
+                            if (fld.length > 254)
+                                fld.length = 254;
+                            fld.default = '';
+                            break;
+                        case 'F':
+                            fld.type = 'numeric';
+                            fld.default = 0;
+                            break;
+                        case 'D':
+                            fld.type = 'date';
+                            //fld.type='varchar';
+                            //fld.length=0;
+                            break;
+                        case 'L':
+                            fld.type = 'boolean';
+                            fld.default = false;
+                            break;
+                    }
+                    fields.push(fld);
+                    fieldNames.push(fld.name);
+                    fieldNames_safe.push('"' + fld.name + '"');
+
+                }
+
+                do {
+                    var f = await geoJsonSource_dbf.read()
+                    var endLoop = (f && (!f.done)) ? false : true;
+                    if (f.value) {
+                        var row={};
+                        for(var j=0;j< fields.length;j++){
+                            row[fields[j].name]= f.value[fields[j].origName];
+                        }
+                        dbfData.push(row);
+
+                    }
+                } while (!endLoop);
+            }
+           
+            status=true;
+        } catch (ex) {
+            var rr = '';
+        }
+        if(status ){
+        return {
+            rows:dbfData,
+            fields:fields
+            }
+        }else{
+            return null;
+        }
+
     }
     async getRasterAsPng(options) {
         var tableName = options.tableName;
@@ -2361,6 +2840,7 @@ try {
         var rasterField = options.rasterField || 'rast';
         var srid = options.srid;
         var origRaster_srid= options.origRaster_srid || 3857;
+        var resample_algorithm='NearestNeighbor';
         var display = options.display;
         if (!display) {
             return;
@@ -2466,18 +2946,34 @@ try {
             south = Phi * 180 / Math.PI;
         }
         //var dw= (east-west)/256.0;
-       // west= west-dw;
-       // east= east+dw;
-        bbox= west+','+south+','+east+','+north+ ',4326';
         
+        var dw2= (east-west)/256.0;
+        
+        // var dw= (east-west)/100.0;
+        // west= west-dw;
+        // east= east+dw;
+        // north= north+dw;
+        // south= south-dw;
+        bbox= west+','+south+','+east+','+north+ ',4326';
+       //  var dw= (east-west)/256.0;
+
+
+        //  var  west2= west-dw2;
+        //  var east2= east+dw2;
+        //  var north2= north+dw2;
+        //  var south2= south-dw2;
+        //  var bbox2= west2+','+south2+','+east2+','+north2+ ',4326';
+
+       
         var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox}),${origRaster_srid}))`;
+       //var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox2}),${origRaster_srid}))`;
         
 
 var clipTileExpr=`with inputR as (SELECT ST_Transform(
     ST_Union(
         ${rasterField}
      )
-    ,${srid},'NearestNeighbor') as rast
+    ,${srid},'${resample_algorithm}') as rast
     FROM public."${overview_prefix}${tableName}"
      WHERE ${whereStr}
 )
@@ -2524,7 +3020,7 @@ clipTileExpr +=`,cippedBands as (
 ,tile as (SELECT
     ST_Resample (
         cippedBands.rast
-          ,${tileSize},${tileSize},NULL,NULL,0,0,'NearestNeighbour'
+          ,${tileSize},${tileSize},NULL,NULL,0,0,'${resample_algorithm}'
          )
           as ${rasterField} 
   from cippedBands
@@ -2634,7 +3130,7 @@ clipTileExpr +=`,cippedBands as (
                     
                     if(CI){
                         var cv=CI.value+'';
-                        if(cv.indexOf('%')>-1){
+                        if(cv.indexOf('%')>=0){
                             try{
                                 cv= parseFloat(cv);
                                 cv=minimum + (maximum-minimum)*cv/100.0;
@@ -2725,12 +3221,542 @@ try{
             return null;
 
     }
+    async getRasterImageAsPng(options) {
+        var tableName = options.tableName;
+        var oidField = options.oidField || 'rid';
+        var rasterField = options.rasterField || 'rast';
+        var srid = options.srid;
+        var origRaster_srid= options.origRaster_srid || 3857;
+        var resample_algorithm='NearestNeighbor';
+        var display = options.display;
+        var z= options.z;
+        if (!display) {
+            return;
+        }
+        var ref_z=options.ref_z || 18;
+        var west= options.west;
+        var east= options.east;
+        var north= options.north;
+        var south=options.south;
+        //var overview_factor= Math.pow(2,(ref_z-z));
+        
+
+        var overview_factor=options.overview_factor;
+
+        //var overview_factor= Math.pow(2,(ref_z-z -1));
+        if(typeof overview_factor =='undefined'){
+         overview_factor= Math.pow(2,(ref_z-z ));
+        }
+        if(overview_factor <1){
+            overview_factor=1;
+        }
+        if(overview_factor>32){
+            overview_factor=32;
+        }
+        var overview_prefix= 'o_'+ overview_factor+ '_';
+        if(overview_factor==1){
+            overview_prefix='';
+        }
+        if(overview_factor>1){
+            try{
+                var queryOverview = `SELECT * FROM public.raster_overviews where r_table_name ='${tableName}' and overview_factor=${overview_factor}`;
+                var overviewResults = await this.query({ text: queryOverview  });
+                if(!(overviewResults && overviewResults.rowCount)){
+                    queryOverview = `SELECT ST_CreateOverview('${tableName}'::regclass, '${rasterField}', ${overview_factor});`;
+                    overviewResults = await this.query({ text: queryOverview  });
+                }
+            }catch(ex){
+
+            }
+        }
+        var imageWidth= options.imageWidth || 256;
+        var imageHeight= options.imageHeight || 256;
+
+        var RBand = options.display.RBand || 1;
+        var GBand = options.display.GBand || 1;
+        var BBand = options.display.BBand || 1;
+        var ABand = options.display.ABand;
+        var bands = options.bands;
+        var bandsCount=1;
+        if(bands){
+            bandsCount= bands.length;
+        }
+        var apply_reclass = false;
+        var noDataValue = null;
+        var minimum, maximum;
+        var bandMinimum, bandMaximum;
+        if (display.displayType == 'colorMap') {
+            if (display.reclass) {
+                apply_reclass = true;
+            }
+            if (!display.colorMap) {
+                display.colorMap = 'grayscale';
+            }
+            if (!display.band) {
+                display.band = 1;
+            }
+            if (bands && bands.length) {
+                var band = bands[display.band - 1];
+                noDataValue = band.noDataValue;
+                bandMinimum = minimum = band.minimum;
+                bandMaximum = maximum = band.maximum;
+            }
+            if (typeof display.minimum == 'undefined') {
+
+                display.minimum = minimum;
+            }
+            if (typeof display.maximum == 'undefined') {
+
+                display.maximum = maximum;
+            }
+
+            minimum = Math.max(minimum, display.minimum);
+            maximum = Math.min(maximum, display.maximum);
+            if (minimum !== bandMinimum || maximum != bandMaximum) {
+                apply_reclass = true;
+            }
+        }
+      
+        var ABand_expr = '';
+
+        if (ABand){
+            ABand_expr = `,ST_Union(${rasterField},${ABand})`;
+        }
+
+        var where='';
+        var bbox;
+     
+        bbox= west+','+south+','+east+','+north+ ',4326';
+        var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox}),${origRaster_srid}))`;
+        
+
+var clipTileExpr=`with inputR as (SELECT ST_Transform(
+    ST_Union(
+        ${rasterField}
+     )
+    ,${srid},'${resample_algorithm}') as rast
+    FROM public."${overview_prefix}${tableName}"
+     WHERE ${whereStr}
+)
+,clipRect as (
+    SELECT ST_AsRaster(
+            ST_Transform(	ST_MakeEnvelope(${bbox}),${srid}),
+					inputR.rast
+					,ST_BandPixelType(inputR.rast)
+					,1) as rast
+		from inputR	
+        )
+ 
+,clippedB1 as (
+    SELECT ST_MapAlgebra(clipRect.rast,1,inputR.rast,1,'[rast2]',NULL,'FIRST') as rast
+   from clipRect,inputR
+)`;
+var lastBn=1;
+for(var bn=2;bn<=bandsCount;bn++){
+    
+    clipTileExpr +=`,clippedB${bn} as (
+        SELECT ST_AddBand(clippedB${lastBn}.rast, ST_MapAlgebra(clipRect.rast,1,inputR.rast,${bn},'[rast2]',NULL,'FIRST')) as rast
+       from clippedB${lastBn},clipRect,inputR
+    )`;
+    lastBn=bn;
+}
+
+clipTileExpr +=`,cippedBands as (
+    select * from clippedB${lastBn}
+ )`;
+ clipTileExpr +=`
+ 
+,tile as (SELECT
+    ST_Resample (
+        cippedBands.rast
+          ,${imageWidth},${imageHeight},NULL,NULL,0,0,'${resample_algorithm}'
+         )
+          as ${rasterField} 
+  from cippedBands
+)
+`;
+
+        var queryText = '';
+        if (display.displayType === 'RGB') {
+            queryText = `${clipTileExpr} SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+ FROM ( Select 
+         
+              ST_AddBand(
+                ST_Union(${rasterField},${RBand}),
+                 ARRAY[
+                     ST_Union(${rasterField},${GBand}),
+                     ST_Union(${rasterField},${BBand})
+                     ${ABand_expr}
+                    ]
+               )
+         
+                as raster
+           from  tile where not tile.rast is null
+) as raster`;
+        }
+
+        if (display.displayType == 'colorMap') {
+            var band = display.band;
+            var colorMap = display.colorMap;
+            var colorMapstr=colorMap;
+            apply_reclass = true; //note: ST_ColorMap without reclassifying generate reverse grayscale
+            var customColorMapArray=undefined;
+            if(colorMap=='pseudocolor'){
+                customColorMapArray=[
+                    [100, 255,   0,   0, 255],
+                    [50,  0, 255,   0, 255],
+                    [0,   0,   0, 255, 255],
+                    ['nv',   0,   0,   0,   0]] ; 
+            }
+            if(colorMap=='fire'){
+                customColorMapArray=[
+                    [100, 243, 255, 221, 255],
+                    [93.75, 242, 255, 178, 255],
+                    [87.5, 255, 255, 135, 255],
+                    [81.25, 255, 228,  96, 255],
+                    [75, 255, 187,  53, 255],
+                    [68.75, 255, 131,   7, 255],
+                    [62.5, 255,  84,   0, 255],
+                    [56.25, 255,  42,   0, 255],
+                    [50, 255,   0,   0, 255],
+                    [43.75, 255,  42,   0, 255],
+                    [37.5, 224,  74,   0, 255],
+                    [31.25, 183,  91,   0, 255],
+                    [25, 140,  93,   0, 255],
+                    [18.75,  99,  82,   0, 255],
+                    [12.5,  58,  58,   1, 255],
+                    [6.25,  12,  15,   0, 255],
+                    [0,   0,   0,   0, 255],
+                    ['nv',   0,   0,   0,   0]];
+            }
+            if(colorMap=='bluered'){
+                customColorMapArray=[
+                    [100.00, 165,   0,  33, 255],
+                    [94.12, 216,  21,  47, 255],
+                    [88.24, 247,  39,  53, 255],
+                    [82.35, 255,  61,  61, 255],
+                    [76.47, 255, 120,  86, 255],
+                    [70.59, 255, 172, 117, 255],
+                    [64.71, 255, 214, 153, 255],
+                    [58.82, 255, 241, 188, 255],
+                    [52.94, 255, 255, 234, 255],
+                    [47.06, 234, 255, 255, 255],
+                    [41.18, 188, 249, 255, 255],
+                    [35.29, 153, 234, 255, 255],
+                    [29.41, 117, 211, 255, 255],
+                    [23.53,  86, 176, 255, 255],
+                    [17.65,  61, 135, 255, 255],
+                    [11.76,  40,  87, 255, 255],
+                    [5.88,  24,  28, 247, 255],
+                    [0.00,  36,   0, 216, 255],
+                    ['nv',   0,   0,   0,   0]];
+            }
+            if(customColorMapArray){
+                apply_reclass=false;
+                colorMapstr='';
+                for(var c=0;c<customColorMapArray.length;c++){
+                    var CI=customColorMapArray[c];
+                    if(colorMapstr){
+                        colorMapstr += '\n';
+                    }
+                    var cv=CI[0];
+                    if(cv!='nv'){
+                        cv=minimum + (maximum-minimum)*cv/100.0;
+                    }
+                    colorMapstr+= `${cv} ${CI[1]} ${CI[2]} ${CI[3]} ${CI[4]}`;
+                }
+            }
+           
+            if(colorMap=='custom'){
+                apply_reclass=false;
+                var customColorMap=display.customColorMap ||[];
+                colorMapstr=''; 
+                for(var c=0;c<customColorMap.length;c++){
+                    var CI=customColorMap[c];
+                    if(colorMapstr){
+                        colorMapstr += '\n';
+                    }
+                    
+                    if(CI){
+                        var cv=CI.value+'';
+                        if(cv.indexOf('%')>=0){
+                            try{
+                                cv= parseFloat(cv);
+                                cv=minimum + (maximum-minimum)*cv/100.0;
+                            }catch(xx){}
+                        }
+                        colorMapstr+= `${cv} ${CI.r} ${CI.g} ${CI.b} ${CI.a}`;
+                        if(customColorMap.length==1){
+                            colorMapstr += '\n';
+                            colorMapstr+= `${cv} ${CI.r} ${CI.g} ${CI.b} ${CI.a}`;
+                        }
+                    }
+                }
+            }
+            if (!apply_reclass) {
+                queryText = `${clipTileExpr} SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+    FROM ( Select 
+         
+               ST_ColorMap(
+                  -- ST_Union(
+                       ${rasterField},${band}
+                  --     )
+                   ,
+                   --1,
+                   '${colorMapstr}'
+                ) 
+        
+             as raster
+              from  tile where not tile.rast is null
+   ) as raster`;
+            } else {
+                 //calssified values
+                 var c_minimum = 1;
+                 var c_maximum = 254;
+                 var c_noDataValue = 255;
+               
+                if (colorMap == 'grayscale') { // grayscale does not support transparency                        
+                    queryText = `${clipTileExpr} SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+    FROM ( Select 
+     
+                ST_Reclass(
+                    --ST_Union(
+                        ${rasterField},${band}
+                       -- )
+                        ,
+                        --1,
+                         '[${minimum}-${maximum}]:${c_minimum}-${c_maximum}', '8BUI',${c_noDataValue} )
+      --          ,1,'${colorMap}'
+             as raster
+            from  tile where not tile.rast is null
+) as raster`;
+                } else {
+                    queryText = `${clipTileExpr} SELECT ST_AsPNG(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+        FROM ( Select 
+           
+                ST_ColorMap(
+                    ST_Reclass(
+                        --ST_Union( 
+                            ${rasterField},${band}
+                          --  )
+                            ,
+                         --1,
+                          '[${minimum}-${maximum}]:${c_minimum}-${c_maximum}', '8BUI',${c_noDataValue} 
+                          ),
+                          1,'${colorMap}'
+                    ) 
+         
+                 as raster
+                from  tile where not tile.rast is null
+    ) as raster`;
+
+                }
+            }
+
+
+        }
+     
+try{
+        var results = await this.query({
+            text: queryText
+        });
+    }catch(ex){
+        return null;  
+    }
+        if (results) {
+
+            return results.rows[0];
+        } else
+            return null;
+
+    }
+    async getRasterImageAsGeotiff(options) {
+        var tableName = options.tableName;
+        var oidField = options.oidField || 'rid';
+        var rasterField = options.rasterField || 'rast';
+        var srid = options.srid;
+        var origRaster_srid= options.origRaster_srid || 3857;
+        var resample_algorithm='NearestNeighbor';
+        var z= options.z;
+        
+        var ref_z=options.ref_z || 18;
+        var west= options.west;
+        var east= options.east;
+        var north= options.north;
+        var south=options.south;
+        //var overview_factor= Math.pow(2,(ref_z-z));
+        
+
+        //var overview_factor= Math.pow(2,(ref_z-z -1));
+        var overview_factor= Math.pow(2,(ref_z-z ));
+        if(overview_factor <1){
+            overview_factor=1;
+        }
+        if(overview_factor>32){
+            overview_factor=32;
+        }
+        var overview_prefix= 'o_'+ overview_factor+ '_';
+        if(overview_factor==1){
+            overview_prefix='';
+        }
+        if(overview_factor>1){
+            try{
+                var queryOverview = `SELECT * FROM public.raster_overviews where r_table_name ='${tableName}' and overview_factor=${overview_factor}`;
+                var overviewResults = await this.query({ text: queryOverview  });
+                if(!(overviewResults && overviewResults.rowCount)){
+                    queryOverview = `SELECT ST_CreateOverview('${tableName}'::regclass, '${rasterField}', ${overview_factor});`;
+                    overviewResults = await this.query({ text: queryOverview  });
+                }
+            }catch(ex){
+
+            }
+        }
+        var imageWidth= options.imageWidth || 256;
+        var imageHeight= options.imageHeight || 256;
+
+        var RBand = options.display.RBand || 1;
+        var GBand = options.display.GBand || 1;
+        var BBand = options.display.BBand || 1;
+        var ABand = options.display.ABand;
+        var bands = options.bands;
+        var bandsCount=1;
+        if(bands){
+            bandsCount= bands.length;
+        }
+        
+       
+      
+        var ABand_expr = '';
+
+        if (ABand){
+            ABand_expr = `,ST_Union(${rasterField},${ABand})`;
+        }
+
+        var where='';
+        var bbox;
+     
+        bbox= west+','+south+','+east+','+north+ ',4326';
+        var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox}),${origRaster_srid}))`;
+        
+
+var clipTileExpr=`with inputR as (SELECT ST_Transform(
+    ST_Union(
+        ${rasterField}
+     )
+    ,${srid},'${resample_algorithm}') as rast
+    FROM public."${overview_prefix}${tableName}"
+     WHERE ${whereStr}
+)
+,clipRect as (
+    SELECT ST_AsRaster(
+            ST_Transform(	ST_MakeEnvelope(${bbox}),${srid}),
+					inputR.rast
+					,ST_BandPixelType(inputR.rast)
+					,1) as rast
+		from inputR	
+        )
+ 
+,clippedB1 as (
+    SELECT ST_MapAlgebra(clipRect.rast,1,inputR.rast,1,'[rast2]',NULL,'FIRST') as rast
+   from clipRect,inputR
+)`;
+var lastBn=1;
+for(var bn=2;bn<=bandsCount;bn++){
+    
+    clipTileExpr +=`,clippedB${bn} as (
+        SELECT ST_AddBand(clippedB${lastBn}.rast, ST_MapAlgebra(clipRect.rast,1,inputR.rast,${bn},'[rast2]',NULL,'FIRST')) as rast
+       from clippedB${lastBn},clipRect,inputR
+    )`;
+    lastBn=bn;
+}
+
+clipTileExpr +=`,cippedBands as (
+    select * from clippedB${lastBn}
+ )`;
+ clipTileExpr +=`
+ 
+,tile as (SELECT
+    ST_Resample (
+        cippedBands.rast
+          ,${imageWidth},${imageHeight},NULL,NULL,0,0,'${resample_algorithm}'
+         )
+          as ${rasterField} 
+  from cippedBands
+)
+`;
+
+        var queryText = '';
+        
+//         queryText = `${clipTileExpr} SELECT ST_AsTIFF(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+//  FROM ( Select 
+         
+//               ST_AddBand(
+//                 ST_Union(${rasterField},${RBand}),
+//                  ARRAY[
+//                      ST_Union(${rasterField},${GBand}),
+//                      ST_Union(${rasterField},${BBand})
+//                      ${ABand_expr}
+//                     ]
+//                )
+         
+//                 as raster
+//            from  tile where not tile.rast is null
+// ) as raster`;
+queryText = `${clipTileExpr} SELECT ST_AsTIFF(raster) as output ,ST_GeoReference(raster, 'ESRI') As esri_ref, ST_GeoReference(raster, 'GDAL') As gdal_ref
+FROM ( Select 
+        
+               ST_Union(${rasterField})
+             
+               as raster
+          from  tile where not tile.rast is null
+) as raster`; 
+
+        
+     
+try{
+        var results = await this.query({
+            text: queryText
+        });
+    }catch(ex){
+        return null;  
+    }
+        if (results) {
+
+            return results.rows[0];
+        } else
+            return null;
+
+    }
     async getRasterMetadata(options) {
         var tableName = options.tableName;
         var oidField = options.oidField || 'rid';
         var rasterField = options.rasterField || 'rast';
         var srid = options.srid;
         var where = options.where || '';
+        var overview_factor=options.overview_factor || 1;
+
+        if(overview_factor <1){
+            overview_factor=1;
+        }
+        if(overview_factor>32){
+            overview_factor=32;
+        }
+        var overview_prefix= 'o_'+ overview_factor+ '_';
+        if(overview_factor==1){
+            overview_prefix='';
+        }
+        if(overview_factor>1){
+            try{
+                var queryOverview = `SELECT * FROM public.raster_overviews where r_table_name ='${tableName}' and overview_factor=${overview_factor}`;
+                var overviewResults = await this.query({ text: queryOverview  });
+                if(!(overviewResults && overviewResults.rowCount)){
+                    queryOverview = `SELECT ST_CreateOverview('${tableName}'::regclass, '${rasterField}', ${overview_factor});`;
+                    overviewResults = await this.query({ text: queryOverview  });
+                }
+            }catch(ex){
+
+            }
+        }
         var whereStr = ''
         if (where) {
             var checkSQlExpression_res= this.checkSQlExpression(where);
@@ -2748,7 +3774,7 @@ SELECT ST_MetaData(raster) as md
             ST_Union(${rasterField},1)
             ,${srid}
            ) as raster
-           from  public."${tableName}"${whereStr} 
+           from  public."${overview_prefix}${tableName}"${whereStr} 
 	) as raster
 ) as raster`;
 
@@ -2758,6 +3784,10 @@ SELECT ST_MetaData(raster) as md
         if (results) {
             var result = results.rows[0];
             delete result.numbands;
+            result.height*= overview_factor;
+            result.width*= overview_factor;
+            result.scalex /= overview_factor;
+            result.scaley /= overview_factor;
             return result;
         } else
             return null;
@@ -3112,11 +4142,13 @@ SELECT AddRasterConstraints(
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'raster',
+                    subType:outDetails.rasterType,
                     description: 'Generated from ' + (fromDetails.name  || fromDetails.datasetName) + errors,
                     ownerUser: ownerUserId,
                     thumbnail: thumbnail,
                     details: JSON.stringify(outDetails)
                 });
+                await this.updateRasterLayerExtent(newLayer);
                 return {
                     status: status,
                     id: newLayer.id
@@ -3377,11 +4409,13 @@ SELECT AddRasterConstraints(
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'raster',
+                    subType:outDetails.rasterType,
                     description: 'Generated from ' + (fromDetails.name || fromDetails.fileName) + errors,
                     ownerUser: ownerUserId,
                     thumbnail: thumbnail,
                     details: JSON.stringify(outDetails)
                 });
+                await this.updateRasterLayerExtent(newLayer);
                 return {
                     status: status,
                     id: newLayer.id
@@ -3623,11 +4657,13 @@ SELECT AddRasterConstraints(
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'raster',
+                    subType:outDetails.rasterType,
                     description: 'Generated from ' + (fromDetails.name  || fromDetails.datasetName) + errors,
                     ownerUser: ownerUserId,
                     thumbnail: thumbnail,
                     details: JSON.stringify(outDetails)
                 });
+                await this.updateRasterLayerExtent(newLayer);
                 return {
                     status: status,
                     id: newLayer.id
@@ -3880,11 +4916,13 @@ SELECT AddRasterConstraints(
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'raster',
+                    subType:outDetails.rasterType,
                     description: outputDescription || ('Generated from ' + (fromDetails.name || fromDetails.fileName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: thumbnail,
                     details: JSON.stringify(outDetails)
                 });
+                await this.updateRasterLayerExtent(newLayer);
                 return {
                     status: status,
                     id: newLayer.id
@@ -4022,12 +5060,14 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
+                    subType:outDetails.shapeType,
                     description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
                 });
                 if(newLayer){
+                    await this.updateVectorLayerExtent(newLayer); 
                     return {
                         status:true,
                         id:newLayer.id
@@ -4126,15 +5166,23 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 }
             });
             layerInfo.history=history;
+
+                       
+
+
         var newLayer = await DataLayer.create({
             name: layerInfo.fileName || 'imported geojson',
-            dataType: 'vector',
-            description: 'Imported geojson data ' ,
+            projectId:options.projectId,
+            keywords:options.keywords?options.keywords:null,
+            dataType: layerInfo.datasetType || 'vector',
+            subType:layerInfo.shapeType,
+            description:layerInfo.description || 'Imported geojson data ' ,
             ownerUser: ownerUserId,
             thumbnail: null,
+            
             details: JSON.stringify(layerInfo)
         });
-        
+        await this.updateVectorLayerExtent(newLayer);   
         return {
             status: status,
             id: newLayer.id
@@ -4146,7 +5194,111 @@ var createVectorResult= await this.createVectorTable(outDetails);
         }
     }
     }
+    async updateVectorLayerExtent(layerItem){
+        var item= layerItem;
+        if(!item){
+            return false;
+        }
+        var details={};
+        try{
+          details= JSON.parse( item.details);
+        }catch(ex){}
+        var tableName= details.datasetName || item.name;
+         var oidField= details.oidField || 'gid';
+         var shapeField=details.shapeField || 'geom';
+         var srid=   3857;
+         if(details.spatialReference){
+             srid=  details.spatialReference.srid ;
+         }
+         try{
+            var extent=await this.getVectorExtentJson({
+                tableName:tableName,
+                shapeField:shapeField,
+                srid:srid,
+                out_srid: 4326 
+            });
+            if(extent.coordinates && extent.coordinates.length){
+                var ext_north=-90, ext_east=-180, ext_south=90,ext_west=180;
+                for(var i=0;i< extent.coordinates[0].length;i++){
+                    var x= extent.coordinates[0][i][0];
+                    var y= extent.coordinates[0][i][1];
+                    if(y> ext_north){
+                        ext_north=y;
+                    }
+                    if(y<ext_south){
+                        ext_south=y;
+                    }
+                    if(x> ext_east){
+                        ext_east=x;
+                    }
+                    if(x<ext_west){
+                        ext_west=x;
+                    }
+                }
+                item.set('ext_north',ext_north);
+                item.set('ext_south',ext_south);
+                item.set('ext_east',ext_east);
+                item.set('ext_west',ext_west);
+                await item.save();
+            }
+            
+        }catch(ex){
+            return false;
+        }
+        return true;
+    }
+    async updateRasterLayerExtent(layerItem){
+        var item= layerItem;
+        if(!item){
+            return false;
+        }
+        var details={};
+        try{
+          details= JSON.parse( item.details);
+        }catch(ex){}
+        var tableName= details.datasetName || item.name;
+        var oidField= details.oidField || 'gid';
+        var metadata_4326= details.metadata_4326;
+        if(!metadata_4326){
+            try{
+                metadata_4326 = await this.getRasterMetadata({
+                    tableName: details.datasetName,
+                    oidField: details.oidField,
+                    rasterField: details.rasterField,
+                    srid: 4326
+                });
+            }catch(ex){
 
+            }
+           
+        }
+       
+
+        
+
+         try{
+           
+            if(metadata_4326){
+                var extent = [  metadata_4326.upperleftx ,
+                                metadata_4326.upperlefty+  (metadata_4326.scaley* metadata_4326.height) ,
+                                metadata_4326.upperleftx + (metadata_4326.scalex * metadata_4326.width),
+                                metadata_4326.upperlefty];
+
+                var ext_north=extent[3], ext_east=extent[2], ext_south=extent[1],ext_west=extent[0];
+                
+                item.set('ext_north',ext_north);
+                item.set('ext_south',ext_south);
+                item.set('ext_east',ext_east);
+                item.set('ext_west',ext_west);
+                await item.save();
+            }
+            
+        }catch(ex){
+            return false;
+        }
+        return true;
+    }
+   
     async makeBuffer(DataLayer, ownerUserId, options) {
         var status = false;
         var fromDetails = options.details;
@@ -4258,12 +5410,14 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
+                    subType:outDetails.shapeType,
                     description: outputDescription || ('created from ' +(fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
                 });
                 if(newLayer){
+                    await this.updateVectorLayerExtent(newLayer); 
                     return {
                         status:true,
                         id:newLayer.id
@@ -4446,12 +5600,14 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
+                    subType:outDetails.shapeType,
                     description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
                 });
                 if(newLayer){
+                    await this.updateVectorLayerExtent(newLayer); 
                     return {
                         status:true,
                         id:newLayer.id
@@ -4671,12 +5827,14 @@ ON  ST_Intersects(${fromGeom},B.geom)  AND ST_Within(${fromGeom},B.geom) = false
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
+                    subType:outDetails.shapeType,
                     description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
                 });
                 if(newLayer){
+                    await this.updateVectorLayerExtent(newLayer); 
                     return {
                         status:true,
                         id:newLayer.id
@@ -4879,12 +6037,14 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
+                    subType:outDetails.shapeType,
                     description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
                 });
                 if(newLayer){
+                    await this.updateVectorLayerExtent(newLayer); 
                     return {
                         status:true,
                         id:newLayer.id
@@ -5076,12 +6236,14 @@ var createVectorResult= await this.createVectorTable(outDetails);
                 var newLayer = await DataLayer.create({
                     name: outputName,
                     dataType: 'vector',
+                    subType:outDetails.shapeType,
                     description: outputDescription || ('created from ' + (fromDetails.name || fromDetails.shapefileName || fromDetails.datasetName) + errors),
                     ownerUser: ownerUserId,
                     thumbnail: null,
                     details: JSON.stringify(outDetails)
                 });
                 if(newLayer){
+                    await this.updateVectorLayerExtent(newLayer); 
                     return {
                         status:true,
                         id:newLayer.id
@@ -5395,6 +6557,143 @@ var createVectorResult= await this.createVectorTable(outDetails);
           var returnValue = stack.length === 0 ? true : false;
           return (returnValue);
         }
+
+    async attachment_insert(tableName,rowId,forField,fileInfo,fileData,thumbnail) {
+            var errors = '';
+            var status=false;
+            var attachments_TableName='gdb_attachments';
+            try {
+                var exists = await this.isTableExists(attachments_TableName, 'public');
+                if (!exists) {
+                    return {
+                        status: status,
+                      
+                        message: `${attachments_TableName} does not exist`
+                    };
+                }
+//                 CREATE TABLE public.gdb_attachments
+// (
+//     id integer NOT NULL DEFAULT nextval('gdb_attachments_id_seq'::regclass),
+//     "table" character varying COLLATE pg_catalog."default" NOT NULL,
+//     "row" integer NOT NULL,
+//     field character varying COLLATE pg_catalog."default",
+//     name character varying COLLATE pg_catalog."default",
+//    ext character varying(10) COLLATE pg_catalog."default",
+
+//     mimetype character varying(100) COLLATE pg_catalog."default",
+//     size bigint,
+//     thumbnail bytea,
+//     data bytea,
+//     CONSTRAINT gdb_attachments_pkey PRIMARY KEY (id)
+// )
+// WITH (
+//     OIDS = FALSE
+// )
+// TABLESPACE pg_default;
+
+
+            } catch (ex) {
+                //throw ex;
+            }
+
+            var insertQuery = {
+                text: `INSERT INTO public.${attachments_TableName}(
+                    "table","row","field","ext","name","mimetype","size","thumbnail","data"
+                     ${fieldNamesExpr}
+                    )
+                    VALUES  ($1,$2,$3,$4,$5,$6);`, 
+                values: [tableName,rowId,forField,fileInfo.name,fileInfo.ext,fileInfo.mimeType,fileInfo.size,thumbnail,fileData],
+            }
+            try {
+                var result = await this.query(insertQuery);
+                if (result) {
+                    status=true;  
+                }
+            } catch (ex) {
+                status=false;
+                var s = 1;
+                errors += '<br/>' + ex.message;
+            }
+
+
+            return {
+                status: status,
+                message: errors
+            }
+    
+        }
+        async applyTemplate(layerInfo,fileName){
+            if(!layerInfo){
+                return;
+            }
+            var datasetType=layerInfo.datasetType;
+            var rootPath=__basedir;
+            var app_dataDirectory = path.join(__basedir, 'app_data/');
+            var targetDirectory = path.join(app_dataDirectory, 'templates'+'/');
+
+            var templateName=fileName || layerInfo.name || layerInfo.filename;
+            templateName=templateName.toLowerCase();
+            var ext = path.extname(templateName);
+            templateName = path.basename(templateName, ext);
+            var filePath = targetDirectory + `${templateName}.json`;
+            if(!fs.existsSync(filePath)){
+                //return;
+                if(!layerInfo.filebaseName){
+                    return;
+                }
+                var templateName=layerInfo.filebaseName;
+                templateName=templateName.toLowerCase();
+                var ext = path.extname(templateName);
+                templateName = path.basename(templateName, ext);
+                filePath = targetDirectory + `${templateName}.json`;
+                if(!fs.existsSync(filePath)){
+                    return;
+                }
+            }
+            var rawdata = fs.readFileSync(filePath);
+            var template;
+            try{
+             template= JSON.parse(rawdata);
+            }catch(ex){
+                return;
+            }
+            if(!template){
+                return;
+            }
+            if(template.datasetType!==datasetType){
+                return;
+            }
+            if(datasetType=='raster'){
+                if(template.display){
+                    layerInfo.display=template.display;
+                }
+            }else if (datasetType==='table' || datasetType==='vector'){
+                if(template.fields && template.fields.length ){
+                    //layerInfo.fields=template.fields;
+                    if(layerInfo.fields){
+
+                        for(var i=0;i<layerInfo.fields.length;i++){
+                            var fld=layerInfo.fields[i];
+                            var templateFld= template.fields.find(function(tmpFld){
+                                return (fld.name==tmpFld.name);
+                            });
+                            if(templateFld){
+                                fld.alias=templateFld.alias;
+                                fld.expression= templateFld.expression;
+                                fld.domain= templateFld.domain;
+                            }
+                        }
+                    }
+                }
+                if(template.renderer && template.shapeType==layerInfo.shapeType){
+                    layerInfo.renderer=template.renderer;
+                }
+                if(template.featureLabeler){
+                    layerInfo.featureLabeler=template.featureLabeler
+                }
+            }
+
+        }   
 };
 module.exports = function(connectionSettings,readonlyConnectionString) {
     var module = {};

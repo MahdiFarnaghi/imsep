@@ -390,7 +390,11 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                 });
                 self.selectCtrl.setActive(true);
                 self.selectCtrl.raiseOnToggle();
-                self.interactionSelect.getFeatures().once('add', function (e) {
+                if(self.lastSelectForDeleteHandler){
+                    ol.Observable.unByKey(self.lastSelectForDeleteHandler);
+                    self.lastSelectForDeleteHandler=null;
+                }
+                self.lastSelectForDeleteHandler=         self.interactionSelect.getFeatures().once('add', function (e) {
                         var feature=e.element;
                         self.deleteFeatures(self.interactionSelect.getFeatures());
 
@@ -426,7 +430,11 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
             });
             self.selectCtrl.setActive(true);
             self.selectCtrl.raiseOnToggle();
-            self.interactionSelect.getFeatures().once('add', function (e) {
+            if(self.lastSelectForEditHandler){
+                ol.Observable.unByKey(self.lastSelectForEditHandler);
+                self.lastSelectForEditHandler=null;
+            }
+            self.lastSelectForEditHandler=  self.interactionSelect.getFeatures().once('add', function (e) {
                     var feature=e.element;
                     self.editFeatureAttributes(feature);
 
@@ -1177,6 +1185,7 @@ VectorLayerEditTask.prototype.addPointByXY = function (options) {
         }
         , {
         title:'Add point feature',
+        closeWithBackButton:(app.isMobile()?false:true),
         tabs:[
             new FeatureAttributesTab(),
             new FeaturePointTab()
@@ -1200,6 +1209,35 @@ VectorLayerEditTask.prototype.addPointByXY = function (options) {
 VectorLayerEditTask.prototype.editFeatureAttributes = function (feature,options) {
     var self=this;
     var vector = this.layer;
+    var custom = vector.get('custom');
+    var dataRelationships;
+    if(custom && custom.dataObj){
+        dataRelationships=custom.dataObj.dataRelationships;
+    }
+    options=options||{};
+    var needToGetRelations=false;
+
+    if(!dataRelationships){
+        needToGetRelations=false; 
+    }else{
+        if(feature.get('_dataRelationships')){
+            needToGetRelations=false; 
+        }else{
+            needToGetRelations=true; 
+        }
+    }
+
+    if(!needToGetRelations){
+        this.editFeatureAttributes_inner(feature,options);
+    }else
+    {
+        this.editFeatureAttributes_inner(feature,options);
+    }
+}
+VectorLayerEditTask.prototype.editFeatureAttributes_inner = function (feature,options) {
+    var self=this;
+    var vector = this.layer;
+    
     options=options||{};
     var defaultFieldToEdit=options.defaultFieldToEdit; 
     var featurePropertiesDlg = new ObjectPropertiesDlg(self.mapContainer, 
@@ -1211,6 +1249,7 @@ VectorLayerEditTask.prototype.editFeatureAttributes = function (feature,options)
         }
         , {
         title:'Edit attributes',
+        closeWithBackButton:(app.isMobile()?false:true),
         tabs:[
             new FeatureAttributesTab(),
             new FeatureShapeTab(),
@@ -1230,6 +1269,7 @@ VectorLayerEditTask.prototype.editFeatureAttributes = function (feature,options)
 
       }).show();
 }
+
 
 VectorLayerEditTask.prototype.deleteSingleFeature = function (feature,options) {
     var self=this;
