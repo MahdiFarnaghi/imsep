@@ -912,7 +912,8 @@ FeatureAttributesTab.prototype.getTextInput=function(fld,properties,fldKey){
      useTextArea=true;
  }
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -983,7 +984,8 @@ FeatureAttributesTab.prototype.getDateTimeInput=function(fld,properties,fldKey){
  htm='';
  var validate=false;
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1041,7 +1043,8 @@ FeatureAttributesTab.prototype.getDateInput=function(fld,properties,fldKey){
  htm='';
  var validate=false;
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1101,7 +1104,8 @@ FeatureAttributesTab.prototype.getIntegerInput=function(fld,properties,fldKey){
  htm='';
  var validate=false;
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1212,7 +1216,8 @@ FeatureAttributesTab.prototype.getNumberInput=function(fld,properties,fldKey){
  htm='';
  var validate=false;
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1320,7 +1325,8 @@ FeatureAttributesTab.prototype.getBoolInput=function(fld,properties,fldKey){
 
  var validate=false;
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1400,7 +1406,8 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,fldKey){
  }
  var validate=false;
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1453,7 +1460,8 @@ FeatureAttributesTab.prototype.getFileListContent=function(fileInfos,fldKey){
  // htm+='</div>';
 
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1534,7 +1542,8 @@ FeatureAttributesTab.prototype.getDocumentListInput=function(fld,properties,fldK
  }
  var validate=false;
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1559,7 +1568,8 @@ FeatureAttributesTab.prototype.getDocumenListContent=function(docIds,fldKey){
  
 
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1656,7 +1666,8 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
 
  var validate=false;
  if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
   htm+='      <p class="">'+fld.description+'</p>';
   htm+='  </div>';
 }
@@ -1736,7 +1747,8 @@ FeatureAttributesTab.prototype.getCodedValuesInput_select2=function(fld,properti
  
   var validate=false;
   if(fld.description){
-    htm+='  <div class="form-group" style="margin-bottom: 0;" ><hr style="margin-bottom: 0;" />';
+    htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+  //htm+='  <hr style="margin-bottom: 0;" />';
     htm+='      <p class="">'+fld.description+'</p>';
     htm+='  </div>';
   }
@@ -1745,9 +1757,9 @@ FeatureAttributesTab.prototype.getCodedValuesInput_select2=function(fld,properti
  
       htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
       if(fld.domain.multipleChoice){
-        htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'[]" id="' +fldKey +'"  class="select2Multiple form-control" multiple="multiple" style="width_:100%;" ';
+        htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'[]" id="' +fldKey +'"  class="select2Multiple form-control" multiple="multiple" style="width:auto;_width_:100%;" ';
       }else{
-        htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="select2Single form-control" style="width_:100%;" ';
+        htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="select2Single form-control" style="width:auto;_width_:100%;" ';
       }
       if(fld.domain.editable){
         htm+='   data-tags="true" ';        
