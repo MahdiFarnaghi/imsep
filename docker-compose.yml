@@ -11,7 +11,7 @@ services:
       - /data/imsep/db_data:/var/lib/postgresql/11/main  
     environment: 
       POSTGRES_USER: postgres
-      POSTGRES_PASS: post1msep
+      POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
       POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL
   pgbackups:
         container_name: imsep_pgbackups
@@ -31,7 +31,7 @@ services:
             - POSTGRES_HOST=imsep_postgis
             - POSTGRES_DB=imsep,imsep_gdb
             - POSTGRES_USER=postgres
-            - POSTGRES_PASSWORD=post1msep
+            - POSTGRES_PASSWORD=d747db4520c046ccb5db14f39a014746
             - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
             - SCHEDULE=@daily
             - BACKUP_KEEP_DAYS=7
@@ -51,10 +51,10 @@ services:
       NODE_ENV: production
       DB_HOSTNAME: imsep_postgis 
       DB_PORT: 5432
-      DB_PASSWORD: post1msep
+      DB_PASSWORD: d747db4520c046ccb5db14f39a014746
       GDB_HOSTNAME: imsep_postgis
       GDB_PORT: 5432
-      GDB_PASSWORD: post1msep
+      GDB_PASSWORD: d747db4520c046ccb5db14f39a014746
       DB_REBUILD: 'false'
     ports:
       - "127.0.0.1:1336:1337"   
