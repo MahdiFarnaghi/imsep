@@ -4,7 +4,7 @@ services:
   imsep_postgis:
     container_name: imsep_postgis
     restart: unless-stopped
-    image: kartoza/postgis:latest
+    image: kartoza/postgis:9.6-2.4
 #    ports: 
 #      - "127.0.0.1:25432:5432"
     volumes:  
