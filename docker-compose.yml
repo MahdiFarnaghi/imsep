@@ -8,7 +8,7 @@ services:
 #    ports: 
 #      - "127.0.0.1:25432:5432"
     volumes:  
-      - /data/imsep/db_data:/var/lib/postgresql/11/main  
+      - /data/imsep/db_data:/var/lib/postgresql/data  
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
