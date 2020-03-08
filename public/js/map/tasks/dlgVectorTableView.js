@@ -287,6 +287,7 @@ DlgVectorTableView.prototype.createUI=function(){
     var editRow= function(row,index,defaultFieldToEdit,$tr){
       if(editable){
         layerEditTask.editFeatureAttributes(row._row_,{
+          displayInModal:true,
           defaultFieldToEdit:defaultFieldToEdit,
           onCommit:function(){
             if($tr){

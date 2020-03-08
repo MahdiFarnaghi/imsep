@@ -181,3 +181,14 @@
     background-image: url(images/deleteVertex.png) !important;
     background-repeat: no-repeat;
 }
+
+.undo24Icon
+{
+    background-image: url(images/undo_24.png) !important;
+    background-repeat: no-repeat;
+}
+.stop24Icon
+{
+    background-image: url(images/stop_24.png) !important;
+    background-repeat: no-repeat;
+}

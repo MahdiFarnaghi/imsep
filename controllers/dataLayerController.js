@@ -1820,6 +1820,9 @@ module.exports = function (postgresWorkspace) {
             }
         }
         try{
+            var tryAttachments = await postgresWorkspace.attachment_delete_by_tableId(req.params.id);
+        }catch(ex){}
+        try{
             var tryDeletePermissions = await models.Permission.destroy(
                 {
                      where: {
@@ -2910,6 +2913,194 @@ module.exports = function (postgresWorkspace) {
         }
         return result;
     }
+    module.updateGeoJSON_attachments = async function (req, res,tableId,details,geoJSON) {
+        var result={
+            status:true,
+            message:'',
+            applyed:false,
+            changed:0
+        }
+        if(!geoJSON){
+            return result;
+        }
+        var fields= details.fields;
+        if(!fields)
+            return result;
+        var tableName= details.datasetName;
+        var rowId= geoJSON.id;
+        const readFile = nativeUtil.promisify(fs.readFile);
+                    
+        
+        
+        for(var i=0;i< fields.length;i++){
+            var fld= fields[i];
+            if(fld.type!=='_filelink'){
+                continue;
+            }
+           var fileInfosStr= geoJSON.properties[fld.name] ;
+           if(!fileInfosStr){
+               continue;
+           }
+           var fileInfos=null;
+           try{
+            fileInfos= JSON.parse(fileInfosStr);
+           }catch(ex){}
+           if(!fileInfos){
+               continue;
+           }
+           var newFileInfos=[];
+           for(var f=0;f<fileInfos.length;f++){
+             
+               if(!fileInfos[f]){
+                   continue;
+               }
+               var fileInfo=fileInfos[f];// JSON.parse(JSON.stringify(fileInfos[f]));
+               var action=fileInfo.action;
+               if(action=='delete'){
+                   if(fileInfo.id && fileInfo.id !== -1){
+                    var rslt=await postgresWorkspace.attachment_delete_by_attachmentId(fileInfo.id);
+                   }
+                 result.changed ++;
+                   //todo delete
+               }else if (action=='new'){
+              
+                var fileData=null;
+                var thumbnail=null;
+                if(!fileInfo.mimeType || fileInfo.mimeType=='application/octet-stream'){
+                     fileInfo.mimeType=fld.defaultMimeType;
+                 }
+                if(fileInfo.dataUrl){
+                    
+                     function atob(a) {
+                         //return new Buffer(a, 'base64').toString('binary');
+                         return Buffer.from(a, 'base64').toString('binary');
+                         //return new Buffer(a).toString('base64');
+                     }
+                    // //var byteString = atob(fileInfo.dataUrl.split(',')[1]);
+                    // var byteString = fileInfo.dataUrl.split(',')[1];
+                    // //var mimeString = fileInfo.dataUrl.split(',')[0].split(':')[1].split(';')[0]
+                  
+                    // // write the bytes of the string to an ArrayBuffer
+                    // fileData = new ArrayBuffer(byteString.length);
+                    
+                    var myPromise = new Promise(function(resolve, reject) {
+                        // var fetch = require("node-fetch");
+                        // fetch(fileInfo.dataUrl)
+                        // .then(res => res.arrayBuffer())
+                        // .then(buffer => {
+                        // //console.log("base64 to buffer: " + new Uint8Array(buffer));
+                        //   resolve( buffer);
+                        // })
+
+                        // var xhr = new XMLHttpRequest;
+                        // xhr.open('GET', fileInfo.dataUrl);
+                        // xhr.responseType = 'arraybuffer';
+                        // xhr.onload = function fileLoaded(e)
+                        // {
+                        //     var byteArray = new Int8Array(e.target.response);
+                        //     // var shortArray = new Int16Array(e.target.response);
+                        //     // var unsignedShortArray = new Int16Array(e.target.response);
+                        //     // etc.
+                        //     resolve(byteArray);
+                        // }
+                        // xhr.send();
+                   });
+
+                   
+                  
+                   try{
+                       //method 1:
+                      //  fileData= await myPromise;
+                      //var dataUriToBuffer = require('data-uri-to-buffer');
+                      //fileData= dataUriToBuffer(fileInfo.dataUrl);
+
+
+                    //method 2:
+                      var dataURI=fileInfo.dataUrl;
+                      var byteStr;
+                      if (dataURI.split(',')[0].indexOf('base64') >= 0) {
+                        //byteStr = atob(dataURI.split(',')[1]);
+                        byteStr = (dataURI.split(',')[1]);
+                    } else {
+                        byteStr = decodeURIComponent(dataURI.split(',')[1]);
+                    }
+
+                    //var buffer= new Buffer(byteStr);
+                    var buffer =Buffer.from(byteStr, 'base64');
+
+                   
+                    fileData=buffer;//.buffer;
+
+                                    
+                   }catch(ex){
+                    console.log(ex);
+                   }
+
+                }else if(fileInfo.path){
+                    var filePath=  path.join(__basedir, fileInfo.path);
+
+                    // var readFilePromise = new Promise(function(resolve, reject) {
+
+                    //         fs.readFile(filePath, null, function (err, data) {
+                    //             if(err){
+                    //                 reject(err);
+                    //             }
+                    //             var ab = data.buffer;
+                    //             resolve(data);
+                    //         });
+                    // });
+                    try{
+                     fileData =  await readFile(filePath);   
+                    }catch(ex){}
+                }     
+                    try{
+                        //var fileData= await readFilePromise;
+                 
+                        
+                        var mimeType=fileInfo.mimeType;
+                        if(mimeType && mimeType.startsWith && mimeType.startsWith('image/')){
+                            try{
+                                thumbnail = await sharp(fileData,{failOnError:false})
+                                .rotate()// to apply exif rotation info
+                                .resize(160,100,{
+                                    fit: sharp.fit.inside
+                                })
+                              //  .withMetadata()// to keeps exif rotation info
+                                 .png()
+                                 .toBuffer();
+                             }catch(ex){
+                                 console.log(ex);
+                             }
+                         }
+                        var rslt=await postgresWorkspace.attachment_insert(tableName,tableId,rowId,fld.name,fileInfo,fileData,thumbnail);
+                        if(rslt.status && rslt.id){
+                            result.changed ++;
+                            fileInfo.id=rslt.id;
+                            
+                            fileInfo.dataset=tableId;
+                            delete fileInfo.action;
+                            delete fileInfo.dataUrl;
+                            if(thumbnail){
+                                delete fileInfo.thumbnail_dataUrl;
+                                fileInfo.thumbnail=true;
+                            }
+                        }
+                        
+                    }catch(ex){
+
+                    }
+                   newFileInfos.push(fileInfo);
+               }else{
+                newFileInfos.push(fileInfo);
+               }
+           }
+
+           geoJSON.properties[fld.name] = JSON.stringify(newFileInfos);
+        }
+
+       
+        return result;
+    }
      /**
      * POST /datalayer/:id/geojson/:row
     */
@@ -3016,13 +3207,26 @@ module.exports = function (postgresWorkspace) {
             var succeeded=false;
             var result;
             if(action=='insert'){
-               result=await postgresWorkspace.insertVector(details,geoJSON);
-               succeeded=true;
-               //return res.json(result);
+                result=await postgresWorkspace.insertVector(details,geoJSON);
+                if(result.status){
+                    geoJSON.id= result.id;
+                    var processAttachments= await module.updateGeoJSON_attachments(req,res,item.id,details,geoJSON);
+                    if(processAttachments && processAttachments.status && processAttachments.changed){
+                        await postgresWorkspace.updateVector(details,geoJSON);
+                    }
+                    succeeded=true;
+               }
+                //return res.json(result);
             }else if(action==='update')
             {
                result=await postgresWorkspace.updateVector(details,geoJSON);
                succeeded=true;
+                
+               var processAttachments= await module.updateGeoJSON_attachments(req,res,item.id,details,geoJSON);
+               if(processAttachments && processAttachments.status && processAttachments.changed){
+                   await postgresWorkspace.updateVector(details,geoJSON);
+               }
+
                var rel_result=  await module.updateGeoJSON_relationships(req,res,details,geoJSON);
                if(!rel_result.status){
                    result.status=false;
@@ -3033,6 +3237,11 @@ module.exports = function (postgresWorkspace) {
             }else if (action==='delete'){ 
                 result=await postgresWorkspace.deleteRow(details,geoJSON.id);
                 succeeded=true;
+                try{
+                    var att_result=await postgresWorkspace.attachment_delete_by_rowId(item.id, geoJSON.id);
+                 }catch(exx){
+
+                 }
                //return res.json(result);
 
             }else
@@ -3188,6 +3397,10 @@ module.exports = function (postgresWorkspace) {
                         if(action=='insert'){
                             _cacheInfo.result=await postgresWorkspace.insertVector(details,geoJSON);
                             geoJSON.id= _cacheInfo.result.id;
+                            var processAttachments= await module.updateGeoJSON_attachments(req,res,item.id,details,geoJSON);
+                            if(processAttachments && processAttachments.status && processAttachments.changed){
+                                    await postgresWorkspace.updateVector(details,geoJSON);
+                            }
                             var rel_result=  await module.updateGeoJSON_relationships(req,res,details,geoJSON);
                             if(!rel_result.status){
                                 _cacheInfo.result.status=false;
@@ -3199,6 +3412,13 @@ module.exports = function (postgresWorkspace) {
                         }else if(action==='update')
                         {
                             _cacheInfo.result=await postgresWorkspace.updateVector(details,geoJSON);
+                            
+                            var processAttachments= await module.updateGeoJSON_attachments(req,res,item.id,details,geoJSON);
+                            if(processAttachments && processAttachments.status && processAttachments.changed){
+                                await postgresWorkspace.updateVector(details,geoJSON);
+                            }
+
+
                             var rel_result=  await module.updateGeoJSON_relationships(req,res,details,geoJSON);
                             if(!rel_result.status){
                                 _cacheInfo.result.status=false;
@@ -3210,6 +3430,11 @@ module.exports = function (postgresWorkspace) {
                         }else if (action==='delete'){ 
                             _cacheInfo.result=await postgresWorkspace.deleteRow(details,geoJSON.id);
                             if(_cacheInfo.result.status){
+                                try{
+                                    var att_result=await postgresWorkspace.attachment_delete_by_rowId(item.id, geoJSON.id);
+                                 }catch(exx){
+                
+                                 }
                                 delete_count++;
                             }
                         }
@@ -4347,5 +4572,321 @@ module.exports = function (postgresWorkspace) {
             return;
         }
     };
+
+
+      /**
+     * POST /dataset/uploadattachments
+     * 
+     */
+    module.uploadattachmentsPost = async function (req, res,  next) {
+        var errors = req.validationErrors();
+      //  req.sanitizeBody('encoding').escape();
+       //  req.sanitizeBody('projection').escape();
+       
+        if (errors) {
+            
+            var result={
+               errors:errors ,
+               message:'Error',
+               error: true,
+               errorkeys: [],
+               initialPreview: [],
+               initialPreviewConfig: [],
+               initialPreviewThumbTags: [],
+               append: false 
+           }
+           return res.json(result);
+        }
+        if (!('files' in req)) {
+            
+            var result={
+                message:'Failed to upload file!',
+                error: true,
+                errorkeys: [],
+                initialPreview: [],
+                initialPreviewConfig: [],
+                initialPreviewThumbTags: [],
+                append: false 
+            }
+            return res.json(result);
+        }
+        var user = await models.User.findOne({ where: { id: req.user.id } });
+        if (!user) {
+            var result={
+                message:'User not found!',
+                error: true,
+                errorkeys: [],
+                initialPreview: [],
+                initialPreviewConfig: [],
+                initialPreviewThumbTags: [],
+                append: false 
+            }
+            return res.json(result);
+        }
+        try {
+           var rootPath=__basedir;
+           var results=[];
+            for(var i=0; i< req.files.length;i++){
+                var filePath= path.join(rootPath, req.files[i].path);
+                var filename= req.files[i].filename;
+                var mimeType=req.files[i].mimetype;
+                var ext= path.extname(filename).toLowerCase();
+                //const readFile = nativeUtil.promisify(fs.readFile);
+                // var blob,thumbnail;
+                // blob=undefined;
+                // thumbnail=undefined;
+                // if(ext){
+                //     ext= (ext+'').substring(1);
+                // }
+                // try{
+                //     blob =  await readFile(filePath);   
+                // }catch(ex){
+
+                // }
+                var thumbnail_dataUrl;
+                if(mimeType && mimeType.startsWith && mimeType.startsWith('image/')){
+                   try{
+                      var thumbnail_data = await sharp(filePath)
+                       .resize(160,100,{
+                           fit: sharp.fit.inside
+                       })
+                        .png()
+                        .toBuffer();
+                        thumbnail_dataUrl= 'data:image/png;base64,' + thumbnail_data.toString('base64');
+                    }catch(ex){}
+                }
+               
+                
+                results.push({
+                    name:filename,
+                    fileType:ext,
+                    thumbnail_dataUrl:thumbnail_dataUrl,
+                    mimeType:mimeType,
+                    size:req.files[i].size,
+                    path:req.files[i].path
+                }) 
+            }
+            
+            if(results.length>0){
+               if(results.length==1){
+                   req.flash('notify', {
+                       type:'success',
+                       notify:true,
+                       delay:3000,
+                       msg: `${results.length} file has been uploaded successfully.`
+                   });
+               }else{
+                   req.flash('notify', {
+                       type:'success',
+                       notify:true,
+                       delay:3000,
+                       msg: `${results.length} files have been uploaded successfully.`
+                   });
+               }
+            }
+            
+            //res.redirect('/dataset/uploadshapefile');
+            var result={
+                flash: req.flash('notify'),
+                results:results,
+               error: '',
+               errorkeys: [], // array of thumbnail keys/identifiers that have errored out (set via key property in initialPreviewConfig
+               initialPreview: [
+               ], // initial preview configuration 
+               initialPreviewConfig: [
+                   // initial preview configuration if you directly want initial preview to be displayed with server upload data
+               ],
+               initialPreviewThumbTags: [
+                   // initial preview thumbnail tags configuration that will be replaced dynamically while rendering
+               ],
+               append: false // whether to append content to the initial preview (or set false to overwrite)
+           }
+           return res.json(result);
+        } catch (err) {
+            
+             
+            
+             var result={
+                message:'Error in updating files!',
+                error: true,
+                errorkeys: [],
+                initialPreview: [],
+                initialPreviewConfig: [],
+                initialPreviewThumbTags: [],
+                append: false 
+            }
+            return res.json(result);
+           
+        }
+       
+    };
+
+/**
+     * GET /dataset/:id/attachment/:attachmentId
+     */
+    module.attachmentGet = async function (req, res, next) {
+       
+        var item,err;
+        var attachmentId=req.params.attachmentId;
+        var itemId=req.params.id;
+        var itemId=req.params.id;
+        var thumbnail=false;
+        if(req.query && 'thumbnail' in req.query){
+            thumbnail=req.query.thumbnail;
+        }
+        
+        if (req.params.id && req.params.id != '-1') {
+            
+          [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
+
+            
+            if (!item) {
+                res.set('Content-Type', 'text/plain');
+                res.status(404).end('Not found');
+                return;
+            }
+
+         
+             if (!item.details) {
+                 res.set('Content-Type', 'text/plain');
+                 res.status(404).end('Not found');
+                 return;
+             }
+              //todo: permission check
+               var isOwner=false;
+               if(item.ownerUser== req.user.id) {
+                   isOwner=true;
+               }else if (item.OwnerUser && item.OwnerUser.parent==req.user.id){
+                   isOwner=true;
+               }
+              if(!isOwner && !res.locals.identity.isAdministrator  )
+              {
+                // var AccessGranted= await adminController._CheckDataPermissionTypes(req.user,item.permissionTypes,'Deny',['Edit','View']) ;
+                // if(!AccessGranted){
+                //     res.set('Content-Type', 'text/plain');
+                //     res.status(403).end('Access denied');
+                //     return;
+                // }  
+
+                var userHasViewPermission=false;
+                var err;
+                [err, item] = await util.call(models.DataLayer.findOne({
+                    where: {  id: itemId },
+                    include: [ 
+                            { model: models.Permission, as: 'Permissions'
+                                ,include: [
+                                    {
+                                        model: models.User, as: 'assignedToUser',
+                                        required: false,
+                                        where: {
+                                            id:  req.user.id
+                                        }
+                                    },
+                                    {
+                                        model: models.Group, as: 'assignedToGroup',
+                                        required: false,
+                                        include: [
+                                            {
+                                                model: models.User, as: 'Users',
+                                                required: true,
+                                                where: {
+                                                    id: req.user.id
+                                                }
+                                            }
+                                        ]
+                                    }
+                                ]
+                                }
+                        ]
+                }));
+
+                if(item){// get permission
+                    var permissions = item.Permissions;
+                    if(permissions){
+                        userHasViewPermission= permissions.some((p)=>{
+                            if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                                return (p.permissionName=='Edit'|| p.permissionName=='View' );
+                            }else return false;
+                        });
+                    }
+                    
+                }
+                
+                if(!userHasViewPermission){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(403).end('Access denied');
+                    return;
+                }
+                
+                
+              }
+             
+             try{
+             
+                var result= await  postgresWorkspace.attachment_get_by_attachmentId(item.id,attachmentId)
+                 if(!result.attachmentInfo ) {
+                    res.set('Content-Type', 'text/plain');
+                    res.status(404).end('Not found');
+                    return; 
+                 } 
+                 var mimeType=result.attachmentInfo.mimetype;
+                 var binary= result.attachmentInfo.data;
+                 var name=result.attachmentInfo.name;
+                 var ext=result.attachmentInfo.ext;
+                 if(thumbnail===true || thumbnail==='true'){
+                    if(!result.attachmentInfo.thumbnail ) {
+                        res.set('Content-Type', 'text/plain');
+                        res.status(404).end('Not found');
+                        return; 
+                     } 
+                     res.set('Content-Type', 'image/png');
+                     res.end(result.attachmentInfo.thumbnail, 'binary');
+                     return;
+                 }
+                 try{
+                    if(mimeType=='text/plain'
+                        || mimeType=='image/jpeg' 
+                        || mimeType=='image/png' 
+                        || mimeType=='image/tiff'
+                        || mimeType=='image/bmp'
+                        || mimeType=='image/gif'
+                    )
+                    {
+                        res.set("Content-Disposition","inline; filename*=UTF-8''" + util.encodeRFC5987ValueChars(name));    
+                    }else if( mimeType== 'application/pdf')
+                    {
+                    //  item.mimeType='application/octet-stream';
+                        res.set("Content-Disposition","inline; filename*=UTF-8''" + util.encodeRFC5987ValueChars(name) );    
+                    }else if( mimeType== 'video/mp4' || mimeType=='audio/mp4' || mimeType=='audio/mp3'
+                    || mimeType== 'video/mpeg' || mimeType=='audio/mpeg' 
+                    //|| mimeType=='application/octet-stream'
+                    )
+                    {
+                        res.set("Content-Disposition","inline; filename*=UTF-8''" + util.encodeRFC5987ValueChars(name) );    
+                    }else{
+                        res.set("Content-Disposition","attachment; filename*=UTF-8''" + util.encodeRFC5987ValueChars(name) );
+                    }
+                }catch(ex){
+    
+                }
+                res.set('Content-Type', mimeType);
+    //            res.end(binary, 'binary');
+                res.send(binary);
+                return;
+                
+              }catch(ex){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(404).end('Not found' );
+                    return;
+              }
+            
+            
+        }else{
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
+        }
+    };
+
     return module;
 }

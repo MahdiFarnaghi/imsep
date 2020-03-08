@@ -461,6 +461,11 @@ var pageTask={
           field.notNull=evt.field.notNull;
           field.isExpression=evt.field.isExpression;
           field.expression=evt.field.expression;
+          if(field.type=='_filelink') {
+            field.defaultMimeType=evt.field.defaultMimeType;
+          }else{
+            delete field.defaultMimeType;
+          } 
           
           field.domain=evt.field.domain;
 
@@ -790,7 +795,8 @@ EditFieldDlg.prototype.initFrom=function(){
     $content.find('#hint').val(typeof me.field.hint==='undefined'?'':me.field.hint);
     $content.find('#group').val(typeof me.field.group==='undefined'?'':me.field.group);
     $content.find('#hidden').prop('checked',me.field.hidden?true:false);
-    
+    $content.find('#defaultMimeType').val(typeof me.field.defaultMimeType==='undefined'?'':me.field.defaultMimeType);
+
     var $type= $content.find('#type');
   $type.val(typeof me.field.type==='undefined'?'varchar':me.field.type);
   var selType=$type.val();
@@ -943,7 +949,11 @@ if(selType=='smallint' || selType=='integer' || selType=='bigint' ){
       //$content.find('.form-group:has(#scale)').hide();
       $content.find('.form-group').has('#scale').hide();
     }
-
+    if(selType=='_filelink'){
+      $content.find('#_filelink_defaultMimeType').show();
+    }else{
+      $content.find('#_filelink_defaultMimeType').hide();
+    }
     if((this.field && this.field.isExpression)){
       $content.find('.form-group').has('#expression').show();
       $content.find('.form-group').has('#default').hide();
@@ -1049,6 +1059,9 @@ EditFieldDlg.prototype.apply=function(){
     editField.hidden=$form.find('#hidden').prop('checked');   
   }
 
+  if($form.find('#_filelink_defaultMimeType').length){
+    editField.defaultMimeType=$form.find('#defaultMimeType').val();   
+  }
   if(_length)
     editField.length=_length;
   if(_scale)

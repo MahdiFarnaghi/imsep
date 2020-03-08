@@ -72,6 +72,8 @@ module.exports = {
             'public/js/map/sourceFactory.js',
             'public/js/map/tasks/dlgTaskBase.js',
             'public/js/map/tasks/dlgPrint.js',
+
+            'public/js/map/tasks/dlgUpload.js',
             
             'public/js/map/tasks/layerTasks.js',
             'public/js/map/tasks/vectorLayerSelectTask.js',

@@ -19,7 +19,17 @@ var app = {
     OSM_FEATURE_COUNT_LIMIT2:500000,
 
     MAx_TABLE_VIEW_RECORDS:1000,
-
+    get_uploadattachments_url:function(){
+        return '/dataset/uploadattachments';
+     },
+     get_attachment_url:function(datasetId,attachmentId,thumbnail){
+         if(thumbnail){
+             return "/dataset/"+datasetId+"/attachment/"+attachmentId+"?thumbnail=true";
+             
+         }else{
+             return "/dataset/"+datasetId+"/attachment/"+attachmentId;
+         }
+     },
     //openrouteservice
     routeServiceTokens:[],
     //overpassApiServer:'https://overpass-api.de/api/interpreter',
@@ -37,10 +47,35 @@ var app = {
     set_UPLOAD_SHAPEFILE_MAX_SIZE_MB: function(v){
         this.UPLOAD_SHAPEFILE_MAX_SIZE_MB=v;
     },
+    set_UPLOAD_FILE_MAX_SIZE_MB:function(v){
+        this.UPLOAD_FILE_MAX_SIZE_MB=v;
+    },
     set_ROUTE_SERVICE_TOKENS: function(v){
         if(v){
          this.routeServiceTokens= v.split(',');   
         }
+    },
+    htmlEncode:function(value){
+        //return $('<div/>').text(value).html();
+        if(!value){
+            return value;
+        }
+        var buf = [];
+			
+			for (var i=value.length-1;i>=0;i--) {
+				buf.unshift(['&#', value[i].charCodeAt(), ';'].join(''));
+			}
+			
+			return buf.join('');
+      },
+      
+    htmlDecode:function(value){
+        
+      //  return $('<div/>').html(value).text();
+      value=value+'';
+      return value.replace(/&#(\d+);/g, function(match, dec) {
+        return String.fromCharCode(dec);
+       });
     },
     test: function (str) {
         alert(str);

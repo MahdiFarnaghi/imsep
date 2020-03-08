@@ -456,6 +456,38 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*(parseFloat(process.env.UPLOAD_GEOJSON_MAX_SIZE_MB) || 10 ) } }).single('file'),
     handleErrors(dataLayerController.geoJsonToShapefilePost));
 
+    
+    app.post('/dataset/uploadattachments', [
+        Authenticated
+        //,authorize({anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'  })
+    ],
+    multer({
+        storage: uploadFolder,
+        limits: {
+            fileSize: 1024 * 1024 * (parseFloat(process.env.UPLOAD_FILE_MAX_SIZE_MB) || 30)
+        }
+    }).array('file'),
+    handleErrors(dataLayerController.uploadattachmentsPost));
+    app.get('/dataset/:id/attachment/:attachmentId', [Authenticated], handleErrors(dataLayerController.attachmentGet));
+    app.get('/api/dataset/:id/attachment/:attachmentId',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(dataLayerController.attachmentGet));
+
+    app.post('/api/dataset/uploadattachments',
+    [
+        passport.authenticate('jwt', {session: false}),InitIdentityInfo
+        //,authorize({anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'  })
+    ],
+    multer({
+        storage: uploadFolder,
+        limits: {
+            fileSize: 1024 * 1024 * (parseFloat(process.env.UPLOAD_FILE_MAX_SIZE_MB) || 30)
+        }
+    }).array('file'),
+    handleErrors(dataLayerController.uploadattachmentsPost));
+
+
+
+
+
     app.get('/datalayer/uploadraster',   [Authenticated, authorize({
         anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'
     })],
@@ -632,6 +664,35 @@ app.set('port', process.env.PORT || 3000);
         message: 'Application started',
         date: new Date()
     });
+    if (app.get('env') === 'production'){ 
+        //wait for mdillon/postgis container
+        var databaseServiceIsReady=false;
+            databaseServiceIsReady=await check_database_service();
+            if(!databaseServiceIsReady){
+                console.log('wait... another 20 sec');
+                await new Promise(resolve => setTimeout(resolve, 20000));
+    
+                databaseServiceIsReady=await check_database_service();
+                if(!databaseServiceIsReady){
+                    console.log('wait... another 10 sec');
+                    await new Promise(resolve => setTimeout(resolve, 10000));
+                    
+                    if(!databaseServiceIsReady){
+                        console.log('wait... another 10 sec');
+                        await new Promise(resolve => setTimeout(resolve, 10000));
+    
+                        databaseServiceIsReady=await check_database_service();
+                        if(!databaseServiceIsReady){
+                            console.log('wait... another 20 sec');
+                            await new Promise(resolve => setTimeout(resolve, 20000));
+                
+                            //databaseServiceIsReady=await check_database_service();
+                        }
+                    }
+              }
+            }
+        }
+
     var forceRebuildDatabaseSchema=process.env.DB_REBUILD? (process.env.DB_REBUILD=='true'):flase;
     
     var old_adb_version=undefined;
@@ -682,6 +743,7 @@ app.set('port', process.env.PORT || 3000);
         try {
                 
             await initGDB();
+            await initGDB_Attachments();
         } catch (ex) {
             //continue
             var a = 1;
@@ -691,7 +753,10 @@ app.set('port', process.env.PORT || 3000);
     
     try{
     await models.sequelize.sync({ force: forceRebuildDatabaseSchema });
-    }catch(ex){}
+    }catch(ex){
+        console.log(ex);
+    }
+    
     if (forceRebuildDatabaseSchema) {
         try {
             await initDataAsync();
@@ -765,7 +830,35 @@ async function createDb(){
     }
     return true;
 }
+async function check_database_service() {
+    const {
+        Client
+    } = require('pg')
+    const dbName = process.env.DB_DATABASE ? process.env.DB_DATABASE : "imsep";
+    var params = {
+        "host": process.env.DB_HOSTNAME ? process.env.DB_HOSTNAME : "127.0.0.1",
+        "port": process.env.DB_PORT ? process.env.DB_PORT : "5432",
+        //"database":dbName,
+        "database": "postgres",
+        "user": process.env.DB_USERNAME ? process.env.DB_USERNAME : "postgres",
+        "password": process.env.DB_PASSWORD ? process.env.DB_PASSWORD : "postgres"
+    };
+    const client = new Client(params)
+
+    try {
+        await client.connect()
+    } catch (ex) {
+       // var a = 1;
+        return false
+    }
+
+
+    return true;
+}
 async function create_ADB_if_not_exists(adb_version){
+    // console.log('wait...');
+    // await new Promise(resolve => setTimeout(resolve, 10000));
+
     const { Client } = require('pg')
     const dbName=process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep";
     var params={
@@ -776,11 +869,16 @@ async function create_ADB_if_not_exists(adb_version){
         "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
         "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
       };
+      var conString = `postgres://${params.user}:${params.password}@${params.host}:${params.port}/${params.database}`;
+   //   console.log(params);
     const client = new Client(params)
+    //const client = new Client(conString)
       
     try{
     await client.connect()
     }catch(ex){
+      //  console.log('create_ADB_if_not_exists:1,')
+     //   console.log(ex);
         var a=1;
         return false
     }
@@ -805,6 +903,8 @@ async function create_ADB_if_not_exists(adb_version){
     `)
     await client2.end()
     }catch(ex){
+       // console.log('create_ADB_if_not_exists:')
+       // console.log(ex);
         return false;
     }
 
@@ -1025,6 +1125,87 @@ async function initGDB(){
     return true;
 }
 
+async function initGDB_Attachments() {
+    const {
+        Client
+    } = require('pg')
+    const dbName = process.env.GDB_DATABASE ? process.env.GDB_DATABASE : "imsep_gdb";
+    var params = {
+        "host": process.env.GDB_HOSTNAME ? process.env.GDB_HOSTNAME : "127.0.0.1",
+        "port": process.env.GDB_PORT ? process.env.GDB_PORT : "5432",
+        "database": dbName,
+        //"database": "postgres",
+        "user": process.env.GDB_USERNAME ? process.env.GDB_USERNAME : "postgres",
+        "password": process.env.GDB_PASSWORD ? process.env.GDB_PASSWORD : "postgres"
+    }
+
+   
+    const cl3 = new Client(params)
+    var gdb_attachments_exists = false;
+    try{
+
+        cl3.connect();
+        var schema = 'public';
+        var queryTemplate = `SELECT EXISTS (
+        SELECT 1
+        FROM   information_schema.tables 
+        WHERE  table_schema = '${schema}'
+        AND    table_name = 'gdb_attachments'
+        ); `;
+        
+        try
+         {
+           
+           const qResult = await cl3.query(queryTemplate);
+            gdb_attachments_exists = qResult.rows[0]['exists'];
+         } catch (ex)
+          {
+
+          }
+    
+        if(!gdb_attachments_exists){
+
+            queryTemplate = `
+            CREATE SEQUENCE public."gdb_attachments_id_seq"
+            INCREMENT 1
+            START 1
+            MINVALUE 1
+            MAXVALUE 2147483647
+            CACHE 1;    
+            
+            ALTER SEQUENCE public."gdb_attachments_id_seq"   OWNER TO postgres; 
+            
+            CREATE TABLE public.gdb_attachments
+            (
+                id integer NOT NULL DEFAULT nextval('gdb_attachments_id_seq'::regclass),
+                "table" character varying COLLATE pg_catalog."default" NOT NULL,
+                "tableid" integer NOT NULL,
+                "row" integer NOT NULL,
+                field character varying COLLATE pg_catalog."default",
+                name character varying COLLATE pg_catalog."default",
+            ext character varying(10) COLLATE pg_catalog."default",
+            
+                mimetype character varying(100) COLLATE pg_catalog."default",
+                size bigint,
+                thumbnail bytea,
+                data bytea,
+                CONSTRAINT gdb_attachments_pkey PRIMARY KEY (id)
+            )
+            WITH (
+                OIDS = FALSE
+            )
+            TABLESPACE pg_default;`
+            const qResult3 = await cl3.query(queryTemplate);
+            
+        }
+        await cl3.end()
+    }catch(ex){
+        console.log(ex);
+
+    }
+
+    return true;
+}
 
 async function initDataAsync() {
     try{

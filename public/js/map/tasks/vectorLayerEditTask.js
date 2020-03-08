@@ -716,7 +716,7 @@ this._toolbar.addControl(editAttribute);
             controls: [new ol.control.TextButton({
                    // html: 'Undo', //'<i class="fa fa-mail-reply"></i>',
                    className:'myOlbutton24',
-                   html: '<span style="display:block;line-height:28px;background-position:center center" class="undo16Icon" >&nbsp;</span>',
+                   html: '<span style="display:block;line-height:28px;background-position:center center" class="undo24Icon" >&nbsp;</span>',
                     title: "Undo last point",
                     handleClick: function() {
                         if (self.interaction.nbpts > 1) self.interaction.removeLastPoint();
@@ -725,7 +725,7 @@ this._toolbar.addControl(editAttribute);
                 new ol.control.TextButton({
                     //html: 'Finish',
                     className:'myOlbutton24',
-                    html: '<span style="display:block;line-height:28px;background-position:center" class="stop16Icon" >&nbsp;</span>',
+                    html: '<span style="display:block;line-height:28px;background-position:center" class="stop24Icon" >&nbsp;</span>',
                     title: "Finish",
                     handleClick: function() { // Prevent null objects on finishDrawing
                         if (self.interaction.nbpts > 2) self.interaction.finishDrawing();
@@ -851,7 +851,7 @@ this._toolbar.addControl(editAttribute);
             controls: [new ol.control.TextButton({
                     //html: 'Undo', //'<i class="fa fa-mail-reply"></i>',
                     className:'myOlbutton24',
-                    html: '<span style="display:block;line-height:28px;background-position:center center" class="undo16Icon" >&nbsp;</span>',
+                    html: '<span style="display:block;line-height:28px;background-position:center center" class="undo24Icon" >&nbsp;</span>',
 
                     title: "Undo last point",
                     handleClick: function() {
@@ -861,7 +861,7 @@ this._toolbar.addControl(editAttribute);
                 new ol.control.TextButton({
                     //html: 'Finish',
                     className:'myOlbutton24',
-                    html: '<span style="display:block;line-height:28px;background-position:center" class="stop16Icon" >&nbsp;</span>',
+                    html: '<span style="display:block;line-height:28px;background-position:center" class="stop24Icon" >&nbsp;</span>',
                     title: "Finish",
                     handleClick: function() { // Prevent null objects on finishDrawing
                         if (self.interaction.nbpts > 3) self.interaction.finishDrawing();

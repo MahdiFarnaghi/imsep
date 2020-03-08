@@ -249,6 +249,73 @@ IdentifyTask.prototype._getHtml=function(feature){
                           }
                         html+='  </div>';
 
+                    }else if (fldType=='_filelink'){
+                        var fileInfos=[];
+                        try{
+                            fileInfos= JSON.parse(fldValue);
+                        }catch(ex0){}
+                        
+                        var htm='';
+                        htm+='  <div style="margin-bottom:0;" class="form-group docListPanel" >';
+                        for(var f=0;fileInfos && f<fileInfos.length;f++){
+                            var fileInfo= fileInfos[f];
+                            if(fileInfo.action=='delete'){
+                                continue;
+                            }
+                            htm+='<div style="margin-bottom: 5px;"  class="form-group row">';
+                            if(fileInfo.id && fileInfo.dataset){
+                                if(app.get_attachment_url){
+                                   htm+='    <a  target="_blank" data-file-id="'+fileInfo.id+'" href="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id,false)+'">'+ fileInfo.name+ '';
+                                   if(fileInfo.thumbnail){
+                                     htm+='<br/><img style="display: block;max-width: 100%;" src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id,true)+'" />';
+                                   }
+                                   htm+='</a>';
+                                   if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4'|| fileInfo.mimeType=='audio/mpeg'){
+                                     htm+=' <audio controls style="display:block;width:200px" >';
+                                     htm+='    <source src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id)+'" type="'+fileInfo.mimeType+'">';
+                                     htm+='           Player not supported.';
+                                     htm+=' </audio>';
+                                    }else  if(fileInfo.mimeType=='video/mp4' || fileInfo.mimeType=='video/mpeg'){
+                                        htm+=' <video controls style="display:block;    width: 100%; max-width: 300px;" >';
+                                        htm+='    <source src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id)+'" type="'+fileInfo.mimeType+'">';
+                                        htm+='           Player not supported.';
+                                        htm+=' </video>';
+                                   }
+                                  
+                                }else{
+                                   htm+='    <a  target="_blank" data-file-id="'+fileInfo.id+'" href="/dataset/'+fileInfo.dataset+'/attachment/'+ fileInfo.id+'">'+ fileInfo.name;
+                                   
+                                   htm+='</a>';
+                                }
+                              }else{
+                               htm+='    <span>'+ fileInfo.name+ '</span>';
+                               if(fileInfo.thumbnail_dataUrl){
+                                 htm+='<img style="display: block;max-width: 100%;" src="'+fileInfo.thumbnail_dataUrl+'" />';
+                               }else  if(fileInfo.dataUrl){
+                                 if(fileInfo.mimeType && fileInfo.mimeType.indexOf('image/')>-1){
+                                   htm+='<img style="display: block;max-width: 100%;" src="'+fileInfo.dataUrl+'" />';
+                                 }
+                               }
+                               if(fileInfo.dataUrl){  
+                                if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4'|| fileInfo.mimeType=='audio/mpeg'){
+                                   htm+=' <audio controls style="display:block;width:200px" >';
+                                   //htm+='    <source src="horse.ogg" type="audio/ogg">';
+                                   htm+='    <source src="'+fileInfo.dataUrl +'" type="'+fileInfo.mimeType+'">';
+                                   htm+='           Player not supported.';
+                                   htm+=' </audio>';
+                                 }else  if(fileInfo.mimeType=='video/mp4' || fileInfo.mimeType=='video/mpeg'){
+                                    htm+=' <video controls style="display:block;    width: 100%; max-width: 300px;" >';
+                                    htm+='    <source src="'+fileInfo.dataUrl +'" type="'+fileInfo.mimeType+'">';
+                                    htm+='           Player not supported.';
+                                    htm+=' </video>';
+                                  }
+                               }
+                              }
+                            htm+='  </div>';//<hr/>';
+
+                        }
+                        htm+='  </div>';
+                        html += htm;
                     }else{
                         html += fldValue;
                     }

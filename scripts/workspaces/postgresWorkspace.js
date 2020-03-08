@@ -6558,7 +6558,7 @@ var createVectorResult= await this.createVectorTable(outDetails);
           return (returnValue);
         }
 
-    async attachment_insert(tableName,rowId,forField,fileInfo,fileData,thumbnail) {
+        async attachment_insert(tableName,tableId,rowId,forField,fileInfo,fileData,thumbnail) {
             var errors = '';
             var status=false;
             var attachments_TableName='gdb_attachments';
@@ -6571,39 +6571,63 @@ var createVectorResult= await this.createVectorTable(outDetails);
                         message: `${attachments_TableName} does not exist`
                     };
                 }
-//                 CREATE TABLE public.gdb_attachments
-// (
-//     id integer NOT NULL DEFAULT nextval('gdb_attachments_id_seq'::regclass),
-//     "table" character varying COLLATE pg_catalog."default" NOT NULL,
-//     "row" integer NOT NULL,
-//     field character varying COLLATE pg_catalog."default",
-//     name character varying COLLATE pg_catalog."default",
-//    ext character varying(10) COLLATE pg_catalog."default",
-
-//     mimetype character varying(100) COLLATE pg_catalog."default",
-//     size bigint,
-//     thumbnail bytea,
-//     data bytea,
-//     CONSTRAINT gdb_attachments_pkey PRIMARY KEY (id)
-// )
-// WITH (
-//     OIDS = FALSE
-// )
-// TABLESPACE pg_default;
-
-
             } catch (ex) {
                 //throw ex;
             }
 
             var insertQuery = {
                 text: `INSERT INTO public.${attachments_TableName}(
-                    "table","row","field","ext","name","mimetype","size","thumbnail","data"
-                     ${fieldNamesExpr}
+                    "table","tableid","row","field","ext","name","mimetype","size","thumbnail","data"
+                     
                     )
-                    VALUES  ($1,$2,$3,$4,$5,$6);`, 
-                values: [tableName,rowId,forField,fileInfo.name,fileInfo.ext,fileInfo.mimeType,fileInfo.size,thumbnail,fileData],
+                    VALUES  ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)  RETURNING id;`, 
+                values: [tableName,tableId,rowId,forField,fileInfo.fileType,fileInfo.name,fileInfo.mimeType,fileInfo.size,thumbnail,fileData],
             }
+            var createdId=undefined;
+            try {
+                var result = await this.query(insertQuery);
+                if (result) {
+                    if(result.rows && result.rows.length){
+                        createdId= result.rows[0]['id'];
+                    }
+                    status=true;  
+                }
+            } catch (ex) {
+                status=false;
+                var s = 1;
+                errors += '<br/>' + ex.message;
+            }
+
+
+            return {
+                status: status,
+                id:createdId,
+                message: errors
+            }
+    
+        }
+        async attachment_delete_by_attachmentId(attachmentId) {
+            var errors = '';
+            var status=false;
+            var attachments_TableName='gdb_attachments';
+            try {
+                var exists = await this.isTableExists(attachments_TableName, 'public');
+                if (!exists) {
+                    return {
+                        status: status,
+                      
+                        message: `${attachments_TableName} does not exist`
+                    };
+                }
+            } catch (ex) {
+                //throw ex;
+            }
+
+            var insertQuery = {
+                text: `DELETE FROM public.${attachments_TableName}   WHERE  id= $1;`, 
+                values: [attachmentId],
+            }
+           
             try {
                 var result = await this.query(insertQuery);
                 if (result) {
@@ -6619,6 +6643,131 @@ var createVectorResult= await this.createVectorTable(outDetails);
             return {
                 status: status,
                 message: errors
+            }
+    
+        }
+        async attachment_delete_by_rowId(tableId,id) {
+            var errors = '';
+            var status=false;
+            var attachments_TableName='gdb_attachments';
+            try {
+                var exists = await this.isTableExists(attachments_TableName, 'public');
+                if (!exists) {
+                    return {
+                        status: status,
+                      
+                        message: `${attachments_TableName} does not exist`
+                    };
+                }
+            } catch (ex) {
+                //throw ex;
+            }
+
+            var insertQuery = {
+                text: `DELETE FROM public.${attachments_TableName}   WHERE  tableid= $1 AND row=$2;`, 
+                values: [tableId,rowId],
+            }
+           
+            try {
+                var result = await this.query(insertQuery);
+                if (result) {
+                    status=true;  
+                }
+            } catch (ex) {
+                status=false;
+                var s = 1;
+                errors += '<br/>' + ex.message;
+            }
+
+
+            return {
+                status: status,
+                message: errors
+            }
+    
+        }
+        async attachment_delete_by_tableId(tableId) {
+            var errors = '';
+            var status=false;
+            var attachments_TableName='gdb_attachments';
+            try {
+                var exists = await this.isTableExists(attachments_TableName, 'public');
+                if (!exists) {
+                    return {
+                        status: status,
+                      
+                        message: `${attachments_TableName} does not exist`
+                    };
+                }
+            } catch (ex) {
+                //throw ex;
+            }
+
+            var insertQuery = {
+                text: `DELETE FROM public.${attachments_TableName}   WHERE  tableid= $1;`, 
+                values: [tableId],
+            }
+           
+            try {
+                var result = await this.query(insertQuery);
+                if (result) {
+                    status=true;  
+                }
+            } catch (ex) {
+                status=false;
+                var s = 1;
+                errors += '<br/>' + ex.message;
+            }
+
+
+            return {
+                status: status,
+                message: errors
+            }
+    
+        }
+        async attachment_get_by_attachmentId(tableId,attachmentId) {
+            var errors = '';
+            var status=false;
+            var attachmentInfo;
+            var attachments_TableName='gdb_attachments';
+            try {
+                var exists = await this.isTableExists(attachments_TableName, 'public');
+                if (!exists) {
+                    return {
+                        status: status,
+                      
+                        message: `${attachments_TableName} does not exist`
+                    };
+                }
+            } catch (ex) {
+                //throw ex;
+            }
+
+            var insertQuery = {
+                text: `SELECT * FROM public.${attachments_TableName}   WHERE  tableid=$1 AND id= $2;`, 
+                values: [tableId,attachmentId],
+            }
+           
+            try {
+                var result = await this.query(insertQuery);
+                if (result) {
+                    status=true;  
+                    if(result.rows && result.rows.length){
+                        attachmentInfo= result.rows[0];
+                    }
+                }
+            } catch (ex) {
+                status=false;
+                var s = 1;
+                errors += '<br/>' + ex.message;
+            }
+
+
+            return {
+                status: status,
+                message: errors,
+                attachmentInfo:attachmentInfo
             }
     
         }

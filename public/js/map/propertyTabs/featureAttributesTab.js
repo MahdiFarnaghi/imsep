@@ -12,6 +12,9 @@ FeatureAttributesTab.prototype.activate=function(){
 }
 FeatureAttributesTab.prototype.onshown=function(){
 var self=this;
+if(!this.$form){
+  return;
+}
  var fElem=this.$form.find('[autofocus]').focus().select();  
  if(fElem && fElem.length){
    var offset=fElem.offset().top;
@@ -39,17 +42,80 @@ FeatureAttributesTab.prototype.applied=function(obj){
  
  return fields?true:false;
 }
+FeatureAttributesTab.prototype.create__=function(obj,isActive){
+  var self=this;
+  this.feature= obj.feature;
+  var autosaveId='autosave';
+  
+ 
+  if(obj.layer){
+   this.layer=obj.layer;
+   this.transactFeature= obj.transactFeature;
+   var layerCustom=  this.layer.get('custom');
+    fields= LayerHelper.getFields( this.layer);
+    autosaveId+= '_'+ this.layer.get('title');
+  }
+  if(this.feature){
+    if(this.feature.getId){
+      var fid=this.feature.getId()
+      if(!fid && this.feature.get('_cacheInfo')){
+                    fid=this.feature.get('_cacheInfo').uid;
+      }
+      if(!fid){
+        fid=-1;
+      }
+      autosaveId+= '_'+fid;
+    }
+   } 
+  if(app && app.controller && app.controller.storageService){
+    app.controller.storageService.get(autosaveId).then(function(data){
+       if(data){
+        console.log('autosaved data loaded');
+        self.create_inner(obj,isActive,data);
+       }else{
+        self.create_inner(obj,isActive,null);
+       }
+    }).catch(function(error){
+      console.log('failed to load autosaved data');
+      self.create_inner(obj,isActive,null);
+    });
+ }else{
+  self.create_inner(obj,isActive,null);
+ }
+
+}
 FeatureAttributesTab.prototype.create=function(obj,isActive){
  var self=this;
  this.feature= obj.feature;
  var fields= obj.fields;
  var fieldsDic={};
+ this.fileInfosStorage={};
+ 
+ var autosaveId=obj.autosaveId?obj.autosaveId:false;
+ self._autosave_done=false;
+ var initData= obj.initData?obj.initData:null;
+
  if(obj.layer){
   this.layer=obj.layer;
   this.transactFeature= obj.transactFeature;
   var layerCustom=  this.layer.get('custom');
    fields= LayerHelper.getFields( this.layer);
+   //autosaveId+= '_'+ this.layer.get('title');
  }
+
+
+//  if(this.feature){
+//   if(this.feature.getId){
+//     var fid=this.feature.getId()
+//     if(!fid && this.feature.get('_cacheInfo')){
+//                   fid=this.feature.get('_cacheInfo').uid;
+//     }
+//     if(!fid){
+//       fid=-1;
+//     }
+//     autosaveId+= '_'+fid;
+//   }
+//  } 
  var active='';
  if(isActive)
    active ='active';
@@ -59,11 +125,27 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
  this.tab=$('<div class="tab-pane '+active+'" id="' +self.tabId+'"></div>').appendTo(this.parentDialog.tabPanelContent);
  var htm='<div><form id="'+self.tabId+'_form" class="modal-body form-horizontal">';  
  var properties;
+ var orig_propertues=null;
  if(this.feature.getProperties){
    properties = this.feature.getProperties();
  }else {
    properties = this.feature.properties ||{};
  }
+ try{
+  orig_propertues = JSON.parse(JSON.stringify(properties));
+ }catch(ex){
+ }
+ if(!orig_propertues){
+  orig_propertues={}
+  for(var i=0;properties && i< fields.length;i++){
+    var fld= fields[i];
+    orig_propertues[fld.name]=properties[fld.name];
+    if(typeof orig_propertues[fld.name]=='undefined' && typeof fld.default!=='undefined'){
+      orig_propertues[fld.name]=fld.default;
+    }
+   }
+ }
+
  for(var i=0;i< fields.length;i++){
   var fld= fields[i];
   fld._index=i;
@@ -116,7 +198,7 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
    }else if (fldType=='boolean'){
      fldHtml+=this.getBoolInput(fld,properties,fldKey);
     }else if (fldType=='_filelink'){
-     fldHtml+=this.getFilesInput(fld,properties,fldKey);
+     fldHtml+=this.getFilesInput(fld,properties,initData,fldKey);
     
    }else if (fldType=='_documentslink'){
      fldHtml+=this.getDocumentListInput(fld,properties,fldKey);
@@ -264,15 +346,18 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
  var $form = $(content.find('#'+self.tabId+'_form'));
  this.$form=$form;
  this.updateDocumenListContent($form);
+ $form.find('.collapsible-panel').has('.attribute-value-changed').addClass('has-attribute-value-changed');
  setTimeout(function() {
  
  }, 1000);
  
   $form.find('input,textarea,select').change(function(){
      $(this).addClass('attribute-value-changed');
+     $form.find('.collapsible-panel').has('.attribute-value-changed').addClass('has-attribute-value-changed');
   });
   $form.find('input[type="checkbox"]').change(function(){
     $(this).parent().addClass('checkbox-attribute-value-changed');
+    $form.find('.collapsible-panel').has('.checkbox-attribute-value-changed').addClass('has-attribute-value-changed');
  });
 
   $form.find('.uploadfile').click(function(){
@@ -281,7 +366,8 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
          var fldStore= $form.find('#'+fldKey);
          var fileInfos=[]
          try{
-           fileInfos= JSON.parse(fldStore.val());
+           //fileInfos= JSON.parse(fldStore.val());
+           fileInfos= self.fileInfosStorage[fldKey];
          }catch(ex){}
          if(!fileInfos){
            fileInfos=[];
@@ -289,9 +375,11 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
          if(! Array.isArray(fileInfos)){
            fileInfos=[];
          }
+         self.fileInfosStorage[fldKey]= fileInfos;
+
          var dlg = new DlgUpload(self, {
-           uploadUrl:'/dataset/uploadattachments',
-           
+           //uploadUrl:'/dataset/uploadattachments',
+           uploadUrl:app.get_uploadattachments_url(),
            onUpload:function(dialogRef,results){
              console.log(results);
              for(var f =0 ;f<results.length;f++){
@@ -300,7 +388,7 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
                fInfo.action='new';
                fileInfos.push(fInfo);
              }
-             fldStore.val(JSON.stringify(fileInfos));
+             //fldStore.val(JSON.stringify(fileInfos));
              fileListPanel.html(self.getFileListContent(fileInfos,fldKey));
              dialogRef.close();
            }
@@ -313,6 +401,142 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
 
      }).show();
   });
+  
+  $form.find('.cameraCapture').unbind().click(function(){
+    var fldKey= $(this).data('field-key');
+    var fileListPanel= $form.find('#'+fldKey+'-panel');
+    var fldStore= $form.find('#'+fldKey);
+    var fileInfos=[]
+    try{
+      //fileInfos= JSON.parse(fldStore.val());
+      fileInfos= self.fileInfosStorage[fldKey];
+    }catch(ex){}
+    if(!fileInfos){
+      fileInfos=[];
+    }
+    if(! Array.isArray(fileInfos)){
+      fileInfos=[];
+    }
+    self.fileInfosStorage[fldKey]= fileInfos;
+    navigator.camera.getPicture(function(imageData){
+      var fInfo={name:'captured'};
+          fInfo.id=-1;
+          fInfo.action='new';
+          fInfo.dataUrl="data:image/jpeg;base64,"+imageData;
+          fInfo.mimeType='image/jpeg';
+          fileInfos.push(fInfo);
+          fileListPanel.html(self.getFileListContent(fileInfos,fldKey));
+
+    },function(message) {
+      alert('Failed because: ' + message);
+    }, { quality: 50,
+      destinationType: Camera.DestinationType.DATA_URL 
+     });
+
+   
+  });
+
+  
+  $form.find('.startRecordAudio').unbind().click(function(){
+    var fldKey= $(this).data('field-key');
+    var me=$(this);
+    var parent=$(this).parent();
+    var fldName= $(this).data('field-name');
+    var fileListPanel= $form.find('#'+fldKey+'-panel');
+    var fldStore= $form.find('#'+fldKey);
+    var fileInfos=[]
+    try{
+      //fileInfos= JSON.parse(fldStore.val());
+      fileInfos= self.fileInfosStorage[fldKey];
+    }catch(ex){}
+    if(!fileInfos){
+      fileInfos=[];
+    }
+    if(! Array.isArray(fileInfos)){
+      fileInfos=[];
+    }
+    self.fileInfosStorage[fldKey]= fileInfos;
+
+    parent.find('.stopRecordAudio').show();
+    
+    parent.find('.audioAmplitude').css('width', '0%');
+    parent.find('.audioAmplitude_progress').show();
+
+    me.hide();
+    var outputFile=app.getTempAudioRecordingLocation(fldName+"_recording.mp3");
+    var src = outputFile.fileName;
+    var mediaRec = new Media(src,
+        // success callback
+        function() {
+          parent.find('.stopRecordAudio').hide();
+          parent.find('.audioAmplitude_progress').hide();
+          me.show();
+          clearInterval(mediaTimer);
+            console.log("recordAudio():Audio Success");
+            window.resolveLocalFileSystemURL(outputFile.dirName + outputFile.fileName, function (fileEntry) {
+              
+              fileEntry.file(function(file){
+                app.fileToDataUrlAsync(file).then(function(dataUrl){
+                  var fInfo={name:'recorded'};
+                  fInfo.id=-1;
+                  fInfo.action='new';
+                  fInfo.dataUrl=dataUrl;
+                  fInfo.mimeType='audio/mp3';
+                  fileInfos.push(fInfo);
+                  fileListPanel.html(self.getFileListContent(fileInfos,fldKey));
+  
+                }).catch(function(error){
+                  console.error(error)
+                });
+
+              } ,function(err){
+                console.error(error)
+              });
+
+
+             
+              
+            }, function (error) {
+              console.error(error)
+            });  
+        },
+
+        // error callback
+        function(err) {
+          
+          parent.find('.stopRecordAudio').hide();
+          parent.find('.audioAmplitude_progress').hide();
+          
+          me.show();
+          clearInterval(mediaTimer);
+
+            console.log("recordAudio():Audio Error: "+ err.code);
+        });
+        
+      var mediaTimer = setInterval(function () {
+        // get media amplitude
+        mediaRec.getCurrentAmplitude(
+            // success callback
+            function (amp) {
+                console.log(amp + "%");
+                parent.find('.audioAmplitude').css('width', (amp*100)+'%');
+            },
+            // error callback
+            function (e) {
+                console.log("Error getting amp=" + e);
+            }
+        );
+      }, 300);
+
+        parent.find('.stopRecordAudio').unbind().click(function(){
+          clearInterval(mediaTimer);
+          mediaRec.stopRecord();
+          mediaRec.release();
+        });
+
+        mediaRec.startRecord();
+       
+  });
 
   $form.on('click','.remove-attachment',function(){
      var fldKey= $(this).data('field-key');
@@ -321,7 +545,8 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
      var fldStore= $form.find('#'+fldKey);
      var fileInfos=[]
      try{
-       fileInfos= JSON.parse(fldStore.val());
+     //  fileInfos= JSON.parse(fldStore.val());
+     fileInfos=self.fileInfosStorage[fldKey];
      }catch(ex){}
      if(!fileInfos){
        fileInfos=[];
@@ -329,10 +554,11 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
      if(! Array.isArray(fileInfos)){
        fileInfos=[];
      }
+     self.fileInfosStorage[fldKey]=fileInfos;
      try{
        fileInfos.splice(fileIndex,1)
      }catch(ex){}
-     fldStore.val(JSON.stringify(fileInfos));
+     //fldStore.val(JSON.stringify(fileInfos));
      fileListPanel.html(self.getFileListContent(fileInfos,fldKey));
   });
   $form.on('click','.delete-attachment',function(){
@@ -342,7 +568,8 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
    var fldStore= $form.find('#'+fldKey);
    var fileInfos=[]
    try{
-     fileInfos= JSON.parse(fldStore.val());
+     //fileInfos= JSON.parse(decodeURIComponent(fldStore.val()));
+     fileInfos= self.fileInfosStorage[fldKey]
    }catch(ex){}
    if(!fileInfos){
      fileInfos=[];
@@ -350,10 +577,11 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
    if(! Array.isArray(fileInfos)){
      fileInfos=[];
    }
+   self.fileInfosStorage[fldKey]=fileInfos;
    try{
      fileInfos[fileIndex].action='delete';
    }catch(ex){}
-   fldStore.val(JSON.stringify(fileInfos));
+   //fldStore.val(JSON.stringify(fileInfos));
    fileListPanel.html(self.getFileListContent(fileInfos,fldKey));
 });
 $form.on('click','.undelete-attachment',function(){
@@ -363,7 +591,8 @@ $form.on('click','.undelete-attachment',function(){
  var fldStore= $form.find('#'+fldKey);
  var fileInfos=[]
  try{
-   fileInfos= JSON.parse(fldStore.val());
+   //fileInfos= JSON.parse( fldStore.val());
+   fileInfos=self.fileInfosStorage[fldKey];
  }catch(ex){}
  if(!fileInfos){
    fileInfos=[];
@@ -371,10 +600,11 @@ $form.on('click','.undelete-attachment',function(){
  if(! Array.isArray(fileInfos)){
    fileInfos=[];
  }
+ self.fileInfosStorage[fldKey]= fileInfos;
  try{
    fileInfos[fileIndex].action=undefined;
  }catch(ex){}
- fldStore.val(JSON.stringify(fileInfos));
+ //fldStore.val(JSON.stringify(fileInfos));
  fileListPanel.html(self.getFileListContent(fileInfos,fldKey));
  });
 
@@ -521,6 +751,7 @@ var placeholder=select2Elm.data('placeholder');
     //$(this).addClass('attribute-value-changed');
     //$($(select2Elm).select2("container")).addClass('attribute-value-changed');
     select2Elm.data('select2').$container.addClass('attribute-value-changed');
+    $form.find('.collapsible-panel').has('.attribute-value-changed').addClass('has-attribute-value-changed');
 });
 });
 
@@ -558,7 +789,9 @@ var placeholder=select2Elm.data('placeholder');
  });
 
  this.parentDialog.cancelHandlers.push(function(evt){
-  // self.layer.setOpacity(origOpacity);
+  
+  clearAutoSaved();
+   clearAutoSavedTimeout();
  });
  this.parentDialog.applyHandlers.push(function(evt){
  
@@ -569,86 +802,261 @@ var placeholder=select2Elm.data('placeholder');
       properties = self.feature.properties ||{};
     }
 
-   for(var i=0;i< fields.length;i++){
-     var fld= fields[i];
-     var fldKey= 'field_'+i;
-     var fldType=fld.type.toLowerCase();
-     var cmp= $form.find('#'+ fldKey);
-     if(cmp.length==0){
-       continue;
-     }
-     var v= cmp.val();
-     if(fld.domain && fld.domain.type=='codedValues'){
-       if(Array.isArray(v)){
-         v= v.join(';');
-       }
-     }
-     if(fldType=='varchar' || fldType=='_filelink'|| fldType=='_documentslink'){
-       if(v=='Null'){
-         v=null;
-       }
-       properties[fld.name]= v;
-     }else if (fldType=='date' ){
-       var dv=v;
-       try{
-         //dv= new Date(v);
-       }catch(ex){}
-       //if(!isNaN(dv)){
-         properties[fld.name]= dv;
-     //  }
-     }else if (fldType=='timestamp with time zone' ){
-       if(v==='')
-         v=undefined;
-       properties[fld.name]= v;
-     }else if (fldType=='smallint' || fldType=='integer' || fldType=='bigint'){
+    populatePropertiesFromForm(properties);
+
+  if(self.feature.setProperties){
+    self.feature.setProperties(properties);
+  }else{
+    self.feature.properties=properties;
+  }
+  clearAutoSaved();
+ });
+
+ function populatePropertiesFromForm(properties){
+    if(!properties){
+      return;
+    }
+    for(var i=0;i< fields.length;i++){
+      var fld= fields[i];
+      var fldKey= 'field_'+i;
+      var fldType=fld.type.toLowerCase();
+      
+      if(fldType=='_filelink'){
+        if(self.fileInfosStorage){
+          properties[fld.name]= JSON.stringify(self.fileInfosStorage[fldKey]);
+        }
+        continue;
+      }
+      
+      
+      var cmp= $form.find('#'+ fldKey);
+      if(cmp.length==0 ){
+        continue;
+      }
+      var v= cmp.val();
+      if(fld.domain && fld.domain.type=='codedValues'){
+        if(Array.isArray(v)){
+          v= v.join(';');
+        }
+      }
+      if(fldType=='varchar' || fldType=='_documentslink'){
+        if(v=='Null'){
+          v=null;
+        }
+        properties[fld.name]= v;
+      }else if (fldType=='date' ){
+        var dv=v;
+        try{
+          //dv= new Date(v);
+        }catch(ex){}
+        //if(!isNaN(dv)){
+          properties[fld.name]= dv;
+      //  }
+      }else if (fldType=='timestamp with time zone' ){
+        if(v==='')
+          v=undefined;
+        properties[fld.name]= v;
+      }else if (fldType=='smallint' || fldType=='integer' || fldType=='bigint'){
       if(v===''){
         properties[fld.name]= undefined;
-       }else{
-       if(!isNaN(+v)){ 
-         if(!isNaN(parseInt(v))){
-           properties[fld.name]= parseInt(v);
-         }
-       }
+        }else{
+        if(!isNaN(+v)){ 
+          if(!isNaN(parseInt(v))){
+            properties[fld.name]= parseInt(v);
+          }
+        }
       }
-     }else if (fldType=='real' || fldType=='double precision' || fldType=='numeric'){
-       if(v===''){
+      }else if (fldType=='real' || fldType=='double precision' || fldType=='numeric'){
+        if(v===''){
         properties[fld.name]= undefined;
-       }else{
+        }else{
         if(!isNaN(+v)){ 
           if(!isNaN(parseFloat(v))){
             properties[fld.name]= parseFloat(v);
           }
         }
         }
-     }else if (fldType=='boolean'){
-       if(cmp && cmp.length && cmp[0].type=='checkbox'){
-         v= cmp.prop('checked');
-       }
-       if(v==='')
-         properties[fld.name]= null;
-       else{
-         if(v===false || v==='0' || v===0 || v==='false' || v==='False'|| v==='FALSE' || v==='no' || v==='No' || v==='NO')
-           properties[fld.name]= false;
-         else
-           properties[fld.name]= true; 
-       }
+      }else if (fldType=='boolean'){
+        if(cmp && cmp.length && cmp[0].type=='checkbox'){
+          v= cmp.prop('checked');
+        }
+        if(v==='')
+          properties[fld.name]= null;
+        else{
+          if(v===false || v==='0' || v===0 || v==='false' || v==='False'|| v==='FALSE' || v==='no' || v==='No' || v==='NO')
+            properties[fld.name]= false;
+          else
+            properties[fld.name]= true; 
+        }
       }
-   }  
+    }  
 
-   if(self.dataRelationshipsTabs && self.dataRelationshipsTabs.length){
+    if(self.dataRelationshipsTabs && self.dataRelationshipsTabs.length){
     var feature_dataRelationships=[];
     for(var i=0;i<self.dataRelationshipsTabs.length;i++){
       var tab_r=self.dataRelationshipsTabs[i];
       feature_dataRelationships.push($(tab_r).data('dataRelationship'));
     }
     properties['_dataRelationships']=feature_dataRelationships;
+    }
+ }
+
+ if(initData){
+   for(var key in initData){
+    if (Object.prototype.hasOwnProperty.call(initData, key)) {
+      var fldValue= initData[key];
+      var searchKey="[data-field-name='"+key+"']";
+      var elem;
+      elem=$form.find('.select2Single'+searchKey+'');
+      if(elem && elem.length){
+        try{
+
+          if (elem.find("option[value='" + fldValue + "']").length) {
+            elem.val(fldValue);
+            elem.trigger('change');
+          } else { 
+              // Create a DOM Option and pre-select by default
+              //var newOption = new Option(data.text, data.id, true, true);
+              var newOption = new Option(fldValue, fldValue, true, true);
+              // Append it to the select
+              elem.append(newOption).trigger('change');
+          } 
+
+        
+
+
+          elem.data('select2').$container.addClass('attribute-value-changed');
+        }catch(ex){
+          console.log(ex);
+        }
+        continue;
+      }
+      elem=$form.find('.select2Multiple'+searchKey+'');
+      if(elem && elem.length){
+        fldValue=fldValue+'';
+        try{
+          fldValue=fldValue.split(';');
+          if(fldValue.length){ // apend none existing values
+            for(var v=0;v<fldValue.length;v++){
+              var sValue=fldValue[v];
+              if (!elem.find("option[value='" + sValue + "']").length) {
+                var newOption = new Option(sValue, sValue, true, true);
+                 elem.append(newOption)
+              }
+            }
+          }
+          elem.val(fldValue);
+          elem.trigger('change');
+          elem.data('select2').$container.addClass('attribute-value-changed');
+          $form.find('.collapsible-panel').has('.attribute-value-changed').addClass('has-attribute-value-changed');
+        }catch(ex){
+          console.log(ex);
+        }
+        continue;
+      }
+      elem=$form.find('input[type!="checkbox"]'+searchKey+',textarea'+searchKey+',select'+searchKey+'');
+      if(elem && elem.length){
+        elem.val(fldValue).addClass('attribute-value-changed');
+        $form.find('.collapsible-panel').has('.attribute-value-changed').addClass('has-attribute-value-changed');
+        continue;
+      }
+      
+      elem= $form.find('input[type="checkbox"]'+searchKey+'');
+      if(elem && elem.length){
+        elem.prop('checked',fldValue?true:false);
+        elem.addClass('attribute-value-changed');
+        elem.parent().addClass('checkbox-attribute-value-changed');
+        $form.find('.collapsible-panel').has('.attribute-value-changed').addClass('has-attribute-value-changed');
+        continue;
+      }
+     
+      
+     
+    }
    }
-  if(self.feature.setProperties){
-    self.feature.setProperties(properties);
-  }else{
-    self.feature.properties=properties;
+ }
+ function clearAutoSavedTimeout(){
+  if (self.autosave_timeoutId) {
+    
+    clearTimeout(self.autosave_timeoutId);
+    console.log('autosaved cleared');
   }
- });
+ }
+ clearAutoSavedTimeout();
+
+ function autosave(){
+    if(!autosaveId){
+      return;
+    }
+    console.log('autosaving...');
+    var properties={} ;
+    var changed_properties={}
+    var count=0;
+    populatePropertiesFromForm(properties);
+    for(var key in properties){
+      if (Object.prototype.hasOwnProperty.call(properties, key)) {
+        var val= properties[key];
+        if(typeof val==='undefined'){
+          val='';
+        }
+        if(val===null){
+          val='';
+        }
+        val=val+'';
+        if(orig_propertues){
+          if(key in orig_propertues){
+            var origValue=orig_propertues[key];
+            if(typeof origValue==='undefined'){
+              origValue='';
+            }
+            if(origValue===null){
+              origValue='';
+            }
+            if(val !== (origValue+'')){
+              changed_properties[key]=properties[key];
+              count++;
+            }
+          }
+        }
+      }
+    }
+    if(count){
+      if(autosaveId && app && app.controller && app.controller.storageService){
+          app.controller.storageService.set(autosaveId,changed_properties).then(function(e){
+              self._autosave_done=true;
+              console.log(changed_properties);
+              console.log('autosave done:'+ autosaveId);
+
+              //app.controller.storageService.cacheMap()
+          }).catch(function(error){
+            console.log('autosave failed');
+          });
+      }
+      
+      
+    }
+    self.autosave_timeoutId= setTimeout(function() {
+      autosave();
+    }, app.AttributePage_AutoSave_Timeout *1000);
+ }
+ this.autosave_timeoutId= setTimeout(function() {
+    autosave();
+ }, app.AttributePage_AutoSave_Timeout *1000);
+
+ function clearAutoSaved(){
+  clearAutoSavedTimeout();
+ // if(self._autosave_done){
+    if(app && app.controller && app.controller.storageService){
+      app.controller.storageService.delete(autosaveId).then(function(e){
+          self._autosave_done=false;
+          console.log('autosaved data removed:'+ autosaveId);
+      }).catch(function(error){
+        console.log('failed to remove autosaved data');
+      });
+  }
+//  }
+ }
+
 }
 FeatureAttributesTab.prototype.createRelationTabs=function(){
   var self=this;
@@ -896,7 +1304,7 @@ FeatureAttributesTab.prototype.getTextInput=function(fld,properties,fldKey){
  }
  var placeholder= '';
  if(!notNull){
-   placeholder='Null';
+   placeholder= app.DROPDOWN_NULL || 'Null';
  }
  if(typeof fld.default !=='undefined'){
      placeholder= fld.default;
@@ -972,7 +1380,7 @@ FeatureAttributesTab.prototype.getDateTimeInput=function(fld,properties,fldKey){
  }
  var placeholder= '';
  if(!notNull){
-   placeholder='Null';
+   placeholder= app.DROPDOWN_NULL || 'Null';
  }
  if(typeof fld.default !=='undefined'){
      placeholder= fld.default;
@@ -1031,7 +1439,7 @@ FeatureAttributesTab.prototype.getDateInput=function(fld,properties,fldKey){
  }
  var placeholder= '';
  if(!notNull){
-   placeholder='Null';
+   placeholder= app.DROPDOWN_NULL || 'Null';
  }
  if(typeof fld.default !=='undefined'){
      placeholder= fld.default;
@@ -1092,7 +1500,7 @@ FeatureAttributesTab.prototype.getIntegerInput=function(fld,properties,fldKey){
  }
  var placeholder= '';
  if(!notNull){
-   placeholder='Null';
+   placeholder= app.DROPDOWN_NULL || 'Null';
  }
  if(typeof fld.default !=='undefined'){
      placeholder= fld.default;
@@ -1203,7 +1611,7 @@ FeatureAttributesTab.prototype.getNumberInput=function(fld,properties,fldKey){
  }
  var placeholder= '';
  if(!notNull){
-   placeholder='Null';
+   placeholder= app.DROPDOWN_NULL || 'Null';
  }
  if(typeof fld.default !=='undefined'){
      placeholder= fld.default;
@@ -1304,7 +1712,7 @@ FeatureAttributesTab.prototype.getBoolInput=function(fld,properties,fldKey){
  }
  var placeholder= '';
  if(!notNull){
-   placeholder='Null';
+   placeholder= app.DROPDOWN_NULL || 'Null';
  }
  if(typeof fld.default !=='undefined'){
      placeholder= fld.default;
@@ -1360,11 +1768,16 @@ FeatureAttributesTab.prototype.getBoolInput=function(fld,properties,fldKey){
    return htm;
 }
 
-FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,fldKey){
+FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,initData,fldKey){
  var self=this;
  var name= fld.name;
  var fldType=fld.type.toLowerCase();
  var value= properties[name];
+ var attribute_value_changed='';
+ if(initData &&  initData[name]){
+   value=initData[name];
+   attribute_value_changed='attribute-value-changed';
+ }
  var caption= fld.alias || name;
  var editable= true;
  var notNull= fld.notNull;
@@ -1383,7 +1796,7 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,fldKey){
  }
  var placeholder= '';
  if(!notNull){
-   placeholder='Null';
+   placeholder= app.DROPDOWN_NULL ||'Null';
  }
  if(typeof fld.default !=='undefined'){
      placeholder= fld.default;
@@ -1404,6 +1817,9 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,fldKey){
      fileInfos= JSON.parse(value);
    }catch(ex){}
  }
+ 
+ this.fileInfosStorage[fldKey]=fileInfos;
+ 
  var validate=false;
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
@@ -1412,8 +1828,8 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,fldKey){
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
- htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
- htm+='    <input type="hidden" name="'+fldKey+'" id="'+fldKey+'" data-field-name="'+fld.name+'" value="'+value+'" readonly class="form-control"></input>';
+ htm+='    <label class="'+attribute_value_changed+'" for="'+ fldKey+'">'+ caption+ '</label>';
+ //htm+='    <input type="hidden" name="'+fldKey+'" id="'+fldKey+'" data-field-name="'+fld.name+'" value="'+app.htmlEncode(value)+'" readonly class="form-control"></input>';
  htm+='  </div>';
  htm+='  <div class="form-group" id="'+fldKey+'-panel">';
  htm+= self.getFileListContent(fileInfos,fldKey);
@@ -1422,7 +1838,23 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,fldKey){
  }
  htm+='  </div>';
  if(editable){
-   htm+='<button  type="button" data-field-name="'+fld.name+'" data-field-key="'+fldKey+'"  class="btn btn-primary form-control___ uploadfile "><span class="glyphicon glyphicon-plus"></span></button>';
+  htm+='<div class="container upload-commands">';
+   htm+='<button  type="button" data-field-name="'+fld.name+'" data-field-key="'+fldKey+'"  class="btn btn-default form-control___ uploadfile "><span class="glyphicon glyphicon-upload"></span></button>';
+   if(!fld.defaultMimeType || (fld.defaultMimeType && fld.defaultMimeType.indexOf('image/')>-1 )){
+    if(navigator && navigator.camera){
+      htm+='<button  type="button" data-field-name="'+fld.name+'" data-field-key="'+fldKey+'"  class="btn btn-primary form-control___ cameraCapture "><span class="glyphicon glyphicon-camera"></span></button>';
+    }
+  }
+  if(!fld.defaultMimeType || (fld.defaultMimeType && fld.defaultMimeType.indexOf('audio/')>-1 )){
+    if(typeof Media !=='undefined'){
+        htm+='<button  type="button" data-field-name="'+fld.name+'" data-field-key="'+fldKey+'"  class="btn btn-primary form-control___ startRecordAudio "><span class="glyphicon glyphicon-record"></span></button>';
+        htm+='<button style="display:none;"  type="button" data-field-name="'+fld.name+'" data-field-key="'+fldKey+'"  class="btn btn-danger form-control___ stopRecordAudio "><span class="glyphicon glyphicon-stop"></span></button>';
+        htm+='<div style="display:none;" class="progress audioAmplitude_progress">';
+        htm+='<div   class="progress-bar progress-bar-success progress-bar-striped active audioAmplitude"  style="width:0%"> Recording Audio </div>';
+        htm+='</div>';
+    }
+  }
+  htm+='</div>';
  }
  
   
@@ -1432,57 +1864,85 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,fldKey){
 }
 FeatureAttributesTab.prototype.getFileListContent=function(fileInfos,fldKey){
  var htm='';
- // htm+='<div class="table-responsive col-sm-12">';
- // htm+='<table class="table table-condensed">';
- // for(var i=0;fileInfos && i<fileInfos.length;i++){
- //   var fileInfo= fileInfos[i];
- //   htm+='<tr>';
- //   if(fileInfo.name){
- //     htm+='<td>';
- //     htm+='    <a  target="_blank" data-file-id="'+fileInfo.id+'" href="">'+ fileInfo.name+ '</a>';
- //     htm+='</td>';
- //   }
- //   htm+='<td>';
- //   if(fileInfo.action=='new'){
- //      htm +=' <button type="button" class="remove-attachment btn btn-xs btn-danger	" data-field-key="'+fldKey+'" data-file-index="'+i+'"   title="Remove"  style="" ><span class="glyphicon glyphicon-remove"></span> </button>';
- //   }else{
- //     if(fileInfo.action='delete'){
- //       htm +=' <button type="button" class="undelete-attachment btn btn-xs btn-danger	" data-field-key="'+fldKey+'" data-file-index="'+i+'" title="Undelete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button>';
- //     }else{
- //       htm +=' <button type="button" class="delete-attachment btn btn-xs btn-danger	" data-field-key="'+fldKey+'"  data-file-index="'+i+'" title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button>';
- //     }
- //   }
- //   htm+='</td>';
-
- //   htm+='</tr>';
- // }
- // htm+='</table>';
- // htm+='</div>';
-
- if(fld.description){
-  htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
-  //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
-  htm+='  </div>';
-}
+ 
  for(var i=0;fileInfos && i<fileInfos.length;i++){
    var fileInfo= fileInfos[i];
-   htm+='<div class="form-group row">';
-   htm+='<div class="col-sm-2">';
+   var rowClass='';
+    if(fileInfo.action=='new'){
+      rowClass='info';
+    }else if (fileInfo.action=='delete') {
+      rowClass='danger';
+    }else{
+      // rowClass='warning';
+    }
+
+   htm+='<div class="form-group row '+ rowClass+'">';
+   htm+='<div class="col-xs-2">';
    if(fileInfo.action=='new'){
       htm +=' <button type="button" class="remove-attachment btn btn-xs btn-danger	" data-field-key="'+fldKey+'" data-file-index="'+i+'"   title="Remove"  style="" ><span class="glyphicon glyphicon-remove"></span> </button>';
    }else{
-     if(fileInfo.action='delete'){
-       htm +=' <button type="button" class="undelete-attachment btn btn-xs btn-danger	" data-field-key="'+fldKey+'" data-file-index="'+i+'" title="Undelete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button>';
+     if(fileInfo.action=='delete'){
+       htm +=' <button type="button" style="text-decoration: line-through;" class="undelete-attachment btn btn-xs btn-warning	" data-field-key="'+fldKey+'" data-file-index="'+i+'" title="Undelete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button>';
      }else{
        htm +=' <button type="button" class="delete-attachment btn btn-xs btn-danger	" data-field-key="'+fldKey+'"  data-file-index="'+i+'" title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button>';
      }
    }
    htm+='</div>';
-   htm+='<div class="col-sm-10" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;"">';
+   if(fileInfo.action=='delete'){
+      htm+='<div class="col-xs-10" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;text-decoration: line-through;">';
+   }else   {
+      htm+='<div class="col-xs-10" style="overflow: hidden;text-overflow: ellipsis;white-space: nowrap;">';
+   }
    if(fileInfo.name){
-     
-     htm+='    <a  target="_blank" data-file-id="'+fileInfo.id+'" href="">'+ fileInfo.name+ '</a>';
+     if(fileInfo.id && fileInfo.dataset){
+       if(app.get_attachment_url){
+          htm+='    <a  target="_blank" data-file-id="'+fileInfo.id+'" href="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id,false)+'">'+ fileInfo.name+ '';
+          if(fileInfo.thumbnail){
+            htm+='<img style="display: block;max-width: 100%;" src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id,true)+'" />';
+          }
+          htm+='</a>';
+          if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4'|| fileInfo.mimeType=='audio/mpeg'){
+            htm+=' <audio controls style="display:block;    width: 100%; max-width: 300px;" >';
+            htm+='    <source src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id)+'" type="'+fileInfo.mimeType+'">';
+            htm+='           Player not supported.';
+            htm+=' </audio>';
+           }else  if(fileInfo.mimeType=='video/mp4' || fileInfo.mimeType=='video/mpeg'){
+            htm+=' <video controls style="display:block;    width: 100%; max-width: 300px;" >';
+            htm+='    <source src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id)+'" type="'+fileInfo.mimeType+'">';
+            htm+='           Player not supported.';
+            htm+=' </video>';
+           }
+         
+       }else{
+          htm+='    <a  target="_blank" data-file-id="'+fileInfo.id+'" href="/dataset/'+fileInfo.dataset+'/attachment/'+ fileInfo.id+'">'+ fileInfo.name;
+          
+          htm+='</a>';
+       }
+     }else{
+      htm+='    <span>'+ fileInfo.name+ '</span>';
+      if(fileInfo.thumbnail_dataUrl){
+        htm+='<img style="display: block;max-width: 100%;" src="'+fileInfo.thumbnail_dataUrl+'" />';
+      }else  if(fileInfo.dataUrl){
+        if(fileInfo.mimeType && fileInfo.mimeType.indexOf('image/')>-1){
+          htm+='<img style="display: block;max-width: 100%;" src="'+fileInfo.dataUrl+'" />';
+        }
+      }
+      if(fileInfo.dataUrl){  
+        if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4'|| fileInfo.mimeType=='audio/mpeg'){
+          htm+=' <audio controls style="display:block;    width: 100%; max-width: 300px;" >';
+          //htm+='    <source src="horse.ogg" type="audio/ogg">';
+          htm+='    <source src="'+fileInfo.dataUrl +'" type="'+fileInfo.mimeType+'">';
+          htm+='           Player not supported.';
+          htm+=' </audio>';
+        }else  if(fileInfo.mimeType=='video/mp4' || fileInfo.mimeType=='video/mpeg'){
+          htm+=' <video controls style="display:block;    width: 100%; max-width: 300px;" >';
+          htm+='    <source src="'+fileInfo.dataUrl +'" type="'+fileInfo.mimeType+'">';
+          htm+='           Player not supported.';
+          htm+=' </video>';
+         }
+      }
+      
+     }
      
    }
   
@@ -1647,7 +2107,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
  }
  var placeholder= '';
  if(!notNull){
-   placeholder='Null';
+   placeholder=app.DROPDOWN_NULL ||'Null';
  }
  if(typeof fld.default !=='undefined'){
      placeholder= fld.default;
@@ -1728,7 +2188,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput_select2=function(fld,properti
   
   var placeholder= '';
   if(!notNull){
-    placeholder='Null';
+    placeholder= app.DROPDOWN_NULL || 'Null';
   }
   if(typeof fld.default !=='undefined'){
       placeholder= fld.default;

@@ -120,6 +120,7 @@
         app.MAPS_COPY_RIGHTS='@process.env.MAPS_COPY_RIGHTS';
         app.set_UPLOAD_SHAPEFILE_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_SHAPEFILE_MAX_SIZE_MB')) ;
         app.set_UPLOAD_RASTER_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_RASTER_MAX_SIZE_MB')) ;
+        app.set_UPLOAD_FILE_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_FILE_MAX_SIZE_MB')) ;
        
         app.initMap_Lon=(parseFloat('@process.env.INITMAP_LONGITUDE')) ;
         app.initMap_Lat=(parseFloat('@process.env.INITMAP_LATITUDE')) ;

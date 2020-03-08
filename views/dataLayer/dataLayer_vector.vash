@@ -310,12 +310,32 @@
                                     
                                     <option value="date">Date</option>
                                     <option value="timestamp with time zone">DateTime</option>
+                                      <option value="_filelink">File</option>
                                     
                                 </select>
                                 
                                  <span class="field-validation-valid" data-valmsg-for="type" data-valmsg-replace="true"></span>
                 </div>
             </div>
+             <div id="_filelink_defaultMimeType" class="form-group">
+                <label class="col-sm-3" for="defaultMimeType">Default file type:</label>
+                <div class="col-sm-4">
+                           <select class="form-control " name="defaultMimeType" id="defaultMimeType"  value="">
+                                    <option value="">Unknow</option>
+                                    <option value="text/plain" >text/plain</option>
+                                    <option value="image/jpeg">image/jpeg</option>
+                                    <option value="image/png">image/png</option>
+                                    <option value="image/tiff">image/tiff</option>
+                                    <option value="image/gif">image/gif</option>
+                                    <option value="application/pdf">pdf</option>
+                                    <option value="audio/mp3">audio/mp3</option>
+                                    <option value="audio/mp4">audio/mp4</option>
+                                    <option value="audio/mpeg">audio/mpeg</option>
+                                    <option value="video/mp4">video/mp4</option>
+                                    <option value="video/mpeg">video/mpeg</option>
+                                </select>
+                </div>
+             </div>
             <div class="form-group">
                 <div  class="col-sm-offset-3 col-sm-8">
                     <span id="typeTip" class="help-block text-info"></span>

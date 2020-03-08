@@ -4,18 +4,25 @@ services:
   imsep_postgis:
     container_name: imsep_postgis
     restart: unless-stopped
-    image: kartoza/postgis:11.0-2.5
-    #image: kartoza/postgis:latest
-    ports: 
-      - "25432:5432"
+    #image: kartoza/postgis:11.0-2.5
+    image: mdillon/postgis:latest
+    #ports: 
+    #  - "25432:5432"
     volumes:  
       #- imsepdb:/var/lib/postgresql/data
       #- c:\docker\imsep\db_data:/var/lib/postgresql/11/main  
-      - imsepdb:/var/lib/postgresql/11/main  
+      #- imsepdb:/var/lib/postgresql/data  
+      #- c:\docker\imsep\db_data:/var/lib/postgresql/11/main
+      - imsepdb:/var/lib/postgresql/11/main 
+      - imsepdb_mdillon:/var/lib/postgresql/data
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
+      POSTGRES_PASSWORD: d747db4520c046ccb5db14f39a014746
+      
       POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL
+  
+      
   pgbackups:
         container_name: imsep_pgbackups
         image: prodrigestivill/postgres-backup-local
@@ -23,7 +30,7 @@ services:
         volumes:
             #- /var/opt/pgbackups:/backups
             #- pgbackups:/backups
-            - c:\docker\imsep\backups:/backups
+            - c:/docker/imsep/backups:/backups
         links:
             - imsep_postgis
         depends_on:
@@ -40,6 +47,7 @@ services:
             - BACKUP_KEEP_WEEKS=4
             - BACKUP_KEEP_MONTHS=6
             - HEALTHCHECK_PORT=1337
+            
   imsep:
     container_name: imsep
     restart: unless-stopped
@@ -49,6 +57,8 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - imsep_postgis
+      #imsep_postgis:
+      #  condition: service_healthy
     links:
       - imsep_postgis
     environment:
@@ -70,5 +80,6 @@ services:
       
 volumes:
   imsepdb:
+  imsepdb_mdillon:
   pgbackups:
     
