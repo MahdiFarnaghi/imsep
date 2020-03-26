@@ -1258,5 +1258,384 @@ module.exports = function () {
         res.redirect('/admin/groups');
 
     };
+
+     /**
+     * GET /admin/permissiontypes
+     */
+    module.permissionTypesGet = async function (req, res) {
+        var items;
+        var format;
+        if(req.query && 'format' in req.query){
+            format=req.query.format;
+        }
+        //var items = await models.User.findAll({ where: { parent: req.user.id } });
+        items = await models.PermissionType.findAll(
+            {
+                
+            }
+            
+        );
+        if(format=='json'){
+            return res.json({
+                items:items
+            })    
+        }else{
+            res.render('admin/permissionTypes', {
+                title: 'Permission Types',
+                items: items
+            });
+        }
+    };
+   /**
+     * GET /permissiontypes
+     */
+    module.permissionTypesGetJson = async function (req, res) {
+        var items;
+        var accessType=undefined;
+        if(req.query && 'accesstype' in req.query){
+            accessType=req.query.accesstype;
+        }
+        var where=null;
+        if(accessType){
+            where={accessType:accessType}
+        }
+        //var items = await models.User.findAll({ where: { parent: req.user.id } });
+        items = await models.PermissionType.findAll(
+            {
+                where:where
+            }
+            
+        );
+        
+        return res.json({
+            items:items
+        });
+    }    
+        
+     /**
+     * GET /admin/permissiontype/:id
+     */
+    module.permissionTypeGet = async function (req, res) {
+        var item,err;
+        if (req.params.id && req.params.id != '-1') {
+            [err, item] = await util.call(models.PermissionType.findOne({
+                where: {
+                    id: req.params.id
+                }
+                })
+            );
+            if (!item) {
+                req.flash('error', {
+                    msg: 'Not found!'
+                });
+                return res.redirect('admin/permissiontypes');
+            }
+
+        }
+     
+        res.render('admin/permissionType', {
+            title: 'Permission Type',
+            item: item || {
+                id: -1
+            }
+        });
+    };
+     /**
+     * POST /admin/permissiontype/:id
+     */
+    module.permissionTypePost = async function (req, res) {
+        
+        req.assert('contentType', 'contentType cannot be blank').notEmpty();
+        req.sanitizeBody('contentType').escape();
+
+        req.assert('caption', 'caption cannot be blank').notEmpty();
+        req.sanitizeBody('caption').escape();
+        req.assert('permissionNames', 'permissionNames cannot be blank').notEmpty();
+        req.sanitizeBody('permissionNames').escape();
+
+        req.assert('accessType', 'accessType cannot be blank').notEmpty();
+        req.sanitizeBody('accessType').escape();
+        
+        var permissiontypeId = req.params.id || -1;
+        try {
+            permissiontypeId = parseInt(permissiontypeId);
+        } catch (ex) { }
+        
+        var errors = req.validationErrors();
+        
+        if (req.body.updatedAt) {
+            try {
+                req.body.updatedAt = new Date(parseInt(req.body.updatedAt));
+            } catch (ex) {
+            }
+        }
+
+        if (errors) {
+            req.flash('error', errors);
+            res.render('admin/permissionType', {
+                title: 'Permission Type',
+                item: {
+                    id: permissiontypeId,
+                    contentType: req.body.contentType,
+                    caption: req.body.caption,
+                    accessType:req.body.accessType,
+                    permissionNames: req.body.permissionNames
+                }
+            });
+            return;
+        }
+        var owner = req.user;
+       
+        if (permissiontypeId == -1) {
+            try {
+                var newItem = await models.PermissionType.create({
+                    name: req.body.name,
+                    contentType: req.body.contentType,
+                    caption: req.body.caption,
+                    accessType:req.body.accessType,
+                    permissionNames: req.body.permissionNames
+                });
+               
+                req.flash('notify', {
+                    type:'success',
+                    notify:true,
+                    delay:3000,
+                    msg: 'Changes successfully saved!'
+                });
+                try {
+                    //if (req.body.isAdministrator) {
+                    //    administrators.addUser(newUser);
+                    //} else {
+                    //}
+                } catch (ex) { }
+               
+                return res.redirect('/admin/permissiontype/' + newItem.id);
+            } catch (ex) {
+                if (ex && ex.errors) {
+                    req.flash('error', {
+                        msg: 'Already exists!'
+                    });
+                } else
+                    req.flash('error', {
+                        msg: 'Unknow error!'
+                    });
+                    res.render('admin/permissionType', {
+                        title: 'Permission Type',
+                        item: {
+                            id: permissiontypeId,
+                            contentType: req.body.contentType,
+                            caption: req.body.caption,
+                            accessType:req.body.accessType,
+                            permissionNames: req.body.permissionNames
+                        }
+                    });
+                return;
+            }
+        } else {
+            try {
+                var item;
+                item = await models.PermissionType.findOne({
+                    where: {
+                        id: permissiontypeId
+                    }
+                });
+                
+
+                if (!item) {
+                    req.flash('error', {
+                        msg: 'Item not found!'
+                    });
+
+                    return res.redirect('/admin/permissiontype/' + permissiontypeId);
+                }
+               
+                if (req.body.updatedAt && item.updatedAt.getTime() !== req.body.updatedAt.getTime()) {
+                    req.flash('error', {
+                        msg: 'Information has been edited by another user. Please refresh the page and try again.'
+                    });
+                   
+                    res.render('admin/permissionType', {
+                        title: 'Permission Type',
+                        item: {
+                            id: permissiontypeId,
+                            contentType: req.body.contentType,
+                            caption: req.body.caption,
+                            accessType:req.body.accessType,
+                            permissionNames: req.body.permissionNames
+                        }
+                    });
+                        return;
+                }
+               
+                
+                item.set('contentType', req.body.contentType);
+                item.set('caption', req.body.caption);
+                item.set('accessType', req.body.accessType);
+                
+                item.set('permissionNames',  req.body.permissionNames);
+                await item.save();
+
+               
+                //req.flash('success', {
+                req.flash('notify', {
+                    type:'success',
+                    msg: 'Changes successfully saved!',
+                    notify:true,
+                    delay:3000
+                });
+                return res.redirect('/admin/permissiontype/' + permissiontypeId);
+            } catch (err) {
+               
+                    req.flash('error', {
+                        msg: 'Error in updating  infos!'
+                    });
+                
+
+                    res.render('admin/permissionType', {
+                        title: 'Permission Type',
+                        item: {
+                            id: permissiontypeId,
+                            contentType: req.body.contentType,
+                            caption: req.body.caption,
+                            accessType:req.body.accessType,
+                            permissionNames: req.body.permissionNames
+                        }
+                    });
+                return;
+            }
+
+        }
+    };
+
+ /**
+     * DELETE /admin/permissiontype/:id/delete
+     */
+    module.permissionTypeDelete = async function (req, res, next) {
+        var item;
+        var itemId;
+        
+        
+        if (req.params.id && req.params.id != '-1') {
+            itemId= req.params.id;
+            item = await models.PermissionType.findOne({
+                where: {
+                    id: itemId
+                }
+            });
+
+            if (!item) {
+                req.flash('error', {
+                    msg: 'Item not found or can not be deleted!'
+                });
+
+                return res.redirect('/admin/permisssiontype/' + itemId);
+            }
+        }
+        
+        var contentType;
+        try {
+            contentType= item.contentType;
+            await item.destroy();
+        } catch (ex) {
+            req.flash('error', {
+                msg: 'Failed to delete item!'
+            });
+            return res.redirect('/admin/permissiontype/' + itemId);
+        }
+
+        try{
+            var tryDelete = await models.Permission.destroy(
+                {
+                     where: {
+                        contentType:contentType,
+                        contentId:null
+                         }
+                });
+            }catch(ex){}
+
+        req.flash('info', {
+            msg: `(${contentType}) has been permanently deleted.`
+        });
+
+        res.redirect('/admin/permissiontypes');
+
+    };
+
+    module._CheckDataPermissionTypes = async function (user,permissionTypeIds,deny_permissionName,grant_permissionName) {
+        return await module._CheckPermissionTypes('data',user,permissionTypeIds,deny_permissionName,grant_permissionName);
+     };
+     module._CheckPermissionTypes = async function (accessType,user,permissionTypeIds,deny_permissionName,grant_permissionName) {
+         var AccessGranted=true;
+         if(!user){
+             AccessGranted=false;
+             return AccessGranted;
+         }
+         if(user.userName=='superadmin' || user.userName=='admin'){
+             return AccessGranted; 
+         }
+         if( permissionTypeIds && permissionTypeIds.length){
+             AccessGranted=false;
+             var allPermissionTypes_where={
+                 id:permissionTypeIds 
+             }
+             if(accessType){
+                 allPermissionTypes_where['accessType']=accessType ;
+             }
+             var allPermissionTypes = await models.PermissionType.findAll({
+                  where: allPermissionTypes_where,
+                   order: [['displayOrder']] });
+                  
+             var groups = user.BelongsToGroups.map(v => {return v.id;});
+ 
+              var AccessDenied=false;
+              if(deny_permissionName){
+                 for(var i=0;i<allPermissionTypes.length;i++){
+                     var contentType =allPermissionTypes[i].contentType;
+ 
+                     var deniedAccess = await models.Permission.findAll(
+                         {
+                             where: {
+                                 contentId: null,
+                                 contentType:contentType,
+                                 grantToType: 'group',
+                                 grantToId: groups,
+                                 permissionName:deny_permissionName
+                                 }
+                             
+                         });
+                         if(deniedAccess && deniedAccess.length){
+                             AccessDenied=true;
+                             break;
+                         }
+                 }
+             }
+             if(!AccessDenied && grant_permissionName){
+                 for(var i=0;i<allPermissionTypes.length;i++){
+                     var contentType =allPermissionTypes[i].contentType;
+ 
+                     var grantedAccesses = await models.Permission.findAll(
+                        {
+                             where: {
+                                  contentId: null,
+                                  contentType:contentType,
+                                  grantToType: 'group',
+                                  grantToId: groups,
+                                  permissionName:grant_permissionName//['Edit','View']
+                                 }
+                              
+                        });
+                        if(grantedAccesses && grantedAccesses.length){
+                         AccessGranted=true;
+                            break;
+                        }
+                 }
+             } 
+ 
+           }else{
+             AccessGranted=true; 
+           }
+ 
+           return AccessGranted;
+     };
     return module;
 }

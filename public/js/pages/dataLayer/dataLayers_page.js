@@ -50,6 +50,11 @@ var pageTask={
     $('#applyMapExtent').prop("checked",self.applyMapExtent?true:false);
     $('#applyMapExtent').change(function(){
       self.applyMapExtent= $(this).prop("checked");
+      if(self.applyMapExtent){
+        $('.extent-map-panel').addClass('has-active-filter');
+      }else{
+        $('.extent-map-panel').removeClass('has-active-filter');
+      }
       self.applyFilters();
     })
     
@@ -256,6 +261,8 @@ deleteItemForReal:function(itemId){
     this.fillItems(this.items);
     this.fillOrderByList(this.data.pagination);
     this.fillingUI=false;
+    $('.panel-group').has('.list-group-item').removeClass('has-active-filter');
+    $('.panel-group').has('.list-group-item.active').addClass('has-active-filter');
   },
   get_pagination:function(pagination){
     var self=this;

@@ -6,7 +6,8 @@ var app = {
     version: '1.0.0',
     identity: undefined,
     pageData:{},
-
+    eventHandlers:[],
+    snapInteractions:[],
     // init map extent settings are filled in layout.vash from env settings
     initMap_Lon:37.41,
     initMap_Lat:9,
@@ -55,6 +56,17 @@ var app = {
          this.routeServiceTokens= v.split(',');   
         }
     },
+    render:function(template,model){
+        if (!model){
+            model=this;
+        }
+        if(typeof vash !=='undefined'){
+            var tpl = vash.compile( template );
+            return tpl(model);
+        }else{
+            return 'vash engine is not loaded';
+        }
+    },
     htmlEncode:function(value){
         //return $('<div/>').text(value).html();
         if(!value){
@@ -87,6 +99,68 @@ var app = {
             isMobile_ = true;
         }
         return isMobile_
+    },
+    registerEventhandler:function (type,handler) {
+        var handlers= this.eventHandlers[type];
+        if(!handlers){
+            handlers=[];
+            this.eventHandlers[type] =handlers;
+        }
+        handlers.push(handler);
+    },
+    unRegisterEventhandler:function (type,handler) {
+        var handlers= this.eventHandlers[type];
+        if(!handlers){
+            handlers=[];
+            this.eventHandlers[type] =handlers;
+        }
+        var index= handlers.findIndex(function (handler_) {
+            if(handler && (handler== handler_)){
+                return true;
+            }
+            return false;
+        });
+        if(index>-1){
+            handlers.splice(index,1);
+        }
+    },
+    dispatchEvent: function (type,eventArgs) {
+        var handlers= this.eventHandlers[type];
+        if(!handlers){
+            handlers=[];
+            this.eventHandlers[type] =handlers;
+        } 
+        var ii=handlers.length;
+        for (var i = 0; i < ii; i++) {
+
+            if (handlers[i] && (handlers[i].call(this, eventArgs) === false || (eventArgs && eventArgs.propagationStopped))) {
+              break;
+            }
+          } 
+          
+    },
+    registerSnapInteraction:function(interaction){
+        this.snapInteractions.push(interaction);
+
+    },
+    addSnapInteractions:function(map){
+        if(!map){
+            return;
+        }
+        for(var i=0;i<this.snapInteractions.length;i++){
+            map.removeInteraction(this.snapInteractions[i]);
+            if(this.snapInteractions[i].getActive()){
+                map.addInteraction(this.snapInteractions[i]);
+            }
+        }
+    },
+    removeSnapInteractions:function(map){
+        if(!map){
+            return;
+        }
+        for(var i=0;i<this.snapInteractions.length;i++){
+            map.removeInteraction(this.snapInteractions[i]);
+        }
     }
 
 };

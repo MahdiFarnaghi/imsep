@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?> 
+<!-- @process.env.MAPS_COPY_RIGHTS --> 
+<WMT_MS_Capabilities version="1.1.1">
+<Service>
+
+  <Name>OGC:WMS</Name>
+  <Title>@(model.title || 'WMS')</</Title>
+  <Abstract>@model.abstract</Abstract>
+  <KeywordList>
+    @if(model.keywords){
+      @model.keywords.forEach(function(keyword) {
+        <Keyword>@keyword</Keyword>
+      })
+    }
+  </KeywordList>
+  @*<OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href=""/>*@
+  <OnlineResource xlink:type="simple" xlink:href="@(model.host)" xmlns:xlink="http://www.w3.org/1999/xlink" />
+  <Fees>none</Fees>
+  <AccessConstraints>none</AccessConstraints>
+  <MaxWidth>2000</MaxWidth>
+  <MaxHeight>2000</MaxHeight>
+</Service>
+<Capability>
+  <Request>
+    <GetCapabilities>
+      <Format>application/vnd.ogc.wms_xml</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="@(model.host)"/></Get>
+        </HTTP>
+      </DCPType>
+    </GetCapabilities>
+    <GetMap>
+        <Format>image/png</Format>
+        <Format>image/tiff</Format>
+      <DCPType>
+        <HTTP>
+          <Get><OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="@(model.host)"/></Get>
+        </HTTP>
+      </DCPType>
+    </GetMap>
+
+  </Request>
+  <Exception>
+    <Format>application/vnd.ogc.se_xml</Format>
+
+  </Exception>
+  <Layer>
+    <Title>@model.title</Title>
+    <SRS>EPSG:3857</SRS>
+    <LatLonBoundingBox minx="-180" miny="-85.0511287798" maxx="180" maxy="85.0511287798" />
+    <BoundingBox SRS="EPSG:3857" minx="-20037508.3428" miny="-20037508.3428" maxx="20037508.3428" maxy="20037508.3428" />
+    @model.layers.forEach(function(layer) {
+      <Layer>
+        <Name>@layer.title</Name>
+        <Title>@layer.title</Title>
+        <LatLonBoundingBox minx="@layer.minx" miny="@layer.miny" maxx="@layer.maxx" maxy="@layer.maxy" />
+        <BoundingBox SRS="EPSG:3857" minx="@layer.mercminx" miny="@layer.mercminy" maxx="@layer.mercmaxx" maxy="@layer.mercmaxy" />
+    </Layer>
+    })
+  </Layer>
+</Capability>
+</WMT_MS_Capabilities>

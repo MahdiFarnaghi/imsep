@@ -1,0 +1,30 @@
+<wfs:FeatureCollection
+ xmlns:xs="http://www.w3.org/2001/XMLSchema"
+ xsi:schemaLocation="@(model.host)featuretype @(model.host)request=DescribeFeatureType&amp;version=1.1.0&amp;typename=L_@(model.id) http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd"
+ xmlns:ns="@(model.host)featuretype"
+ xmlns:gml="http://www.opengis.net/gml"
+ xmlns:wfs="http://www.opengis.net/wfs"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+@*<gml:boundedBy>
+  <gml:Envelope srsName="urn:ogc:def:crs:EPSG:6.9:32639">
+    <gml:lowerCorner>452016.75813546125 3918250.382066004</gml:lowerCorner> 
+    <gml:upperCorner>946923.49766700156 4205774.0133032929</gml:upperCorner> 
+  </gml:Envelope>
+</gml:boundedBy>*@
+ @model.features.forEach(function(feature) {
+   <gml:featureMember>
+      <ns:L_@(model.id) gml:id="@feature.id">
+        <ns:id>@feature.id</ns:id> 
+      
+       @model.fields.forEach(function(fld) {
+         @if(fld.isShape){
+          <ns:@(fld.name)>@(html.raw(feature.geometry))</ns:@(fld.name)> 
+         }else{
+          <ns:@(fld.name)>@(feature.properties[fld.origName])</ns:@(fld.name)> 
+         }
+        })
+      </ns:L_@(model.id)>
+   </gml:featureMember>
+ })
+  </wfs:FeatureCollection>

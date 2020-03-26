@@ -42,7 +42,43 @@
                                @* <span class="help-block">This is some help text that breaks onto a new line and may extend more than one line.</span>*@
                             </div>
                 </div>
-                 
+   @if(!model.isNew){
+        @if (model.dataLayer.Metadata){
+                 <div class="checkbox  ">
+                    <label class="">
+                        <input type="checkbox" name="publish_ogc_service" @(model.dataLayer.publish_ogc_service?'checked':'' ) value="" />Publish OGC services
+                    </label>
+                </div>    
+                }else{
+                 <div class="checkbox form-group">
+                    <label class="col-sm-7  disabled">
+                        <input type="checkbox" name="publish_ogc_service" disabled="disabled" @(model.dataLayer.publish_ogc_service?'checked':'' ) value="" />Publish OGC services
+                    </label>
+                    <small class="col-sm-12 text-muted">Create metadata in order to publish OGC serices</small>
+                </div> 
+                }
+ <div class="panel">
+                    <div class="panel-body">
+                        <div class="form-horizontal">
+                            <legend><i class="fas fa-tag"></i> Metadata</legend>
+                             @if (!model.dataLayer.Metadata){
+                            <div class="form-group">
+                                <div class=" col-sm-2  ">
+                                    <a href="/datalayer/@model.dataLayer.id/editmetadata" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Create</a>
+                                </div>  
+                            </div>
+                            }else{
+                            <div class="form-group">
+                                <div class=" col-sm-2  ">
+                                    <a href="/datalayer/@model.dataLayer.id/editmetadata" class="btn btn-info	"><span class="glyphicon glyphicon-edit"></span> Edit</a>
+                                </div>  
+                            </div>
+                            }
+                          
+                        </div>
+                    </div>    
+</div>
+}              
                @if(model.userIsOwnerOfItem){
                  <div class="panel">
                     <div class="panel-body">
@@ -310,7 +346,7 @@
                                     
                                     <option value="date">Date</option>
                                     <option value="timestamp with time zone">DateTime</option>
-                                      <option value="_filelink">File</option>
+                                    <option value="_filelink">File</option>
                                     
                                 </select>
                                 

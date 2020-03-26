@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wfs:WFS_Capabilities 
+  xmlns:ns="@process.env.APP_HOST"
+ xmlns:osm="http://openstreemap.org"
+  xmlns:topp="http://www.openplans.org/topp" 
+  xmlns:usa="http://census.gov" 
+  xmlns:ne="http://naturalearthdata.com" 
+  xmlns:opengeo="http://opengeo.org" 
+  xmlns:w3geo="http://ahocevar.net/w3geo-geoserver-workspace" 
+  xmlns:xml="http://www.w3.org/XML/1998/namespace" 
+  xsi:schemaLocation="http://www.opengis.net/wfs/2.0 http://schemas.opengis.net/wfs/2.0/wfs.xsd" 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+  xmlns:xlink="http://www.w3.org/1999/xlink" 
+  xmlns:fes="http://www.opengis.net/fes/2.0" 
+  xmlns:gml="http://www.opengis.net/gml/3.2" 
+  xmlns:ows="http://www.opengis.net/ows/1.1" 
+  xmlns:wfs="http://www.opengis.net/wfs/2.0" 
+  xmlns="http://www.opengis.net/wfs/2.0" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.0.0">
+  <ows:ServiceIdentification>
+      <ows:Title>@(model.title || 'WFS')</ows:Title>
+      <ows:Abstract>@model.abstract</ows:Abstract>
+      <ows:Keywords>
+      @if(model.keywords){
+        @model.keywords.forEach(function(keyword) {
+          <ows:Keyword>@keyword</ows:Keyword>
+        })
+      }
+      </ows:Keywords>
+      <ows:ServiceType>WFS</ows:ServiceType>
+      <ows:ServiceTypeVersion>2.0.0</ows:ServiceTypeVersion>
+      <ows:Fees>NONE</ows:Fees>
+      <ows:AccessConstraints>NONE</ows:AccessConstraints>
+  </ows:ServiceIdentification>
+  <ows:ServiceProvider>
+    <ows:ProviderName>@process.env.SITE_NAME</ows:ProviderName>
+    <ows:ServiceContact>
+      <ows:IndividualName></ows:IndividualName>
+      <ows:PositionName/>
+      <ows:ContactInfo>
+        <ows:Phone>
+          <ows:Voice></ows:Voice>
+          <ows:Facsimile/>
+        </ows:Phone>
+        <ows:Address>
+          <ows:DeliveryPoint/>
+          <ows:City></ows:City>
+          <ows:AdministrativeArea/>
+          <ows:PostalCode></ows:PostalCode>
+          <ows:Country></ows:Country>
+          <ows:ElectronicMailAddress>@process.env.CONTACT_TO_EMAIL</ows:ElectronicMailAddress>
+        </ows:Address>
+      </ows:ContactInfo>
+    </ows:ServiceContact>
+  </ows:ServiceProvider>
+  <ows:OperationsMetadata>
+    <ows:Operation name="GetCapabilities">
+      <ows:DCP>
+        <ows:HTTP>
+          <ows:Get xlink:href="@(model.host)"/>
+        </ows:HTTP>
+      </ows:DCP>
+      <ows:Parameter name="AcceptVersions">
+        <ows:AllowedValues>
+          <ows:Value>1.1.0</ows:Value>
+          <ows:Value>2.0.0</ows:Value>
+        </ows:AllowedValues>
+      </ows:Parameter>
+      <ows:Parameter name="AcceptFormats">
+        <ows:AllowedValues>
+          <ows:Value>text/xml</ows:Value>
+        </ows:AllowedValues>
+      </ows:Parameter>
+      <ows:Parameter name="Sections">
+        <ows:AllowedValues>
+          <ows:Value>ServiceIdentification</ows:Value>
+          <ows:Value>ServiceProvider</ows:Value>
+          <ows:Value>OperationsMetadata</ows:Value>
+          <ows:Value>FeatureTypeList</ows:Value>
+          <ows:Value>Filter_Capabilities</ows:Value>
+        </ows:AllowedValues>
+      </ows:Parameter>
+    </ows:Operation>
+    <ows:Operation name="DescribeFeatureType">
+      <ows:DCP>
+        <ows:HTTP>
+          <ows:Get xlink:href="@(model.host)" />
+        </ows:HTTP>
+      </ows:DCP>
+      <ows:Parameter name="outputFormat">
+        <ows:AllowedValues>
+          <ows:Value>json</ows:Value>
+          <ows:Value>application/json</ows:Value>
+        @*<ows:Value>application/gml+xml; version=3.2</ows:Value>*@
+        </ows:AllowedValues>
+      </ows:Parameter>
+    </ows:Operation>
+    <ows:Operation name="GetFeature">
+      <ows:DCP>
+        <ows:HTTP>
+          <ows:Get xlink:href="@(model.host)" />
+        </ows:HTTP>
+      </ows:DCP>
+      <ows:Parameter name="resultType">
+        <ows:AllowedValues>
+          <ows:Value>results</ows:Value>
+          <ows:Value>hits</ows:Value>
+        </ows:AllowedValues>
+      </ows:Parameter>
+      <ows:Parameter name="outputFormat">
+        <ows:AllowedValues>
+          <ows:Value>json</ows:Value>
+          <ows:Value>application/json</ows:Value>
+          
+          <ows:Value>application/gml+xml; version=3.1</ows:Value>
+           <ows:Value>text/xml; subtype=gml/3.1.1</ows:Value>
+          @*
+          <ows:Value>GML2</ows:Value>
+          <ows:Value>KML</ows:Value>
+          <ows:Value>SHAPE-ZIP</ows:Value>
+          
+          <ows:Value>application/vnd.google-earth.kml xml</ows:Value>
+          <ows:Value>application/vnd.google-earth.kml+xml</ows:Value>
+          <ows:Value>csv</ows:Value>
+          <ows:Value>gml3</ows:Value>
+          <ows:Value>gml32</ows:Value>
+          
+          <ows:Value>text/xml; subtype=gml/2.1.2</ows:Value>
+          <ows:Value>text/xml; subtype=gml/3.1.1</ows:Value>
+          <ows:Value>text/xml; subtype=gml/3.2</ows:Value>*@
+        </ows:AllowedValues>
+      </ows:Parameter>
+      <ows:Constraint name="CountDefault">
+        <ows:NoValues/>
+        <ows:DefaultValue>1000000</ows:DefaultValue>
+      </ows:Constraint>
+    </ows:Operation>
+  </ows:OperationsMetadata>
+  <FeatureTypeList>
+  @model.layers.forEach(function(layer) {
+    <FeatureType>
+        <Name>ns:L_@(layer.id)</Name>
+        <Title>@layer.title</Title>
+        <Abstract>@layer.abstract</Abstract>
+        <ows:Keywords>
+        @if(layer.keywords){
+          @layer.keywords.forEach(function(keyword) {
+            <ows:Keyword>@keyword</ows:Keyword>
+          })
+        }
+        </ows:Keywords>
+        <DefaultCRS>urn:ogc:def:crs:EPSG::@layer.srid</DefaultCRS>
+        <ows:WGS84BoundingBox>
+          <ows:LowerCorner>@layer.minx @layer.miny</ows:LowerCorner>
+          <ows:UpperCorner>@layer.maxx @layer.maxy</ows:UpperCorner>
+        </ows:WGS84BoundingBox>
+    </FeatureType>
+  })
+  </FeatureTypeList>
+
+
+  <fes:Filter_Capabilities>
+  </fes:Filter_Capabilities>
+
+</wfs:WFS_Capabilities>

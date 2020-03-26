@@ -300,10 +300,10 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
   this.routeTasks= new RouteTasks(this.app,this,{});
   this.routeTasks.OnActivated();
   
-  if (location.protocol === 'https:') {
-    //this.geolocationTasks= new GeolocationTasks(this.app,this,{});
-    //this.geolocationTasks.OnActivated();
-   }
+ if (location.protocol === 'https:' && app.isMobile()) {
+    this.geolocationTasks= new GeolocationTasks(this.app,this,{});
+    this.geolocationTasks.OnActivated();
+ }
   
 
 
@@ -710,6 +710,7 @@ MapContainer.prototype.loadFromJson = function(mapJsonStr) {
       this.load(mapJson);
 }
 MapContainer.prototype.load = function(mapSettings) {
+    var self=this;
   this.mapSettings = mapSettings;
   this.setActiveLayer(null);
   if (mapSettings.details) {
@@ -752,8 +753,25 @@ MapContainer.prototype.load = function(mapSettings) {
       for (var i = 0; i < mapSettings.preview.length; i++) {
           zoomLayer=this.addData(mapSettings.preview[i]);
       }
-      this.zoomToLayer(zoomLayer);
+      if(zoomLayer){
+        self.zoomToLayer(zoomLayer);
+      }
       this.legend.setVisible(false);
+      if(mapSettings.options){
+        var extent =mapSettings.options.bbox;
+
+        if(extent){
+            extent = ol.extent.applyTransform(extent, ol.proj.getTransform("EPSG:4326", mapProjectionCode));
+            map.getView().fit(extent, {
+                size: map.getSize()
+            });
+        }
+        if(mapSettings.options.layerType=='WMS'){
+            self.addNewWMS(mapSettings.options);
+        }else if(mapSettings.options.layerType=='WFS'){
+            self.addNewWFS(mapSettings.options);
+        }
+    }
   }
 
   // var vectorSource = new ol.source.Vector({
@@ -1440,86 +1458,91 @@ MapContainer.prototype.addTestWFS=function(){
 
     this.addLayer(layerInfo);
     }
-MapContainer.prototype.addNewWMS=function(){
-    var self=this;  
-    var layerInfo={
-            title:'',
-            custom:{
-                type : 'ol.layer.Tile',
-                source:'ol.source.WMS',
-                dataObj:{
-                    details:{
-                        url: '',
-                        params: {'LAYERS': ''}
+    MapContainer.prototype.addNewWMS = function(options) {
+        options=options||{};
+        var self = this;
+        var layerInfo = {
+            title: options.title||'',
+            custom: {
+                type: 'ol.layer.Tile',
+                source: 'ol.source.WMS',
+                dataObj: {
+                    details: {
+                        url: options.url || '',
+                        params: {
+                            'LAYERS': options.layers || options.Layers || options.LAYERS ||''
+                        }
                     }
                 }
             }
         };
-        
-      var newLayer= this.createLayer(layerInfo);
-
-      var layerPropertiesDlg = new ObjectPropertiesDlg(self, newLayer, {
-        isNew:true,
-        title:'Add new WMS layer',
-        tabs:[
-            new LayerGeneralTab(),
-            new LayerStyleTab(),
-            new LayerLabelTab(),
-            new RasterDisplayTab(),
-            new LayerSourceTab(),
-          ],
-          activeTabIndex:4,
-        onapply:function(dlg){
-            self.map.addLayer(newLayer);
-        },
-        helpLink:'/help#newWMSLayer'
-
-      }).show();
-      
-        
-}
-MapContainer.prototype.addNewWFS=function(){
-    var self=this;  
-    var layerInfo={
-            title:'',
-            custom:{
-                type : 'ol.layer.Vector',
-                source:'ol.source.Vector',
-                format:'ol.format.WFS',
-                shapeType:'',
-                dataObj:{
-                    details:{
-                        shapeType:'',
-                        url: '',
-                        params: {'typename': ''}
+    
+        var newLayer = this.createLayer(layerInfo);
+    
+        var layerPropertiesDlg = new ObjectPropertiesDlg(self, newLayer, {
+            isNew: true,
+            title: 'Add new WMS layer',
+            tabs: [
+                new LayerGeneralTab(),
+                new LayerStyleTab(),
+                new LayerLabelTab(),
+                new RasterDisplayTab(),
+                new LayerSourceTab(),
+            ],
+            activeTabIndex: 4,
+            onapply: function(dlg) {
+                self.map.addLayer(newLayer);
+            },
+            helpLink: '/help#newWMSLayer'
+    
+        }).show();
+    
+    
+    }
+    MapContainer.prototype.addNewWFS = function(options) {
+        options=options||{};
+        var self = this;
+        var layerInfo = {
+            title: options.title || options.name || '',
+            custom: {
+                type: 'ol.layer.Vector',
+                source: 'ol.source.Vector',
+                format: 'ol.format.WFS',
+                shapeType: options.shapetype || options.shapeType || '',
+                dataObj: {
+                    details: {
+                        shapeType: options.shapetype || options.shapeType || '',
+                        url: options.url || '',
+                        params: {
+                            'typename': options.typename || options.typeName || options.TYPENAME || ''
+                        }
                     }
                 }
             }
         };
-        
-      var newLayer= this.createLayer(layerInfo);
-
-      var layerPropertiesDlg = new ObjectPropertiesDlg(self, newLayer, {
-        isNew:true,
-        title:'Add new WFS layer',
-        tabs:[
-            new LayerGeneralTab(),
-            new LayerStyleTab(),
-            new LayerLabelTab(),
-            new LayerSourceTab(),
-            
-          ],
-          activeTabIndex:3,
-        onapply:function(dlg){
-            self.map.addLayer(newLayer);
-        }
-        ,
-        helpLink:'/help#newWFSLayer'
-
-      }).show();
-      
-        
-}
+    
+        var newLayer = this.createLayer(layerInfo);
+    
+        var layerPropertiesDlg = new ObjectPropertiesDlg(self, newLayer, {
+            isNew: true,
+            title: 'Add new WFS layer',
+            tabs: [
+                new LayerGeneralTab(),
+                new LayerStyleTab(),
+                new LayerLabelTab(),
+                new LayerSourceTab(),
+    
+            ],
+            activeTabIndex: 3,
+            onapply: function(dlg) {
+                self.map.addLayer(newLayer);
+            },
+            helpLink: '/help#newWFSLayer'
+    
+        }).show();
+    
+    
+    }
 MapContainer.prototype.addNewOSMXML_withOptions=function(options,features){
     var self=this;  
     options= options||{};
@@ -2617,3 +2640,53 @@ MapContainer.prototype.downloadDataFromWCS=function(){
         }   
       }).show();
 }
+MapContainer.prototype.showTopStatus=function(message,delay,tipElement, thenCb) {
+    var self=this;
+    if(!this.topStatus){
+        return;
+    }
+    // if(this._waitTimeoutHandler){
+    //     clearTimeout(this._waitTimeoutHandler);
+    //     this._waitTimeoutHandler=null;
+
+    // }
+    // if(wait){
+    //   this._waitTimeoutHandler= setTimeout(function(){
+    //         self.showTopStatus(message,delay,undefined,thenCb);
+    //     },wait);
+    //     return;
+    // }
+    if(this._topStatusTimeoutHandler){
+        clearTimeout(this._topStatusTimeoutHandler);
+        this._topStatusTimeoutHandler=null;
+        
+
+    }
+    if(this._StatusTipElement){
+        $(this._StatusTipElement).removeClass('active-tip');
+        this._StatusTipElement=null;
+    }
+    this._StatusTipElement=tipElement;
+    if(this._StatusTipElement){
+        $(this._StatusTipElement).addClass('active-tip');
+    }
+    this.topStatus.status(message);
+    //this.topStatus.show();  
+    if(delay){ 
+        this._topStatusTimeoutHandler=setTimeout(function(){
+            if(self._StatusTipElement){
+                $(self._StatusTipElement).removeClass('active-tip');
+            }
+            self.topStatus.hide();
+            if(thenCb){
+                thenCb();
+            }
+        } ,delay); 
+    }
+};
+MapContainer.prototype.hideTopStatus=function() {
+    if(!this.topStatus){
+        return;
+    }
+    this.topStatus.hide();
+};

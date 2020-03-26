@@ -7,6 +7,7 @@ module.exports = (sequelize, DataTypes) => {
             autoIncrement: true,
         },
         name: DataTypes.STRING,
+        caption:{type:DataTypes.STRING,allowNull: true},
         description: DataTypes.TEXT
         ,type: {
             type: DataTypes.ENUM('normal', 'system','hidden'),

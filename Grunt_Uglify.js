@@ -28,6 +28,10 @@ module.exports = {
         src:['public/js/pages/dataLayer/dataLayer_raster_page.js'],
         dest: 'public/dist/js/dataLayer_raster_page-<%= pkg.version %>-min.js'
     },
+    edit_metadata_page:{
+        src:['public/js/pages/dataLayer/edit_metadata_page.js'],
+        dest: 'public/dist/js/edit_metadata_page-<%= pkg.version %>-min.js'
+    },
     group_page:{
         src:['public/js/pages/admin/group_page.js'],
         dest: 'public/dist/js/group_page-<%= pkg.version %>-min.js'
@@ -133,5 +137,9 @@ module.exports = {
             'public/js/map/objectPropertiesDlg.js'
         ],
         dest: 'public/dist/js/map-<%= pkg.version %>-min.js'
+    }
+    ,catalog_page:{
+        src:['public/js/pages/ows/catalog_page.js'],
+        dest: 'public/dist/js/catalog_page-<%= pkg.version %>-min.js'
     }
   }

@@ -9,6 +9,7 @@ var models = require('../models/index');
 var sharp= require('sharp');
 var ogr2ogr= require('../ogr2ogr');
 
+var adminController=require('./adminController')();
 var dataRelationshipController=require('./dataRelationshipController')();
 
 module.exports = function (postgresWorkspace) {
@@ -671,7 +672,9 @@ module.exports = function (postgresWorkspace) {
                             id: { [Op.eq]: req.params.id },
                             dataType: { [Op.eq]:  dataType }
                         }
-                    },include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent'] }] 
+                    },include: [
+                         { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent'] }
+                         ,{model:models.Metadata,as:'Metadata',require:false} ] 
                 }));
                 if(item){
                     userHasEditPermission=true;
@@ -686,7 +689,10 @@ module.exports = function (postgresWorkspace) {
                             dataType: { [Op.eq]:  dataType }
                             //, ownerUser: { [Op.eq]:  req.user.id },
                         }
-                    },include: [ { model: models.User, as: 'OwnerUser' ,attributes: ['userName','id','firstName','lastName','parent']}] 
+                    },include: [ 
+                        { model: models.User, as: 'OwnerUser' ,attributes: ['userName','id','firstName','lastName','parent']}
+                        ,{model:models.Metadata,as:'Metadata',require:false} 
+                    ] 
                 }));
                 if(item){
                     
@@ -1007,6 +1013,8 @@ module.exports = function (postgresWorkspace) {
     req.body.grantViewPermissionToAllUsers = ('grantViewPermissionToAllUsers' in req.body) ? true : false;
     req.body.grantEditPermissionToAllUsers = ('grantEditPermissionToAllUsers' in req.body) ? true : false;
     
+    req.body.publish_ogc_service = ('publish_ogc_service' in req.body) ? true : false;
+
     var layerId = req.params.id || -1;
     try {
         layerId = parseInt(layerId);
@@ -1041,6 +1049,7 @@ module.exports = function (postgresWorkspace) {
                     dataType: dataType,
                     description:req.body.description,
                     keywords:req.body.keywords,
+                    publish_ogc_service:req.body.publish_ogc_service,
                     ownerUser: (owner ? owner.id : 0), 
                     details:JSON.stringify({isNew:true })
             });
@@ -1248,6 +1257,7 @@ module.exports = function (postgresWorkspace) {
             item.set('name', req.body.name);
             item.set('description', req.body.description);
             item.set('keywords', req.body.keywords);
+            item.set('publish_ogc_service',req.body.publish_ogc_service);
             item.set('details',JSON.stringify(details));
             
             [err, item] = await util.call(item.save());
@@ -1495,6 +1505,7 @@ module.exports = function (postgresWorkspace) {
             item.set('name', req.body.name);
             item.set('description', req.body.description);
             item.set('keywords', req.body.keywords);
+            item.set('publish_ogc_service',req.body.publish_ogc_service);
             item.set('details',JSON.stringify(details));
             
             [err, item] = await util.call(item.save());
@@ -1689,6 +1700,10 @@ module.exports = function (postgresWorkspace) {
                         }
                     }
                 }
+                var metadata= await item.getMetadata();
+                if(metadata){ //update metadata
+                    await module.updateLayerMetadata({datasetItem:item,create:false});
+                 }
                 result.status=true;
                 result.id= item.id;
                 result.item=item;
@@ -1985,6 +2000,121 @@ module.exports = function (postgresWorkspace) {
          } catch (err) {
             result.status=false;
             result.message= 'Error in updating thumbnail image';
+            return res.json(result) ;
+         }
+        
+     };
+      /**
+     * POST /datalayer/:id/display
+     */
+    module.displayPost = async function (req, res,  next) {
+        
+        var result={
+            status:false
+        };
+         
+ 
+         var errors = req.validationErrors();
+ 
+         if (errors) {
+            result.status=false;
+            result.message= errors;
+            return res.json(result) ;
+        }
+        
+         var err,item;
+         
+         var itemId=req.params.id;
+         [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']}]}) );
+         if (!item) {
+             result.status=false;
+             result.message= 'Data layer not found!';
+            return res.json(result) ;
+         }
+         var isOwner=false;
+        if(item.ownerUser== req.user.id) {
+            isOwner=true;
+        }else if (item.OwnerUser && item.OwnerUser.parent==req.user.id){
+            isOwner=true;
+        }
+  
+        if(!isOwner && !res.locals.identity.isAdministrator  )
+         {
+             var userHasEditPermission=false;
+             var err;
+             [err, item] = await util.call(models.DataLayer.findOne({
+                 where: {  id: itemId },
+                 include: [ 
+                         { model: models.Permission, as: 'Permissions'
+                             ,include: [
+                                 {
+                                     model: models.User, as: 'assignedToUser',
+                                     required: false,
+                                     where: {
+                                         id:  req.user.id
+                                     }
+                                 },
+                                 {
+                                     model: models.Group, as: 'assignedToGroup',
+                                     required: false,
+                                     include: [
+                                         {
+                                             model: models.User, as: 'Users',
+                                             required: true,
+                                             where: {
+                                                 id: req.user.id
+                                             }
+                                         }
+                                     ]
+                                 }
+                             ]
+                             }
+                     ]
+             }));
+
+             if(item){// get permission
+                 var permissions = item.Permissions;
+                 if(permissions){
+                     userHasEditPermission= permissions.some((p)=>{
+                        if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                            return (p.permissionName=='Edit' );
+                        }else return false;
+                     });
+                 }
+                 
+             }
+              
+             if(!userHasEditPermission){
+                 result.status=false;
+                 result.message= 'Access denied';
+                 return res.json(result) ;
+             }
+         }
+         try {
+           
+            var renderer= req.body.renderer;
+            var display= req.body.display;
+            var featureLabeler=req.body.featureLabeler;
+            var details={};
+            try{
+              details= JSON.parse( item.details);
+            }catch(ex){}
+            if(!details){
+              details={};
+             }
+             details.renderer=renderer;// for vector
+             details.featureLabeler=featureLabeler;
+             details.display=display;// for raster
+           //  var dataUri= 'data:image/png;base64,' + data.toString('base64');
+            item.set('details',JSON.stringify(details));
+              await item.save();
+             
+                result.status=true;
+                result.message= undefined;
+                return res.json(result) ;
+         } catch (err) {
+            result.status=false;
+            result.message= 'Error in updating display settings';
             return res.json(result) ;
          }
         
@@ -2398,7 +2528,12 @@ module.exports = function (postgresWorkspace) {
                }
               if(!isOwner && !res.locals.identity.isAdministrator  )
               {
-                
+                var AccessGranted= await adminController._CheckDataPermissionTypes(req.user,item.permissionTypes,'Deny',['Edit','View']) ;
+                if(!AccessGranted){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(403).end('Access denied');
+                    return;
+                }  
                 var userHasViewPermission=false;
                 var err;
                 [err, item] = await util.call(models.DataLayer.findOne({
@@ -3138,7 +3273,13 @@ module.exports = function (postgresWorkspace) {
             //     res.set('Content-Type', 'text/plain');
             //     res.status(403).end('Access denied');
             //     return;
-            // }   
+            // }  
+            var AccessGranted= await adminController._CheckDataPermissionTypes(req.user,item.permissionTypes,'Deny',['Edit']) ;
+            if(!AccessGranted){
+                res.set('Content-Type', 'text/plain');
+                res.status(403).end('Access denied');
+                return;
+            }  
             var userHasEditPermission=false;
             var err;
             [err, item] = await util.call(models.DataLayer.findOne({
@@ -3255,6 +3396,11 @@ module.exports = function (postgresWorkspace) {
             //    if(metadata){ //update metadata
             //        await module.updateLayerMetadata({datasetItem:item,create:false});
             //     }
+            await postgresWorkspace.updateVectorLayerExtent(item);
+            var metadata= await item.getMetadata();
+            if(metadata){ //update metadata
+                await module.updateLayerMetadata({datasetItem:item,create:false});
+             }
                return res.json(result);
             }
        }catch(ex){
@@ -3455,11 +3601,11 @@ module.exports = function (postgresWorkspace) {
        
             
             try{
-              //      await postgresWorkspace.updateVectorLayerExtent(item);
-                    // var metadata= await item.getMetadata();
-                    // if(metadata){ //update metadata
-                    //     await module.updateLayerMetadata({datasetItem:item,create:false});
-                    // }
+                   await postgresWorkspace.updateVectorLayerExtent(item);
+                    var metadata= await item.getMetadata();
+                    if(metadata){ //update metadata
+                        await module.updateLayerMetadata({datasetItem:item,create:false});
+                    }
             }catch(ex){
             
             }
@@ -3719,7 +3865,12 @@ module.exports = function (postgresWorkspace) {
             //todo: permission check
             if(req.user.id !== item.ownerUser && !res.locals.identity.isAdministrator  )
             {
-              
+                var AccessGranted= await adminController._CheckDataPermissionTypes(req.user,item.permissionTypes,'Deny',['Edit','View']) ;
+                if(!AccessGranted){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(403).end('Access denied');
+                    return;
+                } 
               var userHasViewPermission=false;
               var err;
               [err, item] = await util.call(models.DataLayer.findOne({
@@ -3991,6 +4142,141 @@ module.exports = function (postgresWorkspace) {
         //todo: permission check
         if(req.user.id !== item.ownerUser && !res.locals.identity.isAdministrator  )
         {
+            var AccessGranted= await adminController._CheckDataPermissionTypes(req.user,item.permissionTypes,'Deny',['Edit','View']) ;
+                if(!AccessGranted){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(403).end('Access denied');
+                    return;
+                } 
+            var userHasViewPermission=false;
+            var err;
+            [err, item] = await util.call(models.DataLayer.findOne({
+                where: {  id: itemId },
+                include: [ 
+                        { model: models.Permission, as: 'Permissions'
+                            ,include: [
+                                {
+                                    model: models.User, as: 'assignedToUser',
+                                    required: false,
+                                    where: {
+                                        id:  req.user.id
+                                    }
+                                },
+                                {
+                                    model: models.Group, as: 'assignedToGroup',
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.User, as: 'Users',
+                                            required: true,
+                                            where: {
+                                                id: req.user.id
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                            }
+                    ]
+            }));
+
+            if(item){// get permission
+                var permissions = item.Permissions;
+                if(permissions){
+                    userHasViewPermission= permissions.some((p)=>{
+                    if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                        return (p.permissionName=='Edit'|| p.permissionName=='View' );
+                    }else return false;
+                    });
+                }
+                
+            }
+            
+            if(!userHasViewPermission){
+                res.set('Content-Type', 'text/plain');
+                res.status(403).end('Access denied');
+                return;
+            }
+            
+            
+        }
+
+        
+        var details={};
+        try{
+          details= JSON.parse( item.details);
+        }catch(ex){}
+        if(!details){
+            details={};
+        }
+
+        //todo: workspace selection
+        try{
+         return await  module.rasterGetTile(req,res,item,details,x,y,z,ref_z,tileSize,display);  
+        }catch(ex){
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found.('+ ex.message +')' );
+            return;
+        }
+    };
+    module.rasterTileGet_0 = async function (req, res, next) {
+       
+        var item,err;
+        //var bbox= req.query.bbox;
+        var x,y,z;
+        x=req.query.x;
+        y=req.query.y;
+        z=req.query.z;
+        var ref_z= req.query.ref_z || 18;
+        try{
+            ref_z=  parseInt(ref_z);
+        }catch(ex){}
+        try{
+            x=  parseInt(x);
+        }catch(ex){}
+        try{
+            y=  parseInt(y);
+        }catch(ex){}
+        try{
+            z=  parseInt(z);
+        }catch(ex){}
+        var out_srid= 3857;//req.query.srid;// reproject to srid
+        var request=req.query.request || 'png';
+        var tileSize=req.query.size || 256;
+        var display= req.query.display;
+        var itemId=req.params.id;
+        
+        if(display){
+            try{
+                display= JSON.parse(display);
+            }catch(ex){}
+        }
+        if(!(req.params.id && req.params.id != '-1')){ 
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
+        }
+                    
+        [err, item] = await util.call(models.DataLayer.findByPk(itemId) );
+
+            
+        if (!item) {
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
+        }
+
+        
+        if (!item.details) {
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
+        }
+        //todo: permission check
+
+        //todo: permission check
+        if(req.user.id !== item.ownerUser && !res.locals.identity.isAdministrator  )
+        {
             
             var userHasViewPermission=false;
             var err;
@@ -4181,6 +4467,304 @@ module.exports = function (postgresWorkspace) {
             
         
     };
+
+    module.rasterGetTile = async function (req, res,item,details, x,y,z,ref_z,tileSize,display) {
+        //todo: workspace selection
+        var out_srid=3857;
+        var tableName= details.datasetName || item.name;
+        var oidField= details.oidField || 'rid';
+        var rasterField=details.rasterField || 'raster';
+        var srid=  details.spatialReference.srid || 3857;
+        if(!out_srid)
+        {
+            out_srid=details.spatialReference.srid || 3857;
+        }
+    
+        var BBand=3;
+        if(details.numberOfBands<3)
+          BBand=details.numberOfBands;
+        var GBand=2;
+        if(details.numberOfBands<2)
+            GBand=details.numberOfBands;   
+        var RBand=1;
+        if(details.bands && details.bands.length){
+            for(var i=0;i< details.bands.length;i++){
+                var band=details.bands[i];
+                if(!band.name){
+                band.name=band.colorInterpretation;
+                }
+                if(band.name==='Red'){
+                    RBand= band.id;
+                }
+                if(band.name==='Green'){
+                GBand= band.id;
+            }
+            if(band.name==='Blue'){
+                BBand= band.id;
+            }
+            }
+        }
+        if(!display){
+        display= details.display;
+        }
+        if(!display){
+            if(details.numberOfBands>1){
+                display={
+                displayType:'RGB',
+                RBand:RBand,
+                GBand:GBand,
+                BBand:BBand,
+                ABand:undefined,
+                reclass:false
+                }
+            }else{
+            display={
+                displayType:'colorMap',
+                band:1,
+                colorMap:'grayscale',
+                reclass:false
+                }
+            }
+        }
+        var themeKey=util.hashString(JSON.stringify(display)); 
+
+        //var cacheKey=util.hashString(req.url);
+        var app_dataDirectory = path.join(__basedir, 'app_data/');
+        var tilecacheDirectory = path.join(app_dataDirectory, 'tilecache/');
+        var cacheDirectory = path.join(app_dataDirectory, 'tilecache/'+ item.id+'/');
+        var cacheThemeDirectory = cacheDirectory + `${themeKey}/`;
+        var cacheFilePath = cacheThemeDirectory + `${z}_${x}_${y}.png`;
+        try{
+            fs.existsSync(app_dataDirectory) || fs.mkdirSync(app_dataDirectory);// ensure  upload directory exists
+            fs.existsSync(tilecacheDirectory) || fs.mkdirSync(tilecacheDirectory);// ensure  tilecacheDirectory exists
+            
+            fs.existsSync(cacheDirectory) || fs.mkdirSync(cacheDirectory);// ensure  tilecacheDirectory exists
+            fs.existsSync(cacheThemeDirectory) || fs.mkdirSync(cacheThemeDirectory);// ensure  cacheThemeDirectory exists
+        }catch(ex){
+            logger.log({
+                level: 'error',
+                message: ex.message,
+                date: new Date()
+            });
+        } 
+        if(fs.existsSync(cacheFilePath)){
+            res.download(cacheFilePath);
+            res.set('Cache-Control', 'public, max-age=2592000'); //30 days cache header
+            res.set('theme-key',themeKey);
+            return;
+        }
+        
+        try{
+           var result=await postgresWorkspace.getRasterTileAsPng({
+                    tableName:tableName,
+                    oidField:oidField,
+                    rasterField:rasterField,
+                    srid:out_srid,
+                    bands:details.bands,
+                    display:display,
+                    origRaster_srid:details.spatialReference.srid || 3857,
+                    
+                    x:x,y:y,z:z,
+                    tileSize:tileSize,
+                    
+                    ref_z:ref_z,
+                    details:details
+                });
+                if(!result){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(404).end('Not found');
+                    return;
+                }
+                
+                try {
+                    await nativeUtil.promisify(fs.writeFile)(cacheFilePath, result.output);
+                } catch (exx) {
+                    console.log(exx);
+                }
+                res.set('Content-Type', 'image/png');
+                res.set('Cache-Control', 'public, max-age=2592000'); //30 days cache header
+                res.set('theme-key',themeKey);
+                res.end(result.output, 'binary');
+                return;
+            
+        }catch(ex){
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found.('+ ex.message +')' );
+            return;
+        }
+            
+            
+        
+    };
+    module.rasterGetImage = async function (req, res,item,details, bbox,z,ref_z,imageWidth,imageHeight,imageFormat,display) {
+        //todo: workspace selection
+        var out_srid=3857;
+        var tableName= details.datasetName || item.name;
+        var oidField= details.oidField || 'rid';
+        var rasterField=details.rasterField || 'raster';
+        var srid=  details.spatialReference.srid || 3857;
+        if(!out_srid)
+        {
+            out_srid=details.spatialReference.srid || 3857;
+        }
+    
+        var BBand=3;
+        if(details.numberOfBands<3)
+          BBand=details.numberOfBands;
+        var GBand=2;
+        if(details.numberOfBands<2)
+            GBand=details.numberOfBands;   
+        var RBand=1;
+        if(details.bands && details.bands.length){
+            for(var i=0;i< details.bands.length;i++){
+                var band=details.bands[i];
+                if(!band.name){
+                band.name=band.colorInterpretation;
+                }
+                if(band.name==='Red'){
+                    RBand= band.id;
+                }
+                if(band.name==='Green'){
+                GBand= band.id;
+            }
+            if(band.name==='Blue'){
+                BBand= band.id;
+            }
+            }
+        }
+        if(!display){
+        display= details.display;
+        }
+        if(!display){
+            if(details.numberOfBands>1){
+                display={
+                displayType:'RGB',
+                RBand:RBand,
+                GBand:GBand,
+                BBand:BBand,
+                ABand:undefined,
+                reclass:false
+                }
+            }else{
+            display={
+                displayType:'colorMap',
+                band:1,
+                colorMap:'grayscale',
+                reclass:false
+                }
+            }
+        }
+        var file_ext='png';
+        if(imageFormat=='image/png'){
+            file_ext='png'
+        }else if (imageFormat=='image/tiff' || imageFormat=='image/geotiff'){
+            imageFormat='image/tiff';
+            file_ext='tif'
+        }
+
+        var themeKey=util.hashString(JSON.stringify({d:display,f:imageFormat})); 
+        var fileKey=util.hashString(JSON.stringify({bbox:bbox,w:imageWidth,h:imageHeight})); 
+
+        //var cacheKey=util.hashString(req.url);
+        var app_dataDirectory = path.join(__basedir, 'app_data/');
+        var tilecacheDirectory = path.join(app_dataDirectory, 'tilecache/');
+        var cacheDirectory = path.join(app_dataDirectory, 'tilecache/'+ item.id+'/');
+        var cacheThemeDirectory = cacheDirectory + `${themeKey}/`;
+        var cacheFilePath = cacheThemeDirectory + `${fileKey}.${file_ext}`;
+        try{
+            fs.existsSync(app_dataDirectory) || fs.mkdirSync(app_dataDirectory);// ensure  upload directory exists
+            fs.existsSync(tilecacheDirectory) || fs.mkdirSync(tilecacheDirectory);// ensure  tilecacheDirectory exists
+            
+            fs.existsSync(cacheDirectory) || fs.mkdirSync(cacheDirectory);// ensure  tilecacheDirectory exists
+            fs.existsSync(cacheThemeDirectory) || fs.mkdirSync(cacheThemeDirectory);// ensure  cacheThemeDirectory exists
+        }catch(ex){
+            logger.log({
+                level: 'error',
+                message: ex.message,
+                date: new Date()
+            });
+        } 
+        if(fs.existsSync(cacheFilePath)){
+            
+            res.set('Content-Type', imageFormat);
+            res.set('Cache-Control', 'public, max-age=2592000'); //30 days cache header
+            res.set('theme-key',themeKey);
+         
+            //res.download(cacheFilePath);
+            res.set("Content-Disposition", "inline;");
+            res.sendFile(cacheFilePath);
+            return;
+        }
+        
+        try{
+            var result;
+            if(imageFormat=='image/png'){
+                 result=await postgresWorkspace.getRasterImageAsPng({
+                    tableName:tableName,
+                    oidField:oidField,
+                    rasterField:rasterField,
+                    srid:out_srid,
+                    bands:details.bands,
+                    display:display,
+                    origRaster_srid:details.spatialReference.srid || 3857,
+                    //var layer_bbox=[item.ext_west,item.ext_south,item.ext_east,item.ext_north];
+                    west: bbox[0],south:bbox[1],east:bbox[2],north:bbox[3],
+                    
+                    imageWidth:imageWidth,
+                    imageHeight:imageHeight,
+                    
+                    z:z,
+                    ref_z:ref_z,
+                    details:details
+                });
+            }else if(imageFormat=='image/tiff' || imageFormat=='image/geotiff'){
+                result=await postgresWorkspace.getRasterImageAsGeotiff({
+                   tableName:tableName,
+                   oidField:oidField,
+                   rasterField:rasterField,
+                   srid:out_srid,
+                   bands:details.bands,
+                   display:display,
+                   origRaster_srid:details.spatialReference.srid || 3857,
+                   //var layer_bbox=[item.ext_west,item.ext_south,item.ext_east,item.ext_north];
+                   west: bbox[0],south:bbox[1],east:bbox[2],north:bbox[3],
+                   
+                   imageWidth:imageWidth,
+                   imageHeight:imageHeight,
+                   
+                   z:z,
+                   ref_z:ref_z,
+                   details:details
+               });
+           }
+                if(!result){
+                    res.set('Content-Type', 'text/plain');
+                    
+                    res.status(404).end('Not found');
+                    return;
+                }
+                
+                try {
+                    await nativeUtil.promisify(fs.writeFile)(cacheFilePath, result.output);
+                } catch (exx) {
+                    console.log(exx);
+                }
+                res.set('Content-Type', imageFormat);
+                res.set('Cache-Control', 'public, max-age=2592000'); //30 days cache header
+                res.set('theme-key',themeKey);
+                res.set("Content-Disposition", "inline;");
+                res.end(result.output, 'binary');
+                return;
+            
+        }catch(ex){
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found.('+ ex.message +')' );
+            return;
+        }
+            
+            
+        
+    };
      /**
      * GET /datalayer/:id/analysis
      */
@@ -4232,7 +4816,12 @@ module.exports = function (postgresWorkspace) {
             //todo: permission check
             if(req.user.id !== item.ownerUser && !res.locals.identity.isAdministrator  )
             {
-              
+                var AccessGranted= await adminController._CheckDataPermissionTypes(req.user,item.permissionTypes,'Deny',['Edit','View']) ;
+                if(!AccessGranted){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(403).end('Access denied');
+                    return;
+                } 
               var userHasViewPermission=false;
               var err;
               [err, item] = await util.call(models.DataLayer.findOne({
@@ -4574,6 +5163,553 @@ module.exports = function (postgresWorkspace) {
     };
 
 
+    
+     /**
+     * GET /datalayer/:id/editmetadata
+     */
+    module.datasetEditMetadataGet = async function (req, res,  next) {
+        var userIsPowerUser=(res.locals.identity.isAdministrator || res.locals.identity.isPowerUser);
+         var err,item;
+         var itemId=req.params.id;
+         [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']
+        //  ,include:[{
+        //     model:models.Organization,as:'Organization',
+        //     require:true
+        //    }]
+        }]}) );
+         if (!item) {
+            
+             req.flash('error', {
+                msg: 'Dataset not found!'
+            });
+            return res.redirect('/');
+         }
+         var isOwner=false;
+        if(item.ownerUser== req.user.id) {
+            isOwner=true;
+        }else if (item.OwnerUser && item.OwnerUser.parent==req.user.id){
+            isOwner=true;
+        }else if (userIsPowerUser){
+            isOwner=true;
+        }
+        // if(!isOwner){
+        //     var organization=await models.Organization.findByPk(res.locals.identity.organizationId || (req.user?req.user.organizationId:null));
+        //     if(userIsPowerUser && organization ){
+        //         if(item.OwnerUser &&  item.OwnerUser.organizationId == organization.id){
+        //            isOwner=true;
+        //         }
+        //         try{
+        //             if(item.OwnerUser){
+        //                 if(await item.OwnerUser.Organization.hasAncestor(organization.id))
+        //                 {
+        //                     isOwner=true;
+        //                 }
+        //             }
+        //         }catch(ee){
+        //             console.log(ee);
+        //         }
+        //     }
+        // }
+        if(!isOwner   )
+         {
+             var userHasEditPermission=false;
+             var err;
+             [err, item] = await util.call(models.Dataset.findOne({
+                 where: {  id: itemId },
+                 include: [ 
+                         { model: models.Permission, as: 'Permissions'
+                             ,include: [
+                                 {
+                                     model: models.User, as: 'assignedToUser',
+                                     required: false,
+                                     where: {
+                                         id:  req.user.id
+                                     }
+                                 },
+                                 {
+                                     model: models.Group, as: 'assignedToGroup',
+                                     required: false,
+                                     include: [
+                                         {
+                                             model: models.User, as: 'Users',
+                                             required: true,
+                                             where: {
+                                                 id: req.user.id
+                                             }
+                                         }
+                                     ]
+                                 }
+                             ]
+                             }
+                     ]
+             }));
+
+             if(item){// get permission
+                 var permissions = item.Permissions;
+                 if(permissions){
+                     userHasEditPermission= permissions.some((p)=>{
+                        if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                            return (p.permissionName=='Edit' || p.permissionName=='EditMetadata' );
+                        }else return false;
+                     });
+                 }
+                 
+             }
+              
+             if(!userHasEditPermission){
+               
+                 req.flash('error', {
+                    msg: 'Access denied'
+                });
+                return res.redirect('/');
+             
+             }
+         }
+         var metadata= await item.getMetadata();
+         var isNew=false;
+         if(!metadata){ //update metadata
+                    await module.updateLayerMetadata({datasetItem:item,create:true});
+                    isNew=true;
+            metadata= await item.getMetadata();
+         }
+         var metadataItems={
+             get:function(key){
+                 if(this[key]){
+                     return this[key].value;
+                 }else
+                 {
+                     return '';
+                 }
+             }
+         };
+         
+      
+         var itemKeywords= await models.Metadata.findAll({ attributes: [[Sequelize.fn('DISTINCT', Sequelize.col('subject')) ,'subject'],]});
+         var keywordMap={};
+         if(itemKeywords && itemKeywords.length){
+             for(var k=0;k< itemKeywords.length;k++){
+                 if(!itemKeywords[k].keywords){
+                     continue;
+                 }
+                var keywords_= itemKeywords[k].keywords.split(/[؛;]+/);
+                keywords_.forEach(function (key) {
+                    key=key.trim();
+                    if(key.length>1){
+                          if (keywordMap.hasOwnProperty(key)) {
+                              keywordMap[key]++;
+                          } else {
+                              keywordMap[key] = 1;
+                          }
+                   }
+                });
+             }
+        }
+                     
+        var keywordArray = [];
+        keywordArray = Object.keys(keywordMap).map(function (key) {
+            return {
+            name: key,
+            total: keywordMap[key]
+            };
+        });
+        keywordArray.sort(function (a, b) {
+            if(b.total==a.total){
+                if (b.name < a.name) {
+                    return 1;
+                }else if (b.name > a.name) {
+                    return -1;
+                }
+                return 0;
+            }
+            return b.total - a.total;
+        });
+        keywordArray=keywordArray.map(function(item){
+            return item.name
+        })
+        var item_keywords=[]
+        if(metadata){
+            if(metadata.subject){
+                var keywords_= metadata.subject.split(/[؛;]+/);
+                    keywords_.forEach(function (key) {
+                        key=key.trim();
+                        if(key.length>1){
+                            item_keywords.push(key);
+                    }
+                    });
+            }
+            metadata.subject=item_keywords;
+        }
+        var item_themes=[]
+        if(metadata){
+            if(metadata.theme){
+                var keywords_= metadata.theme.split(/[؛;]+/);
+                    keywords_.forEach(function (key) {
+                        key=key.trim();
+                        if(key.length>1){
+                            item_themes.push(key);
+                    }
+                    });
+            }
+            metadata.theme=item_themes;
+        }
+        if(!metadata.theme){
+            metadata.theme=[];
+        }
+         res.render('dataLayer/edit_metadata' , {
+            title: 'Edit Metadata'
+            , datalayer: item,
+            metadata:metadata,
+           // items:metadataItems,
+            isNew:isNew,
+            keywordArray:keywordArray.join(';')
+        });
+
+
+        
+     };
+      /**
+     * POST /datalayer/:id/editmetadata
+     */
+    module.datasetEditMetadataPost = async function (req, res,  next) {
+        
+        var userIsPowerUser=(res.locals.identity.isAdministrator || res.locals.identity.isPowerUser);
+    var item,err;
+   
+    req.assert('title', 'Title cannot be blank').notEmpty();
+    
+    req.sanitizeBody('title').trim();
+    req.sanitizeBody('title').escape();
+    req.sanitizeBody('alternative').trim();
+    req.sanitizeBody('alternative').escape();
+    
+    req.sanitizeBody('abstract').trim();
+    req.sanitizeBody('abstract').escape();
+    //req.sanitizeBody('subject').trim();
+    //req.sanitizeBody('subject').escape();
+    if(req.body.subject && Array.isArray(req.body.subject)){
+        req.body.subject=req.body.subject.join(';');
+    }else{
+            req.body.subject=null;
+    }
+    if(req.body.theme && Array.isArray(req.body.theme)){
+        req.body.theme=req.body.theme.join(';');
+    }else{
+            req.body.theme=null;
+    }
+
+    req.sanitizeBody('theme').trim();
+    req.sanitizeBody('theme').escape();
+    req.sanitizeBody('language').trim();
+    req.sanitizeBody('language').escape();
+    
+    req.sanitizeBody('creator').trim();
+    req.sanitizeBody('creator').escape();
+    req.sanitizeBody('publisher').trim();
+    req.sanitizeBody('publisher').escape();
+    req.sanitizeBody('rights').trim();
+    req.sanitizeBody('rights').escape();
+    req.sanitizeBody('contributor').trim();
+    req.sanitizeBody('contributor').escape();
+    
+    req.sanitizeBody('source').trim();
+    req.sanitizeBody('source').escape();
+    req.sanitizeBody('relation').trim();
+    req.sanitizeBody('relation').escape();
+    
+    req.sanitizeBody('updatedAt').toInt();
+    var result={
+        status:false
+    };
+    var datasetId = req.params.id || -1;
+    try {
+        datasetId = parseInt(datasetId);
+    } catch (ex) { }
+    var errors = req.validationErrors();
+    //prepare body fields
+            
+    if (req.body.updatedAt) {
+        try {
+            req.body.updatedAt = new Date(parseInt(req.body.updatedAt));
+        } catch (ex) {
+        }
+    }
+    if (errors) {
+        result.status=false;
+        result.id=datasetId;
+        result.message= errors;
+        return res.json(result) ;
+    }
+
+       
+        var itemId=req.params.id;
+        [err, item] = await util.call(models.DataLayer.findByPk(itemId,{include: [ { model: models.User, as: 'OwnerUser',attributes: ['userName','id','firstName','lastName','parent']
+        // ,include:[{
+        //    model:models.Organization,as:'Organization',
+        //    require:true
+        //   }]
+        }]}) );
+        if (!item) {
+           
+           result.status=false;
+           result.message= 'Dataset not found!';
+          return res.json(result) ;
+        }
+        var isOwner=false;
+       if(item.ownerUser== req.user.id) {
+           isOwner=true;
+       }else if (item.OwnerUser && item.OwnerUser.parent==req.user.id){
+           isOwner=true;
+       }else if(userIsPowerUser){
+           isOwner=true;
+       }
+    //    if(!isOwner){
+    //        var organization=await models.Organization.findByPk(res.locals.identity.organizationId || (req.user?req.user.organizationId:null));
+    //        if(userIsPowerUser && organization ){
+    //            if(item.OwnerUser &&  item.OwnerUser.organizationId == organization.id){
+    //               isOwner=true;
+    //            }
+    //            try{
+    //                if(item.OwnerUser){
+    //                    if(await item.OwnerUser.Organization.hasAncestor(organization.id))
+    //                    {
+    //                        isOwner=true;
+    //                    }
+    //                }
+    //            }catch(ee){
+    //                console.log(ee);
+    //            }
+    //        }
+    //    }
+       if(!isOwner   )
+        {
+            var userHasEditPermission=false;
+            var err;
+            [err, item] = await util.call(models.Dataset.findOne({
+                where: {  id: itemId },
+                include: [ 
+                        { model: models.Permission, as: 'Permissions'
+                            ,include: [
+                                {
+                                    model: models.User, as: 'assignedToUser',
+                                    required: false,
+                                    where: {
+                                        id:  req.user.id
+                                    }
+                                },
+                                {
+                                    model: models.Group, as: 'assignedToGroup',
+                                    required: false,
+                                    include: [
+                                        {
+                                            model: models.User, as: 'Users',
+                                            required: true,
+                                            where: {
+                                                id: req.user.id
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                            }
+                    ]
+            }));
+
+            if(item){// get permission
+                var permissions = item.Permissions;
+                if(permissions){
+                    userHasEditPermission= permissions.some((p)=>{
+                       if((p.grantToType=='user' && p.assignedToUser) || (p.grantToType=='group' && p.assignedToGroup)){
+                           return (p.permissionName=='Edit' || p.permissionName=='EditMetadata' );
+                       }else return false;
+                    });
+                }
+                
+            }
+             
+            if(!userHasEditPermission){
+               result.status=false;
+               result.message=  'Access denied';
+              return res.json(result) ;
+            }
+        }
+        var metadata= await item.getMetadata();
+        var isNew=false;
+        if(!metadata){ //update metadata
+                   await module.updateLayerMetadata({datasetItem:item,create:true});
+                   isNew=true;
+           metadata= await item.getMetadata();
+        }
+        
+        metadata.set('identifier',item.id);
+        metadata.set('title',req.body.title);
+        metadata.set('alternative',req.body.alternative);
+
+        metadata.set('abstract',req.body.abstract);
+        metadata.set('subject',req.body.subject);
+        metadata.set('theme',req.body.theme);
+        metadata.set('creator',req.body.creator);
+        metadata.set('publisher',req.body.publisher);
+        metadata.set('contributor',req.body.contributor );
+        metadata.set('rights',req.body.rights );
+        metadata.set('language',req.body.language );
+        metadata.set('source',req.body.source );
+        metadata.set('relation',req.body.relation );
+        //metadata.set('spatial',req.body.spatial );
+        metadata.set('modified',util.getFormatedDate() );
+        metadata.set('ext_west',req.body.ext_west?req.body.ext_west:null);
+        metadata.set('ext_south',req.body.ext_south?req.body.ext_south:null);
+        metadata.set('ext_east',req.body.ext_east?req.body.ext_east:null);
+        metadata.set('ext_north',req.body.ext_north?req.body.ext_north:null);
+        try{
+        await metadata.save();
+        result.status=true;
+        result.id=datasetId;
+        result.message= undefined;
+        return res.json(result) ;
+        }catch(ex){
+
+            result.status=false;
+            result.id=datasetId;
+            result.message= ex.message;
+            return res.json(result) ;
+        }
+          
+
+
+       
+    };
+     module.updateLayerMetadata = async function (options)
+     {
+        var util = require('./util');
+        options=options||{}
+        var item= options.datasetItem;
+        var OwnerUser= options.OwnerUser;
+        var create=options.create;
+        if(!item){
+            return false;
+        }
+        var details;
+        var subtype='';
+        try{
+            
+            if (typeof item.details === 'string' || item.details instanceof String){
+                details= JSON.parse( item.details);
+            }
+            subtype=details.shapeType;
+          }catch(ex){}
+        var metadata= await item.getMetadata();
+        if(!OwnerUser){
+         OwnerUser= await item.getOwnerUser();
+        }
+        if(!metadata && create){
+            try{
+                var metadata= await item.createMetadata({ });
+                metadata.set('identifier',item.id);
+                metadata.set('title',item.name);
+                metadata.set('abstract',item.description);
+                metadata.set('subject',item.keywords);
+                metadata.set('creator',OwnerUser.userName );
+               // metadata.set('publisher',process.env.COPY_RIGHTS);
+                metadata.set('contributor',OwnerUser.userName );
+                metadata.set('rights',process.env.COPY_RIGHTS);
+                
+                metadata.set('created',util.getFormatedDate() );
+                metadata.set('date',util.getFormatedDate() );
+                if(details && details.spatialReference){
+                    var spatial=details.spatialReference.name||details.spatialReference.srid;
+                    metadata.set('spatial',spatial?spatial:'' );
+                }
+                metadata.set('type','dataset' );
+                if(item.dataType=='raster'){
+                    metadata.set('format','grid' );
+                }else{
+                    if(subtype){
+                        metadata.set('format',item.dataType+'-'+subtype );
+                    }else{
+                        metadata.set('format',item.dataType );
+                    }
+                }
+                
+                
+
+                await metadata.save();
+
+                
+            }catch(ex){
+
+            }
+        }
+        if(metadata){
+           if(item.ext_west===null|| typeof item.ext_west ==='undefined' || isNaN(item.ext_west)){
+            try{
+                if(item.dataType=='raster'){
+                    await postgresWorkspace.updateRasterLayerExtent(item);
+                }else if (item.dataType=='vector')
+                {
+                    await postgresWorkspace.updateVectorLayerExtent(item);
+                }
+            }catch(ex){
+
+            }    
+           }
+
+            try{
+                var mItem,mCreated; 
+                metadata.set('title',item.name);
+                metadata.set('abstract',item.description);
+                metadata.set('subject',item.keywords);
+                metadata.set('modified',util.getFormatedDate() );
+                metadata.set('ext_west',isNaN(item.ext_west)?null:item.ext_west);
+                metadata.set('ext_south',isNaN(item.ext_south)?null:item.ext_south);
+                metadata.set('ext_east',isNaN(item.ext_east)?null:item.ext_east);
+                metadata.set('ext_north',isNaN(item.ext_north)?null:item.ext_north);
+
+                metadata.set('type','dataset' );
+                if(item.dataType=='raster'){
+                    metadata.set('format','grid' );
+                }else{
+                    if(subtype){
+                        metadata.set('format',item.dataType+'-'+subtype );
+                    }else{
+                        metadata.set('format',item.dataType );
+                    }
+                }
+                if(details && details.spatialReference){
+                    var spatial=details.spatialReference.name||details.spatialReference.srid;
+                    metadata.set('spatial',spatial?spatial:'' );
+                }
+                metadata.set('publish_ogc_service',item.publish_ogc_service);
+                
+                 if(item.thumbnail){
+                    try{
+                        const data = await sharp(item.thumbnail)
+                                .png()
+                                .toBuffer();
+                                metadata.set('thumbnail', 'data:image/png;base64,' + data.toString('base64'));
+                        }catch(ex){
+                            metadata.set('thumbnail', null);
+                        }
+                 }else{
+                    metadata.set('thumbnail', null);
+                 }
+
+                await metadata.save();
+
+               
+            }catch(ex){
+                return false;
+            }
+            
+
+              
+         }else
+         {
+             return false;
+         }
+        return true;
+    };
+
+
       /**
      * POST /dataset/uploadattachments
      * 
@@ -4761,12 +5897,12 @@ module.exports = function (postgresWorkspace) {
                }
               if(!isOwner && !res.locals.identity.isAdministrator  )
               {
-                // var AccessGranted= await adminController._CheckDataPermissionTypes(req.user,item.permissionTypes,'Deny',['Edit','View']) ;
-                // if(!AccessGranted){
-                //     res.set('Content-Type', 'text/plain');
-                //     res.status(403).end('Access denied');
-                //     return;
-                // }  
+                var AccessGranted= await adminController._CheckDataPermissionTypes(req.user,item.permissionTypes,'Deny',['Edit','View']) ;
+                if(!AccessGranted){
+                    res.set('Content-Type', 'text/plain');
+                    res.status(403).end('Access denied');
+                    return;
+                } 
 
                 var userHasViewPermission=false;
                 var err;

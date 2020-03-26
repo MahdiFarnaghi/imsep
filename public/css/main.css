@@ -614,3 +614,41 @@ input[type=number].nospinner::-webkit-outer-spin-button {
     border-color: #b0d6f7;
       
   }
+
+  
+  .listItem-select-box {
+    position: absolute;
+    top: -10px;
+  }
+  .listItem-select-box button{
+    padding: 1px 2px 1px 3px;
+  }
+  .listItem-select-box button span{
+    font-size: 1.6em;
+  }
+
+ 
+  .listItem-select-all-box button{
+    padding: 1px 2px 1px 3px;
+  }
+  .listItem-select-all-box button span{
+    font-size: 1.6em;
+  }
+
+  
+  /* .panel-group.has-active-filter button{
+    background-color: #bfe3e0;
+    
+  } */
+  .panel-group.has-active-filter > .panel > .panel-heading button{
+    background-color: #c8e0f5;
+    
+  }
+  
+  .panel-group.has-active-filter button .title{
+    
+  }
+
+  .help-link{
+    float: right; margin-right: .5em;
+  }

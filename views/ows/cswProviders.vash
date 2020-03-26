@@ -1,0 +1,115 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<style>
+th:nth-child(n)
+    {
+        background-color:#74beb8;
+        text-align: center;
+    }
+    td {
+        text-align: center;
+    }
+    img.avatar {
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        margin: 0 4px 0 0;
+    }
+   
+</style>
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+        <legend>@(model.title)
+  
+       </legend>
+
+            @if(!model.readOnly){
+            <div class="row row-grid" >
+                <div class=" col-sm-2  ">
+                <a href="/ows/csw/provider/-1" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> Add new service</a>
+                </div>
+               
+            </div>
+            }
+    
+            @if(model.items.length >5){
+            <div class="row" >&nbsp;</div>
+            <div class="row row-grid" >    
+                <div class=" col-sm-10">
+                    <input class="animated-search-box" id="tblItems_search" type="search" placeholder="Search...">
+                
+                </div>
+            </div>
+            }
+           
+            <div class="row" >&nbsp;</div>
+             <div class="row row-grid" >
+            <div class="table-responsive col-sm-12">
+                <table id="tblData" class="table table-condensed table-striped" style= "background-color: #f5f5f0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Url</th>
+                            <th>Enabled</th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody id="tblItems">
+                        @{var i=0;}
+                        @model.items.forEach(function(item) {
+                        <tr>
+                            <td>@(++i)</td>
+                            
+                            <td>
+                             @if(!model.readOnly){
+                              
+                                    <a href="/ows/csw/provider/@item.id">
+                                    @(item.name)
+                                    </a>
+                            }else{
+                                @(item.name)
+                            }
+                              
+                            </td>
+                            <td>@item.description</td>
+                            <td>@item.url</td>
+                            <td >@((item.enabled)?"✔":"✘")</td>
+                            
+                            
+                        </tr>
+                        })
+
+                    </tbody>
+                </table>
+                
+            </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+  })
+ @html.block('scripts', function(model) {
+    <script>
+        $(document).ready(function () {
+            $("#tblItems_search").on("keyup change", function () {
+                var value = $(this).val().toLowerCase();
+                $("#tblItems tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+              //  app.test('11');
+            });
+        });
+
+     
+    </script>
+    })
+    
+})
+
+

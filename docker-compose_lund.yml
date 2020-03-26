@@ -4,14 +4,15 @@ services:
   imsep_postgis:
     container_name: imsep_postgis
     restart: unless-stopped
-    image: kartoza/postgis:11.0-2.5 
+    image: mdillon/postgis:11
 #    ports: 
 #      - "127.0.0.1:25432:5432"
     volumes:  
-      - /data/imsep/db_data:/var/lib/postgresql/11/main   
+      - /data/imsep/db_data:/var/lib/postgresql/data  
     environment: 
       POSTGRES_USER: postgres
       POSTGRES_PASS: d747db4520c046ccb5db14f39a014746
+      POSTGRES_PASSWORD: d747db4520c046ccb5db14f39a014746
       POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL
   pgbackups:
         container_name: imsep_pgbackups
@@ -49,6 +50,7 @@ services:
       - imsep_postgis
     environment:
       NODE_ENV: production
+      APP_HOST: https://imsep.gis.lu.se
       DB_HOSTNAME: imsep_postgis 
       DB_PORT: 5432
       DB_PASSWORD: d747db4520c046ccb5db14f39a014746

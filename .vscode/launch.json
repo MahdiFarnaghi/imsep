@@ -12,6 +12,15 @@
             // Capture "std" instead of "console" fro winston
             "outputCapture": "std"
         },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Server_ssl",
+            "env": {"HTTPS_Server":"true"},
+            "program": "${workspaceFolder}\\server",
+            // Capture "std" instead of "console" fro winston
+            "outputCapture": "std"
+        },
         
         {
             "type": "node",
@@ -26,6 +35,14 @@
             "request": "launch",
             "name": "Chrome",
             "url": "http://localhost:1337" ,
+            "webRoot": "${workspaceFolder}\\public"
+            
+        },
+        {
+            "type":"chrome",
+            "request": "launch",
+            "name": "Chrome_ssl",
+            "url": "https://localhost:1337" ,
             "webRoot": "${workspaceFolder}\\public"
             
         },
@@ -57,6 +74,10 @@
         {
             "name": "Server/Chrome",
             "configurations": ["Server", "Chrome"]
+        },
+        {
+            "name": "Server/Chrome(ssl)",
+            "configurations": ["Server_ssl", "Chrome_ssl"]
         },
      
         {

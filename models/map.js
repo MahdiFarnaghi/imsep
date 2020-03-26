@@ -15,7 +15,10 @@ module.exports = (sequelize, DataTypes) => {
         ext_west:DataTypes.FLOAT,
         details: DataTypes.TEXT,
 //        thumbnail:DataTypes.BLOB('medium')
-        thumbnail:DataTypes.BLOB
+        thumbnail:DataTypes.BLOB,
+
+        theme: DataTypes.STRING
+        ,permissionTypes:  {type:DataTypes.ARRAY(DataTypes.INTEGER)}
         
     }, {
 
@@ -24,6 +27,15 @@ module.exports = (sequelize, DataTypes) => {
         Map.belongsTo(models.User, { foreignKey: 'ownerUser', targetKey: 'id', as: 'OwnerUser' ,onDelete: 'CASCADE' });
         Map.hasMany(models.Permission, {
             as: 'Permissions',// onDelete:'CASCADE',
+            foreignKey: 'contentId', sourceKey:'id',
+            constraints: false,
+            scope: {
+                contentType: 'Map'
+            }
+        });
+
+        Map.hasOne(models.Metadata, {
+            as: 'Metadata',// onDelete:'CASCADE',
             foreignKey: 'contentId', sourceKey:'id',
             constraints: false,
             scope: {

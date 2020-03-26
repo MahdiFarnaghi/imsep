@@ -44,6 +44,33 @@ exports.hashString = function (string) {
     var hash = crypto.createHash('md5').update(String(string)).digest('hex');
     return hash;
 };
+exports.getFormatedDatetime=function(d){
+    if(typeof d=='undefined'){
+        d= Date.now();
+    }
+    var appendLeadingZeroes=function (n){
+        if(n <= 9){
+          return "0" + n;
+        }
+        return n
+      }
+    
+    return  d.getFullYear() + "-" + appendLeadingZeroes(d.getMonth() + 1) + "-" + appendLeadingZeroes(d.getDate()) + " " + appendLeadingZeroes(d.getHours()) + ":" + appendLeadingZeroes(d.getMinutes()) + ":" + appendLeadingZeroes(d.getSeconds())
+};
+//'yyyy-mm-dd'
+exports.getFormatedDate=function(d){ 
+    if(typeof d=='undefined'){
+        d= new Date();
+    }
+    var appendLeadingZeroes=function (n){
+        if(n <= 9){
+          return "0" + n;
+        }
+        return n
+      }
+    
+    return  d.getFullYear() + "-" + appendLeadingZeroes(d.getMonth() + 1) + "-" + appendLeadingZeroes(d.getDate()) ;
+};
 exports.escape= function(str) {
     var isString = typeof str === 'string' || str instanceof String;
     if(isString){

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+<xs:schema targetNamespace="@process.env.APP_HOST" elementFormDefault="qualified" xmlns:ns="@process.env.APP_HOST" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:gml="http://www.opengis.net/gml">
+  <xs:import namespace="http://www.opengis.net/gml" schemaLocation="http://schemas.opengis.net/gml/3.1.1/base/gml.xsd" /> 
+  <xs:element name="L_@(model.id)" type="ns:L_@(model.id)Type" substitutionGroup="gml:_Feature" /> 
+  <xs:complexType name="L_@(model.id)Type">
+    <xs:complexContent>
+      <xs:extension base="gml:AbstractFeatureType">
+        <xs:sequence>
+          @*<xs:element name="@model.oidField" type="xs:int" /> *@
+           @model.fields.forEach(function(fld) {
+             @if(fld.type=='xs:string'){
+                <xs:element minOccurs="0" name="@fld.name">
+                  <xs:simpleType>
+                    <xs:restriction base="xs:string">
+                      <xs:maxLength value="@fld.length" />
+                    </xs:restriction>
+                  </xs:simpleType>
+                </xs:element>
+             }else{
+              <xs:element minOccurs="0" name="@fld.name" type="@fld.type" />      
+             }
+           })
+          </xs:sequence>
+        </xs:extension>
+      </xs:complexContent>
+    </xs:complexType>
+  </xs:schema>

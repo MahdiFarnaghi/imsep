@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- @process.env.MAPS_COPY_RIGHTS --> 
+<!-- @process.env.COPY_RIGHTS-->
+<csw:GetRecordByIdResponse
+	xmlns:csw="http://www.opengis.net/cat/csw/2.0.2"
+	xmlns:dc="http://purl.org/dc/elements/1.1/"
+	xmlns:dct="http://purl.org/dc/terms/"
+	xmlns:gmd="http://www.isotc211.org/2005/gmd"
+	xmlns:gml="http://www.opengis.net/gml"
+	xmlns:ows="http://www.opengis.net/ows"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	version="2.0.2"
+	xsi:schemaLocation="http://www.opengis.net/cat/csw/2.0.2 http://schemas.opengis.net/csw/2.0.2/CSW-discovery.xsd">
+     @model.records.forEach(function(record){
+		 @if(model.elementSet=='brief'){
+			<csw:BriefRecord>
+				<dc:identifier>@record.identifier</dc:identifier>
+				<dc:title>@record.title</dc:title>
+				<dc:type>@record.type</dc:type>
+				@if(record.thumbnail){
+					<dct:references scheme="THUMBNAIL">@record.thumbnail</dct:references>
+				}
+				@if(record._wms){
+					<dct:references scheme="OGC:WMS" wms_layers="@record._wms_layers" >@record._wms</dct:references>
+				}
+				@if(record._wmts){
+					<dct:references scheme="OGC:WMTS">@record._wmts</dct:references>
+				}
+				@if(record._wfs){
+					<dct:references scheme="OGC:WFS" wfs_typename="@record._wfs_typename" wfs_shapetype="@record._wfs_shapeType" >@record._wfs</dct:references>
+				}
+				@if(record.references &&  record.references.length){
+					@record.references.forEach(function(item){
+						<dct:references >@item</dct:references>
+					})
+					
+				}
+				@if(typeof record.ext_east !=='undefined' && typeof record.ext_west !=='undefined' && typeof record.ext_south !=='undefined' && typeof record.ext_north !=='undefined' ){
+					@if( record.ext_east !==null && record.ext_west !==null &&  record.ext_south !==null &&  record.ext_north !==null ){
+					<ows:WGS84BoundingBox>
+						<ows:LowerCorner>@record.ext_west @record.ext_south</ows:LowerCorner>
+						<ows:UpperCorner>@record.ext_east @record.ext_north</ows:UpperCorner>
+					</ows:WGS84BoundingBox>
+					<ows:BoundingBox crs="urn:x-ogc:def:crs:EPSG:6.11:4326" dimensions="2">
+						<ows:LowerCorner>@record.ext_south @record.ext_west</ows:LowerCorner>
+						<ows:UpperCorner>@record.ext_north @record.ext_east</ows:UpperCorner>
+					</ows:BoundingBox>
+					}
+				}
+			</csw:BriefRecord>
+		 }else if(model.elementSet=='summary'){
+			<csw:SummaryRecord>
+				<dc:identifier>@record.identifier</dc:identifier>
+				<dc:title>@record.title</dc:title>
+				<dc:type>@record.type</dc:type>
+				@if(record.theme && record.theme.length){
+					@record.theme.forEach(function(item){
+						<dct:subject >@item</dct:subject>
+					})
+				}
+				@if(record.subject && record.subject.length){
+					@record.subject.forEach(function(item){
+						<dct:subject >@item</dct:subject>
+					})
+				}
+				@if(record.thumbnail){
+					<dct:references scheme="THUMBNAIL">@record.thumbnail</dct:references>
+				}
+				@if(record._wms){
+					<dct:references scheme="OGC:WMS" wms_layers="@record._wms_layers" >@record._wms</dct:references>
+				}
+				@if(record._wmts){
+					<dct:references scheme="OGC:WMTS">@record._wmts</dct:references>
+				}
+				@if(record._wfs){
+					<dct:references scheme="OGC:WFS" wfs_typename="@record._wfs_typename" wfs_shapetype="@record._wfs_shapeType" >@record._wfs</dct:references>
+				}
+				@if(record.references &&  record.references.length){
+					@record.references.forEach(function(item){
+						<dct:references >@item</dct:references>
+					})
+					
+				}
+				<dc:relation>@record.relation</dc:relation>
+				<dct:modified>@record.modified</dct:modified>
+				<dct:abstract>@record.abstract</dct:abstract>
+				<dct:spatial>@record.spatial</dct:spatial>
+				@if(typeof record.ext_east !=='undefined' && typeof record.ext_west !=='undefined' && typeof record.ext_south !=='undefined' && typeof record.ext_north !=='undefined' ){
+					@if( record.ext_east !==null && record.ext_west !==null &&  record.ext_south !==null &&  record.ext_north !==null ){
+					<ows:WGS84BoundingBox>
+						<ows:LowerCorner>@record.ext_west @record.ext_south</ows:LowerCorner>
+						<ows:UpperCorner>@record.ext_east @record.ext_north</ows:UpperCorner>
+					</ows:WGS84BoundingBox>
+					<ows:BoundingBox crs="urn:x-ogc:def:crs:EPSG:6.11:4326" dimensions="2">
+						<ows:LowerCorner>@record.ext_south @record.ext_west</ows:LowerCorner>
+						<ows:UpperCorner>@record.ext_north @record.ext_east</ows:UpperCorner>
+					</ows:BoundingBox>
+					}
+				}
+      		</csw:SummaryRecord>
+
+		 }else{
+			<csw:Record>
+				<dc:identifier>@record.identifier</dc:identifier>
+				<dc:title>@record.title</dc:title>
+				<dc:type>@record.type</dc:type>
+				@if(record.theme && record.theme.length){
+					@record.theme.forEach(function(item){
+						<dct:subject >@item</dct:subject>
+					})
+				}
+				@if(record.subject && record.subject.length){
+					@record.subject.forEach(function(item){
+						<dct:subject >@item</dct:subject>
+					})
+				}
+				@if(record.thumbnail){
+					<dct:references scheme="THUMBNAIL">@record.thumbnail</dct:references>
+				}
+				@if(record._wms){
+					<dct:references scheme="OGC:WMS" wms_layers="@record._wms_layers" >@record._wms</dct:references>
+				}
+				@if(record._wmts){
+					<dct:references scheme="OGC:WMTS">@record._wmts</dct:references>
+				}
+				@if(record._wfs){
+					<dct:references scheme="OGC:WFS" wfs_typename="@record._wfs_typename" wfs_shapetype="@record._wfs_shapeType" >@record._wfs</dct:references>
+				}
+				@if(record.references &&  record.references.length){
+					@record.references.forEach(function(item){
+						<dct:references >@item</dct:references>
+					})
+					
+				}
+				<dc:source>@record.source</dc:source>
+				<dc:relation>@record.relation</dc:relation>
+				<dct:modified>@record.modified</dct:modified>
+				<dct:abstract>@record.abstract</dct:abstract>
+				<dc:format>@record.format</dc:format>
+				<dc:contributor>@record.contributor</dc:contributor>
+				<dc:publisher>@record.publisher</dc:publisher>
+				<dc:creator>@record.creator</dc:creator>
+				<dc:date>@record.date</dc:date>
+				<dc:language>@record.language</dc:language>
+				<dc:rights>@record.rights</dc:rights>
+				<dct:spatial>@record.spatial</dct:spatial>
+				@if(typeof record.ext_east !=='undefined' && typeof record.ext_west !=='undefined' && typeof record.ext_south !=='undefined' && typeof record.ext_north !=='undefined' ){
+					@if( record.ext_east !==null && record.ext_west !==null &&  record.ext_south !==null &&  record.ext_north !==null ){
+					<ows:WGS84BoundingBox>
+						<ows:LowerCorner>@record.ext_west @record.ext_south</ows:LowerCorner>
+						<ows:UpperCorner>@record.ext_east @record.ext_north</ows:UpperCorner>
+					</ows:WGS84BoundingBox>
+					<ows:BoundingBox crs="urn:x-ogc:def:crs:EPSG:6.11:4326" dimensions="2">
+						<ows:LowerCorner>@record.ext_south @record.ext_west</ows:LowerCorner>
+						<ows:UpperCorner>@record.ext_north @record.ext_east</ows:UpperCorner>
+					</ows:BoundingBox>
+					}
+				}
+      		</csw:Record>
+		 }
+
+	 })
+        
+  
+</csw:GetRecordByIdResponse>

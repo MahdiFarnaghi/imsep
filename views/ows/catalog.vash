@@ -1,0 +1,319 @@
+@html.extend('layout', function(model) {
+    @html.block('styles', function(model) {
+        
+        <link rel='stylesheet' href='/css/ol/ol.css' /> 
+        
+        <style>
+   .thumbnail {
+    display: flow-root;
+    }
+    .thumbnail:hover{
+background-color:#e6e5e5;
+}
+.thumbnail h4{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.thumbnail .caption{
+          overflow: hidden;
+        text-overflow: ellipsis;
+}
+    img.avatar {
+      border-radius: 5%;
+    margin: 0 4px .2em 0;
+        float: right;
+     
+    margin-right: 0.2em !important;
+    margin-left: 0.2em !important;
+    box-shadow: grey 5px 5px 10px;
+
+    }
+   i.avatar {
+        /* display:none;*/
+        border-radius: 5%;
+        /*width: 96px;*/
+        height: 96px;
+        margin: 0 4px 0 0;
+         float: right;
+        
+   
+        font-size: 3.5em;
+        /*
+         margin-right: 1em !important;
+         */
+    }
+    i.layerSubtype{
+              /* border: solid #1d7cf4 1px; */
+            width: 1.5em;
+            /* height: 1.5em; */
+            display: inline-block;
+            /* background-color: #e2e2e2; */
+            padding: 2px;
+            font-style: normal;
+    }
+    .item-container{
+        padding-top:0.5em;
+        
+    }
+    .item-container .item-description{
+            white-space: pre-wrap;
+    }
+    .item-container.selected  .thumbnail{
+        background-color:#acc5da;
+    }
+    .list-inline{
+            margin: 0 0 0 -15px;
+            padding: 0.5em;
+    }
+   .list-inline > li {
+        display: inline-block;
+        padding-left: 5px;
+        padding-right: 5px;
+    }
+  #extMap {
+       clear:both;
+    border: solid 1px rgba(160, 160, 160, 0.3);
+    box-shadow: 5px 5px 4px 0 rgba(150, 148, 148, 0.65);
+}
+
+.filter-input.active{
+        background-color: #a5d8d3b5;
+    border-color: #fbfdff;
+}
+    
+</style>
+        
+    })
+  @html.block('content', function(model) {
+
+
+
+<div class="container">
+
+<div class="row">
+   <div class="col-sm-4">
+                <div class="panel">
+                    <div class="panel-body">
+                        <h4>@(model.title)
+                         <a title="Help" class="close help-link" style=" " target="_blank" href="/help#catalog">?</a>
+                        </h4>
+                        <p></p>
+                        <span class="help-block"></span>
+                        <p></p>
+                        
+                        <div class="input-group">
+                            <input class="search-box_ animated-search-box_ form-control" id="tblItems_search" type="search" placeholder="Search..." autofocus >
+                            <span class="input-group-btn">
+                             <button class="btn btn-primary" type="button" id="text_search_btn"><i class="fa fa-search"></i></button>
+                            </span>
+                            
+                        </div> 
+                             <div class="form-group">
+                                <label>Search in:</label>
+                                <select id="cmbCswProvider" class="form-control"  style="" name="cmbCatalog">
+                                        <option value="/ows/csw" selected >Current CSW</option> 
+                                        @if(model.providers){
+                                             @model.providers.forEach(function(provider) {
+                                                    <option value="@provider.url"  >@provider.name</option> 
+                                             })  
+                                        }
+                                </select>
+                                <a id="cmdCheckCapabilies" href="/ows/csw?Service=CSW&Request=GetCapabilities" target='_blank' class="btn btn-xs btn-info   "><span class="glyphicon glyphicon-info-sign"></span> Check capabilitis</a>
+                            </div>
+                            @*
+                            @if(model.identity.isAdmin){
+                                <br/>
+                                <div class="form-group">
+                                    <a href="/ows/csw/providers" class="btn btn-primary  "><span class="glyphicon glyphicon-book"></span> CSW Providers</a>
+                                </div>
+                            }*@
+                            
+                        
+                    </div>
+                </div>
+               
+                <div class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlDatasetType" aria-expanded="false" class="btn btn-link btn-block ">
+                                    <i class="collapse-action glyphicon"></i>
+                                    <h4 class="title"><i class="glyphicon glyphicon-filter"></i> Type</h4>
+                            </button>
+                        </div>
+                        <div id="pnlDatasetType" class="panel-collapse collapse in">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <ul class="nav list-group" id="datasetTypes">
+                        
+                                     </ul>  
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                   <div id="pnlTopicFilter" class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlTopic" aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                    <i class="collapse-action glyphicon"></i>
+                                    <h4 class="title"><i class="glyphicon glyphicon-tags"></i> Topics </h4>
+                            </button>
+                        </div>
+                        <div id="pnlTopic" class="panel-collapse collapse ">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <ul class="nav" id="topics">
+                        
+                                     </ul>  
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                  <div class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlKeywords" aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                    <i class="collapse-action glyphicon"></i>
+                                    <h4 class="title"><i class="glyphicon glyphicon-tags"></i> Keywords </h4>
+                            </button>
+                        </div>
+                        <div id="pnlKeywords" class="panel-collapse collapse ">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <ul class="nav" id="keywords">
+                        
+                                     </ul>  
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+                 <div class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlAuthor" aria-expanded="false" class="btn btn-link btn-block collapsed ">
+                                    <i class="collapse-action glyphicon"></i>
+                                    <h4 class="title"><i class="fa fa-user"></i> User</h4>
+                            </button>
+                        </div>
+                        <div id="pnlAuthor" class="panel-collapse collapse ">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <ul class="nav list-group" id="authors">
+                        
+                                     </ul>  
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+
+                 
+                  <div class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlDate" aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                    <i class="collapse-action glyphicon"></i>
+                                     <h4 class="title "><i class="glyphicon glyphicon-calendar"></i> Date </h4>
+                            </button>
+                        </div>
+                        <div id="pnlDate" class="panel-collapse collapse ">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <div class="form-group">
+                                            <label class="" for="fromDate">From</label>
+                                            <input type="date"  name="fromDate" id="fromDate" value="" placeholder="From Date" class="filter-input form-control"/> 
+                                    </div>
+                                    <div class="form-group">
+                                            <label class="" for="toDate">To</label>
+                                            <input type="date"  name="toDate" id="toDate" value="" placeholder="To Date" class="filter-input form-control"/> 
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                 </div>          
+                 <div class="panel-group extent-map-panel">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                        
+                            <button id="pnlExtentMapCmd" data-toggle="collapse" data-target="#pnlExtentMap" aria-expanded="false" class="btn btn-link btn-block collapsed_">
+                                    <i class="collapse-action glyphicon"></i>
+                                    <h4 class="title"><i class="glyphicon glyphicon-globe"></i> Extent </h4>
+                            </button>
+                        </div>
+                        <div id="pnlExtentMap" class="panel-collapse collapse_">
+                            <div class="panel-body">
+                                    <label class="col-sm-offset-1_ col-sm-12 checkbox">
+                                        <input type="checkbox" id="applyMapExtent" name="applyMapExtent" />
+                                       Apply extent
+                                    </label>
+                                 
+                                    <div id="extMap" style="height:200px;">
+
+                                    </div>
+                                        
+                                    
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-group">
+                    <div class="panel panel-default collapsible-panel">
+                        <div class="panel-heading">
+                            <button data-toggle="collapse" data-target="#pnlSort" aria-expanded="false" class="btn btn-link btn-block collapsed">
+                                    <i class="collapse-action glyphicon"></i>
+                                     <h4 class="title "><i class="glyphicon glyphicon-sort"></i> Order by </h4>
+                            </button>
+                        </div>
+                        <div id="pnlSort" class="panel-collapse collapse ">
+                            <div class="panel-body" style="max-height: 400px;overflow: auto;">
+                                    <ul class="nav" id="orderbys">
+                        
+                                     </ul>  
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+
+    </div>
+    
+    @*<input type="hidden" name="items" id="items" value="@(JSON.stringify(model.data))" readonly class="form-control">*@
+    
+    <div class="col-sm-8">
+      <div class="panel">
+        <div class="panel-body">
+            <div class="row row-grid" id="tblItems">
+                <div class="col-xs-18 col-sm-12 col-md-12 ">
+                     <div class="thumbnail waitbar_h" style="height:30px"  ></div>
+                </div>  
+            </div>
+
+        </div>
+    </div>
+
+
+            </div>
+         
+</div>
+
+</div>
+
+
+
+
+
+ 
+  })
+ @html.block('scripts', function(model) {
+
+  <script src="/js/lib/proj4.js"></script>
+  <script src="/js/lib/ol.js"></script>
+
+   @if(process.env.NODE_ENV=='development'){
+       @model.uglify.catalog_page.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        })
+   }else{
+       <script src="/dist/js/catalog_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+
+    
+    })
+})
+
+

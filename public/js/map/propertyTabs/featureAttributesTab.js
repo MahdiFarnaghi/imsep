@@ -468,10 +468,11 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
     var mediaRec = new Media(src,
         // success callback
         function() {
-          parent.find('.stopRecordAudio').hide();
-          parent.find('.audioAmplitude_progress').hide();
-          me.show();
-          clearInterval(mediaTimer);
+          // parent.find('.stopRecordAudio').hide();
+          // parent.find('.audioAmplitude_progress').hide();
+          // me.show();
+          // clearInterval(mediaTimer);
+          onEnd_Stop();
             console.log("recordAudio():Audio Success");
             window.resolveLocalFileSystemURL(outputFile.dirName + outputFile.fileName, function (fileEntry) {
               
@@ -504,11 +505,8 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
         // error callback
         function(err) {
           
-          parent.find('.stopRecordAudio').hide();
-          parent.find('.audioAmplitude_progress').hide();
+          onEnd_Stop();
           
-          me.show();
-          clearInterval(mediaTimer);
 
             console.log("recordAudio():Audio Error: "+ err.code);
         });
@@ -529,11 +527,19 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
       }, 300);
 
         parent.find('.stopRecordAudio').unbind().click(function(){
-          clearInterval(mediaTimer);
+          
           mediaRec.stopRecord();
           mediaRec.release();
+          onEnd_Stop();
         });
 
+        function onEnd_Stop(){
+          parent.find('.stopRecordAudio').hide();
+          parent.find('.audioAmplitude_progress').hide();
+          parent.find('.startRecordAudio').show();
+          clearInterval(mediaTimer);
+          me.show();
+        }
         mediaRec.startRecord();
        
   });
@@ -988,7 +994,7 @@ var placeholder=select2Elm.data('placeholder');
     if(!autosaveId){
       return;
     }
-    console.log('autosaving...');
+    //console.log('autosaving...');
     var properties={} ;
     var changed_properties={}
     var count=0;

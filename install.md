@@ -29,6 +29,10 @@
      `docker-compose  -f docker-compose_local.debug.yml up`
 
      then start debuging  with the "Docker/Chrome1338" configuration
+* updating only code
+1. `docker-compose  -f stop`
+2. `docker image rm imsep -f`
+3. `docker-compose  -f up`
 
 
 # Manual backup of DB

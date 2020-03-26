@@ -108,6 +108,14 @@ function LayerSourceTab() {
         htm += ' </div>';
         htm += '</div>';
       htm+='  </div>';
+      if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
+        if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+        
+          htm+='<div class="form-group">';
+          htm += '<button type="button" class="btn btn-primary" id="cmdupdateDisplay" > Save display</button>';
+          htm+='</div>'; 
+       }
+      }
       htm+='<div class="form-group">';
       htm += '<button type="button" class="btn btn-primary" id="downloadGeoJSON" ><i class="fa fa-download"></i> Download GeoJSON</button>';
       htm+='</div>'; 
@@ -222,6 +230,14 @@ function LayerSourceTab() {
         htm += ' </div>';
         htm += '</div>';
       htm+='  </div>';
+      if(layerCustom && layerCustom.dataObj && layerCustom.dataObj.id){
+        if(app.identity.isAdministrator || layerCustom.dataObj.ownerUser==app.identity.id || (layerCustom.dataObj.OwnerUser && layerCustom.dataObj.OwnerUser.parent ===app.identity.id) ){
+        
+          htm+='<div class="form-group">';
+          htm += '<button type="button" class="btn btn-primary" id="cmdupdateDisplay" > Save display</button>';
+          htm+='</div>'; 
+       }
+      }
       var details= LayerHelper.getDetails(self.layer);
       if(details){
        
@@ -453,6 +469,9 @@ function LayerSourceTab() {
     var datalayerThumbnailElment= content.find('#datalayerThumbnail');
     content.find('#cmdupdatethumbnail').click(function(){
       self.updateLayerThumbnail(datalayerThumbnailElment);
+    });
+    content.find('#cmdupdateDisplay').click(function(){
+      self.updateLayerDisplay();
     });
     if(sourceType=='GeoJSON'){
       content.find('#shapeType').val(details.shapeType);
@@ -1377,6 +1396,81 @@ function LayerSourceTab() {
             });
         
         });
+
+  }
+  LayerSourceTab.prototype.updateLayerDisplay=function(datasetThumbnailElment){
+    var self=this;
+    if(! this.layer)
+      return;
+    var layerCustom= this.layer.get('custom');
+    var details= LayerHelper.getDetails(self.layer);
+    var request={};
+    if(details.display){
+        request.display=JSON.parse(JSON.stringify(details.display));
+    }
+    if(details.renderer){
+      request.renderer=JSON.parse(JSON.stringify(details.renderer));
+    }
+    if(details.featureLabeler){
+      request.featureLabeler=JSON.parse(JSON.stringify(details.featureLabeler));
+    }
+   
+    waitingDialog.show('Saving layer\'s settings', { progressType: 'info'});
+    
+    
+      
+      $.ajax({
+      url: '/datalayer/' +  layerCustom.dataObj.id +'/display',
+      type: 'POST',
+      dataType: 'json',
+      contentType: 'application/json; charset=utf-8',
+      timeout: 30000,
+      cache: false,
+      data: JSON.stringify(request),
+      }).done(function(respond){
+            waitingDialog.hide();
+            if(respond.status)  { 
+              var d = new Date();
+              $.notify({
+                  message: "Layer's display settings saved successfully"
+              },{
+                  type:'info',
+                  z_index:50000,
+                  delay:2000,
+                  animate: {
+                      enter: 'animated fadeInDown',
+                      exit: 'animated fadeOutUp'
+                  }
+              });
+            }else{
+                $.notify({
+                  message:  respond.message ||"Failed to save settings."
+              },{
+                  type:'danger',
+                  z_index:50000,
+                  delay:2000,
+                  animate: {
+                      enter: 'animated fadeInDown',
+                      exit: 'animated fadeOutUp'
+                  }
+              });
+            }
+      }).fail(function( jqXHR, textStatus, errorThrown) {
+          waitingDialog.hide();
+          $.notify({
+              message: "Failed to save settings"
+          },{
+              type:'danger',
+              z_index:50000,
+              delay:2000,
+              animate: {
+                  enter: 'animated fadeInDown',
+                  exit: 'animated fadeOutUp'
+              }
+          });
+      });
+  
+        
 
   }
   

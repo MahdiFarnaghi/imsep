@@ -1,0 +1,138 @@
+@html.extend('layout', function(model) {
+     @html.block('styles', function(model) {
+      
+        <style>
+           .dual-list .list-group {
+            margin-top: 8px;
+        }
+
+        .list-left li, .list-right li {
+            cursor: pointer;
+        }
+
+        .list-arrows {
+            padding-top: 100px;
+        }
+
+            .list-arrows button {
+                margin-bottom: 20px;
+            }
+
+        </style>
+        
+    })
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" class="form-horizontal" action="/admin/permissiontype/@(model.item.id)">
+                <legend>@(model.i18n['PermissionType'] || model.title)
+                
+               
+                </legend>
+               
+                <div class="form-group">
+                    <label class="col-sm-3" for="contentType">Content Type</label>
+                    @if(model.item.id && !html.equals(model.item.id, -1) && model.item.updatedAt){
+                        <input type="hidden" name="updatedAt" id="updatedAt" value="@model.item.updatedAt.getTime()" readonly class="form-control">
+                    }
+                    <div class="col-sm-7">
+                        <input type="text" name="contentType" id="contentType" value="@model.item.contentType" autofocus placeholder="contentType" class="form-control" data-val="true" data-val-required="ContentType Is required"                              />
+                        <span class="field-validation-valid" data-valmsg-for="contentType" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                 <div class="form-group">
+                    <label class="col-sm-3" for="caption">Caption</label>
+                    <div class="col-sm-7">
+                        <input type="text" name="caption" id="caption" value="@model.item.caption" autofocus placeholder="Caption" class="form-control" data-val="true" data-val-required="Caption Is required"   />
+                        <span class="field-validation-valid" data-valmsg-for="caption" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3">AccessType</label>
+                    <div class="col-sm-7">
+                     @if(model.item.id && !html.equals(model.item.id, -1)){
+                        <label class="radio-inline radio col-sm-3">
+                            <input type="radio" @(html.equals('menu',model.item.accessType) ? 'checked'  :'' ) name="accessType" value="menu" data-toggle="radio" />
+                            <span>Menu</span>
+                        </label>
+                        <label class="radio-inline  col-sm-3">
+                            <input type="radio" @(html.equals('tool',model.item.accessType) ? 'checked' : '' ) name="accessType" value="tool" data-toggle="radio" />
+                            <span>Tool</span>
+                        </label>
+                        <label class="radio-inline  col-sm-3">
+                             <input type="radio" @((html.equals('data',model.item.accessType) || html.equals('field',model.item.accessType)) ? 'checked' : '' ) name="accessType" value="data" data-toggle="radio" />
+                            <span>Data</span>
+                        </label>
+                     }else{
+                        <label class="radio-inline radio col-sm-3">
+                            <input type="radio" checked name="accessType" value="menu" data-toggle="radio" />
+                            <span>Menu</span>
+                        </label>
+                        <label class="radio-inline  col-sm-3">
+                            <input type="radio" name="accessType" value="tool" data-toggle="radio" />
+                            <span>Tool</span>
+                        </label>
+                        <label class="radio-inline  col-sm-3">
+                            <input type="radio" name="accessType" value="data" data-toggle="radio" />
+                            <span>Data</span>
+                        </label>
+
+                     } 
+
+                    </div>
+                </div>
+                  <div class="form-group">
+                    <label class="col-sm-3" for="permissionNames">Permission Names</label>
+                    <div class="col-sm-7">
+                        <input type="text" name="permissionNames" id="permissionNames" value="@model.item.permissionNames" autofocus placeholder="permissionNames" class="form-control" data-val="true" data-val-required="permissionNames Is required"   />
+                        <span class="field-validation-valid" data-valmsg-for="permissionNames" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-4"><button type="submit" class="btn btn-primary btn-success">@model.i18n['Save']</button></div>
+                    </div>
+
+</form>
+
+        </div>
+    </div>
+    @if(model.item.id && !html.equals(model.item.id, -1)){
+    
+    
+
+    
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" action="/admin/permissiontype/@model.item.id/delete?_method=DELETE" class="form-horizontal">
+                <legend>حذف</legend>
+                <div class="form-group">
+                    <p class="col-sm-offset-3 col-sm-9">شما می توانید این مورد را حذف کنید ولی این کار غیر قابل برگشت می باشد.</p>
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-danger glyphicon glyphicon-trash"
+                                onclick="return confirm('حذف شود؟');">
+                            حذف این مورد
+                        </button>
+                        
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    }
+
+</div>
+
+  })
+
+ @html.block('scripts', function(model) {
+   
+   
+    
+   })
+
+})
+
+

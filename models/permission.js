@@ -15,6 +15,8 @@ module.exports = (sequelize, DataTypes) => {
         },
         grantToId: DataTypes.INTEGER,
         insertedByUserId: DataTypes.INTEGER
+
+        ,extra: DataTypes.TEXT
     }, {
 
         });

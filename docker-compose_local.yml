@@ -21,7 +21,11 @@ services:
       POSTGRES_PASSWORD: d747db4520c046ccb5db14f39a014746
       
       POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL
-  
+    #healthcheck:
+    #  test: ["CMD-SHELL", "pg_isready -U postgres"]
+    #  interval: 10s
+    #  timeout: 5s
+    #  retries: 5  
       
   pgbackups:
         container_name: imsep_pgbackups
@@ -63,6 +67,7 @@ services:
       - imsep_postgis
     environment:
       NODE_ENV: production
+      APP_HOST: http://192.168.1.2:1336
       DB_HOSTNAME: imsep_postgis 
       DB_PORT: 5432
       DB_PASSWORD: d747db4520c046ccb5db14f39a014746

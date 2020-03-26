@@ -1,0 +1,113 @@
+@html.extend('layout', function(model) {
+     @html.block('styles', function(model) {
+      
+        <style>
+           .dual-list .list-group {
+            margin-top: 8px;
+        }
+
+        .list-left li, .list-right li {
+            cursor: pointer;
+        }
+
+        .list-arrows {
+            padding-top: 100px;
+        }
+
+            .list-arrows button {
+                margin-bottom: 20px;
+            }
+
+        </style>
+        
+    })
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" class="form-horizontal" action="/ows/csw/provider/@(model.item.id)">
+                <legend>@(model.title)
+                
+                <a title="Help" class="close help-link" style=" " target="_blank" href="/help#cswProvider">?</a>
+                </legend>
+                <div class="form-group">
+                    <label class="col-sm-3" for="name">@('Name')</label>
+                    @if(model.item.id && !html.equals(model.item.id, -1)){
+                    <div class="col-sm-7">
+                        <input type="hidden" name="updatedAt" id="updatedAt" value="@model.item.updatedAt.getTime()" readonly class="form-control">
+                        <input type="text" name="name" id="name" value="@model.item.name" autofocus placeholder="Name" class="form-control" data-val="true" data-val-required="Name is required"/>
+                        <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+
+                    </div>
+                    }else{
+                    <div class="col-sm-7">
+                        <input type="text" name="name" id="name" value="@model.item.name" autofocus placeholder="Name" class="form-control" data-val="true" data-val-required="Name is required"/>
+                        <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                   </div>
+                    }
+
+                </div>
+                 
+                 <div class="form-group">
+                            <label class="col-sm-12" for="description">@('Description')</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="description" rows="5" id="description" autofocus placeholder="Description" class="form-control">@html.raw(model.item.description)</textarea>
+                            </div>
+                </div>
+                 <div class="form-group">
+                  <label class="col-sm-3" for="url">@('Url')</label>
+                   <div class="col-sm-7"> 
+                    <input type="text" name="url" id="url" value="@model.item.url" placeholder="Url address" autocomplete="on" class="form-control" data-val="true"  data-val-url2="Enter a valid Url" data-val-required="Service url is required" />
+                    <span class="field-validation-valid" data-valmsg-for="url" data-valmsg-replace="true"></span>
+                   </div>
+               </div>
+                <div class="form-group">
+                    <label class="col-sm-7 checkbox">
+                        <input type="checkbox" name="enabled" @(model.item.enabled?'checked':'') value="" />Enabled
+                    </label>
+                </div>    
+                
+
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-4"><button type="submit" class="btn btn-primary btn-success">Save</button></div>
+                    </div>
+
+</form>
+
+        </div>
+    </div>
+    @if(model.item.id && !html.equals(model.item.id, -1)){
+     
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" action="/ows/csw/provider/@model.item.id/delete?_method=DELETE" class="form-horizontal">
+                <legend>Delete</legend>
+                <div class="form-group">
+                    <p class="col-sm-offset-3 col-sm-9">You can delete this relationship, but keep in mind this action is irreversible..</p>
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-danger glyphicon glyphicon-trash"
+                                onclick="return confirm('Delete?');">
+                            Delete this Service
+                        </button>
+                        
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+     
+    }
+
+</div>
+
+  })
+
+ @html.block('scripts', function(model) {
+   
+   
+     
+   })
+
+})
+
+

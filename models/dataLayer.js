@@ -16,7 +16,22 @@ module.exports = (sequelize, DataTypes) => {
         // ext_south:DataTypes.FLOAT,
         // ext_west:DataTypes.FLOAT,
         
-        thumbnail:DataTypes.BLOB
+        thumbnail:DataTypes.BLOB,
+
+        
+        subType: DataTypes.STRING(50),
+        theme: DataTypes.STRING,
+        
+        ext_north:DataTypes.FLOAT,
+        ext_east:DataTypes.FLOAT,
+        ext_south:DataTypes.FLOAT,
+        ext_west:DataTypes.FLOAT,
+        extra: DataTypes.TEXT
+        ,permissionTypes:  {type:DataTypes.ARRAY(DataTypes.INTEGER)},
+        publish_ogc_service:{
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        }
         
     }, {
 
@@ -29,6 +44,16 @@ module.exports = (sequelize, DataTypes) => {
             constraints: false,
             scope: {
                 contentType: 'DataLayer'
+            }
+        });
+
+
+        DataLayer.hasOne(models.Metadata, {
+            as: 'Metadata',//, onDelete:'CASCADE',
+            foreignKey: 'contentId', sourceKey:'id',
+            constraints: false,
+            scope: {
+                contentType: 'Dataset'
             }
         });
     };

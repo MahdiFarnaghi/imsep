@@ -1,0 +1,260 @@
+
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+            <form id="mainForm" method="POST" class="form-horizontal" action="/datalayer/@(model.datalayer.id)/editmetadata">
+                <legend>
+                @(model.title)
+                <a title="Help" class="close help-link" style=" " target="_blank" href="/help#editmetadata">?</a>
+                </legend>
+            
+                @if (model.datalayer.thumbnail){
+                    <img class="avatar" src="/datalayer/@model.datalayer.id/thumbnail" />
+                    <hr />
+                }
+                else {}
+                 
+            
+                <div class="form-group">
+                    <label class="col-sm-3" for="Title">Title</label>
+                    <div class="col-sm-7">
+                       <input type="text" name="title" id="title" readonly value="@html.raw(model.metadata.title)" autofocus placeholder="Title" class="form-control" data-val="true" data-val-required="Title is reqired"                               />
+                        <span class="field-validation-valid" data-valmsg-for="title" data-valmsg-replace="true"></span>
+                         <input type="hidden" name="updatedAt" id="updatedAt" value="@model.metadata.updatedAt.getTime()" readonly class="form-control">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3" for="alternative">Alternate title</label>
+                    <div class="col-sm-7">
+                       <input type="text" name="alternative" id="alternative" value="@html.raw(model.metadata.alternative)"  placeholder="Alternate title" class="form-control"  />
+                    </div>
+                </div>
+                <div class="form-group">
+                            <label class="col-sm-12" for="abstract">Abstract</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="abstract" readonly rows="5" id="abstract"  placeholder="Abstract" class="form-control">@html.raw(model.metadata.abstract)</textarea>
+                            </div>
+                </div>
+                 <div class="form-group">
+                         @{var topicCategory= model.metadata.theme}
+                            <label class="col-sm-12" for="theme"><i class="fas fa-theme"></i> Topic Category</label>
+                            <div class="col-sm-12">
+                                <select class="select2Multiple form-control "   name="theme[]" id="theme" multiple="multiple" >
+                                   <option value="environment" @( topicCategory.indexOf('environment')>-1 ? 'selected="selected"' : '' ) >
+                                        environment</option>
+                                    <option value="biota" @( topicCategory.indexOf('biota')>-1 ? 'selected="selected"' : '' ) >
+                                    biota</option>
+                                    <option value="inlandWaters" @( topicCategory.indexOf('inlandWaters')>-1 ? 'selected="selected"' : '' ) >
+                                        inlandWaters</option>
+                                    <option value="climatologyMeteorologyAtmosphere" @( topicCategory.indexOf('climatologyMeteorologyAtmosphere')>-1 ? 'selected="selected"' : '' ) >
+                                        climatologyMeteorologyAtmosphere</option>
+                                    <option value="elevation" @( topicCategory.indexOf('elevation')>-1  ? 'selected="selected"' : '' ) >
+                                        elevation</option>
+                                    <option value="imageryBaseMapsEarthCover" @( topicCategory.indexOf('imageryBaseMapsEarthCover')>-1  ? 'selected="selected"' : '' ) >
+                                        imageryBaseMapsEarthCover</option>
+                                    <option value="boundaries" @( topicCategory.indexOf('boundaries')>-1  ? 'selected="selected"' : '' ) >
+                                    boundaries</option>
+                                     <option value="geoscientificInformation" @( topicCategory.indexOf('geoscientificInformation')>-1  ? 'selected="selected"' : '' ) >
+                                        geoscientificInformation</option>
+                                    <option value="farming" @( topicCategory.indexOf('farming')>-1  ? 'selected="selected"' : '' ) >
+                                        farming</option>
+                                    <option value="location" @( topicCategory.indexOf('location')>-1  ? 'selected="selected"' : '' ) >
+                                        location</option>
+                                    <option value="disaster" @( topicCategory.indexOf('disaster')>-1  ? 'selected="selected"' : '' ) >
+                                        disaster</option>
+                                    <option value="health" @( topicCategory.indexOf('health')>-1  ? 'selected="selected"' : '' ) >
+                                        health</option>
+                                    <option value="transportation" @( topicCategory.indexOf('transportation')>-1  ? 'selected="selected"' : '' ) >
+                                        transportation</option>
+                                    
+                                    <option value="economy" @( topicCategory.indexOf('economy')>-1  ? 'selected="selected"' : '' ) >
+                                        economy</option>
+                                    <option value="intelligenceMilitary" @( topicCategory.indexOf('intelligenceMilitary')>-1  ? 'selected="selected"' : '' ) >
+                                        intelligenceMilitary</option>
+                                    
+                                    <option value="oceans" @( topicCategory.indexOf('oceans')>-1  ? 'selected="selected"' : '' ) >
+                                        oceans</option>                                   
+                                    
+                                    <option value="planningCadastre" @( topicCategory.indexOf('planningCadastre')>-1  ? 'selected="selected"' : '' ) >
+                                        planningCadastre</option>
+                                     <option value="society" @( topicCategory.indexOf('society')>-1  ? 'selected="selected"' : '' ) >
+                                        society</option>
+                                    <option value="structure" @( topicCategory.indexOf('structure')>-1  ? 'selected="selected"' : '' ) >
+                                        structure</option>
+                                     
+                                    <option value="utilitiesCommunication" @( topicCategory.indexOf('utilitiesCommunication')>-1  ? 'selected="selected"' : '' ) >
+                                        utilitiesCommunication</option>
+                                     <option value="extraTerrestrial" @( topicCategory.indexOf('extraTerrestrial')>-1  ? 'selected="selected"' : '' ) >
+                                        extraTerrestrial</option>
+                                     @*   
+                                       <option value="" @(html.equals('',topicCategory) ? 'selected="selected"' : '' ) >
+                                        other</option>  *@   
+                                </select>
+                            </div>
+                </div>
+                
+                <div class="form-group">
+                            <input type="hidden" name="keywordArray" id="keywordArray" value="@model.keywordArray" readonly class="form-control">
+                    
+                            <label class="col-sm-12" for="subject"><i class="fas fa-key1"></i> Keywords</label>
+                            <div class="col-sm-12">
+                                <select id="subject" class="select2Multiple form-control"  style="width: 100%" name="subject[]" multiple="multiple">
+                                @if(model.metadata.subject){
+                                    @model.metadata.subject.forEach(function(keyword) {
+                                        <option value="@keyword" selected >@keyword</option> 
+                                    })  
+                                }
+                                </select>
+                            </div>
+                </div>
+                <div class="form-group">
+                     <label class="col-sm-3" >Type</label>
+                     <label class="col-sm-7" >
+                        <span title="">@model.metadata.type</span>
+                     </label>
+                </div> 
+                
+                <div class="form-group">
+                     <label class="col-sm-3" >Format</label>
+                     <label class="col-sm-7" >
+                        <span title="">@model.metadata.format</span>
+                     </label>
+                </div> 
+                <div class="form-group">
+                     <label class="col-sm-3" >Spatial reference</label>
+                     <label class="col-sm-7" >
+                        <span title="">@model.metadata.spatial</span>
+                     </label>
+                </div> 
+                 <div class="form-group">
+                    <label class="col-sm-3" for="language">Language</label>
+                    <div class="col-sm-7">
+                       <input type="text" name="language" id="language" value="@model.metadata.language"  placeholder="Language" class="form-control"  />
+                    </div>
+                </div>
+                
+                 
+                
+                
+                <div class="form-group">
+                     <label class="col-sm-3" >Creation date</label>
+                     <label class="col-sm-7" >
+                        <span title="">@model.metadata.created</span>
+                     </label>
+                </div> 
+                <div class="form-group">
+                     <label class="col-sm-3" >Revision date</label>
+                     <label class="col-sm-7" >
+                        <span title="">@model.metadata.modified</span>
+                     </label>
+                </div> 
+                 <div class="form-group">
+                            <label class="col-sm-12" for="creator">Creator</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="creator"  rows="2" id="creator"  placeholder="Creator" class="form-control">@html.raw(model.metadata.creator)</textarea>
+                                <small class="text-muted">Dataset responsible party (originator). Who is responsible for making the content
+of the resource?</small>
+                            </div>
+                </div>
+                <div class="form-group">
+                            <label class="col-sm-12" for="publisher">Publisher</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="publisher"  rows="2" id="publisher"  placeholder="Publisher" class="form-control">@html.raw(model.metadata.publisher)</textarea>
+                                <small class="text-muted">Dataset responsible party (publisher). Who is responsible for making the resource
+available?</small>
+                            </div>
+                </div>
+                <div class="form-group">
+                            <label class="col-sm-12" for="rights">Copyright</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="rights"  rows="2" id="rights"  placeholder="Copyright" class="form-control">@html.raw(model.metadata.rights)</textarea>
+                                <small class="text-muted">Information about rights held in and over the resource. Describe legal constraints</small>
+                            </div>
+                             
+                </div>
+                <div class="form-group">
+                            <label class="col-sm-12" for="contributor">Contributor</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="contributor"  rows="2" id="contributor"  placeholder="Contributor" class="form-control">@html.raw(model.metadata.contributor)</textarea>
+                                <small class="text-muted"> Who is responsible for making contributions to the content of the resource?</small>
+                            </div>
+                </div> 
+                 <div class="form-group">
+                            <label class="col-sm-12" for="source">Source</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="source"  rows="5" id="source"  placeholder="Source ( Lineage description)" class="form-control">@html.raw(model.metadata.source)</textarea>
+                                <small class="text-muted"> Describe source and lineage of dataset</small>
+                            </div>
+                </div>
+                 <div class="form-group">
+                            <label class="col-sm-12" for="relation">Relation</label>
+                            <div class="col-sm-12">
+                                <textarea type="text" name="relation"  rows="2" id="relation"  placeholder="Relation" class="form-control">@html.raw(model.metadata.relation)</textarea>
+                                 <small class="text-muted"> Describe any relationship that exists between this dataset and any related resource</small>
+                            </div>
+                </div>
+             <div class="panel">
+                    <div class="panel-body">
+                        <div class="form-horizontal">
+                            <legend><i class="fas fa-globe"></i> GeoExtent</legend>
+                             
+                             <div class="form-group">
+                                <label class="col-sm-offset-3 col-sm-1" for="ext_north">North</label>
+                                <div class="col-sm-3">
+                                    <input type="number" name="ext_north" id="ext_north" value="@model.metadata.ext_north"  placeholder="North" class="form-control"  />
+                                </div>
+                            </div>
+                             <div class="form-group">
+                                <label class="col-sm-1" for="ext_west"> West</label>
+                                <div class="col-sm-3">
+                                    <input type="number" name="ext_west" id="ext_west" value="@model.metadata.ext_west"  placeholder="West" class="form-control"  />
+                                </div>
+                            @*</div>
+                             <div class="form-group">*@
+                                <label class="col-sm-offset-3 col-sm-1" for="ext_east">East</label>
+                                <div class="col-sm-3">
+                                    <input type="number" name="ext_east" id="ext_east" value="@model.metadata.ext_east"  placeholder="East" class="form-control"  />
+                                </div>
+                            </div>
+                             <div class="form-group">
+                                <label class="col-sm-offset-3 col-sm-1" for="ext_south">South</label>
+                                <div class="col-sm-3">
+                                    <input type="number" name="ext_south" id="ext_south" value="@model.metadata.ext_south"  placeholder="South" class="form-control"  />
+                                </div>
+                            </div>
+                        </div>
+                    </div>    
+            </div>
+              
+            </form>
+           
+
+
+            <div class="form-group">
+                        <div class=" col-sm-4"><button id="cmdSave" type="submit" class="btn btn-primary btn-success">Save</button></div>
+             </div>
+        </div>
+    </div>
+</div>
+
+
+  })
+@html.block('scripts', function(model) {
+            
+        @if(process.env.NODE_ENV=='development'){
+            @model.uglify.edit_metadata_page.src.forEach(function(item) {
+                    @{item=item.replace('public/js','/js')}
+                    <script src="@item"></script>    
+                })
+        }else{
+            <script src="/dist/js/edit_metadata_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+        }
+        
+ 
+   
+   })
+})
+
+

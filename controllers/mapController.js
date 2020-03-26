@@ -514,13 +514,20 @@ module.exports = function () {
                     }
                 }
             }
+            var options;
+            if(req.query.options){
+                try{
+                options= JSON.parse(req.query.options);
+                }catch(ex){}
+            }
             userHasEditPermission=true;
             userHasViewPermission=true;
             userIsOwnerOfMap=true;
             item={
                 id:-1,
                 
-                preview:preview
+                preview:preview,
+                options:options
             }
         }
          else if (req.params.id)

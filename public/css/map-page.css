@@ -566,3 +566,43 @@ hr.field-sep{
 .upload-commands .btn{
   margin:0.2em 0.3em;
 }
+
+
+
+.myOlTextButton24 {
+  float: left;
+  /* left: 0px; */
+  margin: 2px!important;
+  border-bottom: solid 1px #c3b6b6;
+  width: 100%;
+  border-left: none!important;
+}
+.ol-control.ol-bar .myOlTextButton24:last-child {
+  border-bottom: none;
+}
+
+.draw_addFromGPS{
+  position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 12px;
+    color: #e6ecf1;
+    background-color: #009688;
+}
+.draw_trackGPS{
+  position: absolute;
+    top: 2px;
+    left: 2px;
+    font-size: 12px;
+    color: #e6ecf1;
+    background-color: #009688;
+}
+.ol-control.ol-bar .ol-toggle.ol-active > button .draw_trackGPS{
+  color: #009688;
+    background-color: transparent;
+  
+}
+
+.myOlTextButton_Space {
+  border: none!important;
+}

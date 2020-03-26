@@ -1,6 +1,8 @@
 ﻿'use strict';
 //var forceRebuildDatabaseSchema = false; // replaced with process.env.DB_REBUILD
-const adb_version = 1;
+const adb_version = 2;
+const https = require('https');
+
 const format = require('string-format');
 format.extend(String.prototype, {});
 //#region require  
@@ -11,6 +13,7 @@ var dotenv = require('dotenv');
 var uuidv4 = require('uuid/v4');
 var debug = require('debug');
 var express = require('express');
+var cors = require('cors');
 var path = require('path');
 //var favicon = require('serve-favicon');
 var fs = require('fs');
@@ -27,6 +30,8 @@ var cookieParser = require('cookie-parser');
 var session = require('express-session');
 var flash = require('express-flash');
 var bodyParser = require('body-parser');
+require('./controllers/body-parser-xml-dom')(bodyParser);
+
 var expressValidator = require('express-validator');
 
 var passport = require('passport');
@@ -113,6 +118,7 @@ var mapController = require('./controllers/mapController')();
 var dataLayerController = require('./controllers/dataLayerController')(postgresWorkspace);
 
 var dataRelationshipController = require('./controllers/dataRelationshipController')(postgresWorkspace);
+var owsController = require('./controllers/owsController')(postgresWorkspace,dataLayerController);
 
 //#endregion Controllers 
 var Authenticated = accountController.ensureAuthenticated;
@@ -122,7 +128,7 @@ var InitIdentityInfo = accountController.initIdentityInfo;
 
 
 var app = express();
-
+app.use(cors());
 //#region LOG Settings 
 var logDirectory = path.join(__dirname, 'log');
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);// ensure log directory exists
@@ -456,7 +462,8 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     multer({ storage: uploadFolder,limits: { fileSize: 1024*1024*(parseFloat(process.env.UPLOAD_GEOJSON_MAX_SIZE_MB) || 10 ) } }).single('file'),
     handleErrors(dataLayerController.geoJsonToShapefilePost));
 
-    
+
+        
     app.post('/dataset/uploadattachments', [
         Authenticated
         //,authorize({anyOfRoles: 'administrators,powerUsers,dataManagers,dataAnalysts'  })
@@ -527,6 +534,39 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     app.delete('/datalayer/:id/delete',   [Authenticated],   handleErrors(dataLayerController.dataLayerDelete));
     app.delete('/api/dataset/:id/delete', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.dataLayerDelete));
 
+    app.get(['/ows/csw']   , handleErrors(owsController.cswGet));
+    app.post(['/ows/csw'] 
+    ,bodyParser.xml_dom({ }),
+      handleErrors(owsController.cswGet));
+    
+    app.get(['/ows/wfs/:id']
+        , handleErrors(owsController.geojsonWfsGet));
+    
+        //app.get('/dataset/:id/wmts', [AuthenticatedOrGuest], handleErrors(datasetController.rasterWmtsGet));
+    //app.get('/dataset/:id/wmts', handleErrors(datasetController.rasterWmtsGet));
+    app.get([
+        '/ows/wmts/:id/1.0.0/WMTSCapabilities.xml',
+            '/ows/wmts/:id']
+    , handleErrors(owsController.rasterWmtsGet));
+    app.get(['/ows/wms/:id']
+    , handleErrors(owsController.rasterWmsGet));
+    
+    app.get('/catalog', [Authenticated ],handleErrors(owsController.catalogGet)); 
+    
+    app.get('/ows/csw/providers', [Authenticated, authorize({
+        users: 'superadmin,admin' 
+    })],handleErrors(owsController.cswProvidersGet));
+    app.get('/ows/csw/provider/:id', [Authenticated, authorize({
+        users: 'superadmin,admin' 
+    })],handleErrors(owsController.cswProviderGet));
+    app.post('/ows/csw/provider/:id', [Authenticated, authorize({
+        users: 'superadmin,admin' 
+    })],handleErrors(owsController.cswProviderPost));
+    app.delete('/ows/csw/provider/:id/delete', [Authenticated, authorize({
+        users: 'superadmin,admin' 
+    })],handleErrors(owsController.cswProviderDelete));
+    
+    
 
     app.get('/datalayer/:id/geojson',  [Authenticated],   handleErrors(dataLayerController.geojsonGet));
     app.get('/api/dataset/:id/geojson',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(dataLayerController.geojsonGet));
@@ -568,6 +608,16 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
         }
     }).single('file'),
     handleErrors(dataLayerController.thumbnailPost));
+    app.post('/datalayer/:id/display', [Authenticated, authorize({
+        anyOfRoles: 'administrators,powerUsers,dataManagers'
+    })],
+    handleErrors(dataLayerController.displayPost));
+
+
+    app.get('/datalayer/:id/editmetadata', [Authenticated], handleErrors(dataLayerController.datasetEditMetadataGet));
+    app.post('/datalayer/:id/editmetadata', [Authenticated], handleErrors(dataLayerController.datasetEditMetadataPost));
+    
+
 
     app.get('/dataRelationships', [Authenticated], handleErrors(dataRelationshipController.allDataRelationshipsGet));
     app.get('/api/dataRelationships', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataRelationshipController.allDataRelationshipsGet));
@@ -770,14 +820,26 @@ app.set('port', process.env.PORT || 3000);
     } catch (ex) {
         var b = 1;
     }
-    var server = app.listen(app.get('port'), function () {
-        //debug('Express server listening on port ' + server.address().port);
-        //console.log()
-      //  console.log('\x1b[47m\x1b[30m%s\x1b[0m', 'Server listening on port ' + server.address().port);  
-       
+    
+    var server;
+    if(process.env.HTTPS_Server=='true'){
+      server=https.createServer({
+            key: fs.readFileSync('../sslOutput/key.pem'),
+            cert: fs.readFileSync('../sslOutput/cert.pem')
+            //,passphrase: 'YOUR PASSPHRASE HERE'
+        }, app)
+        .listen(app.get('port'), function() {
+            console.log('\x1b[42m\x1b[42m%s\x1b[32m', 'iMSEP is running on local port:' + server.address().port+'(https)');  
+            console.log('');
+        });
+    }else{
+      server = app.listen(app.get('port'), function () {
       console.log('\x1b[42m\x1b[42m%s\x1b[32m', 'iMSEP is running on local port:' + server.address().port);  
       console.log('');
     });
+    }
+
+
     server.timeout = 60000*10;// 10 minutes
     //server.timeout = 60000*60;// 60 minutes
 
@@ -870,15 +932,15 @@ async function create_ADB_if_not_exists(adb_version){
         "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
       };
       var conString = `postgres://${params.user}:${params.password}@${params.host}:${params.port}/${params.database}`;
-   //   console.log(params);
+    //  console.log(params);
     const client = new Client(params)
     //const client = new Client(conString)
       
     try{
     await client.connect()
     }catch(ex){
-      //  console.log('create_ADB_if_not_exists:1,')
-     //   console.log(ex);
+       // console.log('create_ADB_if_not_exists:1,')
+      //  console.log(ex);
         var a=1;
         return false
     }
@@ -903,8 +965,8 @@ async function create_ADB_if_not_exists(adb_version){
     `)
     await client2.end()
     }catch(ex){
-       // console.log('create_ADB_if_not_exists:')
-       // console.log(ex);
+      //  console.log('create_ADB_if_not_exists:2,')
+     //   console.log(ex);
         return false;
     }
 
@@ -955,6 +1017,13 @@ async function upgrade_ADB(adb_version,old_adb_version){
             console.log('Failed to upgrade ADB to version 1');
         }
     }
+    if (old_adb_version < 2) {
+        try {
+            await upgrade_ADB_to_2();
+        } catch (ex) {
+            console.log('Failed to upgrade ADB to version 2');
+        }
+    }
 
 }
 async function upgrade_ADB_to_1(){
@@ -986,6 +1055,165 @@ async function upgrade_ADB_to_1(){
     await client2.end()
     }catch(ex){}
    return true;
+
+}
+async function upgrade_ADB_to_2(){
+    const { Client } = require('pg')
+    const dbName=process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep";
+    var params={
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        "database":dbName,
+        "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
+      };
+    
+      const client2 = new Client(params)
+      try{
+          await client2.connect()
+          const q2 = `
+CREATE TABLE public."PermissionTypes" (
+    id integer NOT NULL,
+    "contentType" character varying(60),
+    caption character varying(255),
+    "accessType" character varying(60),
+    "permissionNames" character varying(255),
+    "displayOrder" integer,
+    extra text,
+    "createdAt" timestamp with time zone NOT NULL,
+    "updatedAt" timestamp with time zone NOT NULL
+);
+ALTER TABLE public."PermissionTypes" OWNER TO postgres;
+CREATE SEQUENCE public."PermissionTypes_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE public."PermissionTypes_id_seq" OWNER TO postgres;
+ALTER SEQUENCE public."PermissionTypes_id_seq" OWNED BY public."PermissionTypes".id;
+ALTER TABLE ONLY public."PermissionTypes" ALTER COLUMN id SET DEFAULT nextval('public."PermissionTypes_id_seq"'::regclass);
+ALTER TABLE ONLY public."PermissionTypes"  ADD CONSTRAINT "PermissionTypes_pkey" PRIMARY KEY (id);
+CREATE UNIQUE INDEX permission_types_content_type ON public."PermissionTypes" USING btree ("contentType");
+          `;
+          const res2 = await client2.query(q2)
+          await client2.end()
+      
+
+
+          const client3 = new Client(params)
+      
+          await client3.connect()
+          const q3 = `
+          CREATE TABLE public."Metadata" (
+            id integer NOT NULL,
+            "contentType" character varying(20),
+            "contentId" integer,
+            "insertedByUserId" integer,
+            "updateddByUserId" integer,
+            extra text,
+            "createdAt" timestamp with time zone NOT NULL,
+            "updatedAt" timestamp with time zone NOT NULL,
+            identifier character varying(255),
+            title character varying(255),
+            alternative character varying(255),
+            abstract text,
+            spatial character varying(100),
+            subject text,
+            theme text,
+            created character varying(100),
+            date character varying(100),
+            modified character varying(100),
+            creator character varying(255),
+            publisher character varying(255),
+            contributor character varying(255),
+            rights text,
+            language character varying(255),
+            type character varying(255),
+            format character varying(255),
+            ext_north double precision,
+            ext_east double precision,
+            ext_south double precision,
+            ext_west double precision,
+            "references" character varying(255)[],
+            thumbnail text,
+            source character varying(255),
+            relation character varying(255),
+            publish_ogc_service boolean
+        );
+        ALTER TABLE public."Metadata" OWNER TO postgres;
+        CREATE SEQUENCE public."Metadata_id_seq"
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+ALTER TABLE public."Metadata_id_seq" OWNER TO postgres;
+ALTER SEQUENCE public."Metadata_id_seq" OWNED BY public."Metadata".id;
+ALTER TABLE ONLY public."Metadata" ALTER COLUMN id SET DEFAULT nextval('public."Metadata_id_seq"'::regclass);
+ALTER TABLE ONLY public."Metadata"
+    ADD CONSTRAINT "Metadata_pkey" PRIMARY KEY (id);
+
+    ALTER TABLE ONLY public."Metadata"
+    ADD CONSTRAINT "Metadata_insertedByUserId_fkey" FOREIGN KEY ("insertedByUserId") REFERENCES public."Users"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+    ALTER TABLE ONLY public."Metadata"
+    ADD CONSTRAINT "Metadata_updateddByUserId_fkey" FOREIGN KEY ("updateddByUserId") REFERENCES public."Users"(id) ON UPDATE CASCADE ON DELETE CASCADE;
+
+          `;
+          const res3 = await client3.query(q3)
+          await client3.end()
+      
+
+          const client4 = new Client(params)
+      
+          await client4.connect()
+          const q4 = `
+          ALTER TABLE public."DataLayers" ADD COLUMN "subType" character varying(50);
+          ALTER TABLE public."DataLayers" ADD COLUMN "theme" character varying(255);
+          
+          ALTER TABLE public."DataLayers" ADD COLUMN "ext_north" double precision;
+          ALTER TABLE public."DataLayers" ADD COLUMN "ext_east" double precision;
+          ALTER TABLE public."DataLayers" ADD COLUMN "ext_south" double precision;
+          ALTER TABLE public."DataLayers" ADD COLUMN "ext_west" double precision;
+          ALTER TABLE public."DataLayers" ADD COLUMN "permissionTypes" integer[];
+          ALTER TABLE public."DataLayers" ADD COLUMN  publish_ogc_service boolean;
+          
+          ALTER TABLE public."DataLayers" ADD COLUMN "extra" text;
+
+          ALTER TABLE public."Maps" ADD COLUMN "theme" character varying(255);
+          ALTER TABLE public."Maps" ADD COLUMN "permissionTypes" integer[];
+          ALTER TABLE public."Maps" ADD COLUMN "extra" text;
+          
+
+          ALTER TABLE public."Groups" ADD COLUMN "caption" character varying(255);
+          ALTER TABLE public."Users" ADD COLUMN "extra" text;
+          ALTER TABLE public."Permissions" ADD COLUMN "extra" text;
+          `;
+          const res4 = await client4.query(q4)
+          await client4.end()
+
+      
+         
+     
+      
+      
+
+
+      const client30 = new Client(params)
+      await client30.connect()
+      const q_v = `UPDATE public.adb_properties SET value= '2' WHERE key='version' `;
+      const res30 = await client30.query(q_v)
+      await client30.end()
+      
+      
+          
+      }catch(ex){
+          console.log(ex);
+          return false;
+      }
+          return true;
 
 }
 async function createGDB(){

@@ -1,4 +1,5 @@
 'use strict';
+const { Op } = require('sequelize');
 var bcrypt = require('bcrypt');
 var util = require('../controllers/util');
 
@@ -37,6 +38,7 @@ module.exports = (sequelize, DataTypes) => {
             defaultValue: 'active'
         },
         parent: DataTypes.INTEGER
+        , extra: DataTypes.TEXT
     }, {
             indexes: [
                 {
@@ -48,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
                     fields: ['email'],
                     where: {
                         email: {
-                            [sequelize.Op.ne]: null
+                            [Op.ne]: null
                         }
                     }
                 }

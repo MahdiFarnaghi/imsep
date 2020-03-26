@@ -9,18 +9,24 @@ function GeolocationTasks(app, mapContainer, options) {
     this._toolbar = null;
     this._subBar = null;
     this.interaction = undefined;
+    this.interactionSnap = undefined;
     this.layer = undefined;
     this.sourc = undefined;
     
     this.measureTooltipElement = undefined;
     this.measureTooltip = undefined;
     this.overlays = [];
+    this.keepCenter=false;
     this.zoomToLocation=false;
+    this._tracking=false;
+    //app.controller.geolocationTasks=this;
+    app.geolocationTasks=this;
 }
 GeolocationTasks.prototype._init = function (dataObj) {
     this._initialized = true;
     var self = this;
     var mapContainer = this.mapContainer;
+    
     var map = this.map;
     var view = map.getView();
     var geolocation =self.geolocation= new ol.Geolocation({
@@ -51,9 +57,33 @@ GeolocationTasks.prototype._init = function (dataObj) {
       geolocation.on('change:accuracyGeometry', function() {
         accuracyFeature.setGeometry(geolocation.getAccuracyGeometry());
       });
-
+     
       var positionFeature = new ol.Feature();
+      var gpsMarker=new ol.style.Icon({
+        anchor: [0.5, 0.56],
+        anchorXUnits: 'fraction',
+        anchorYUnits: 'fraction',
+        src: '/css/images/gps_33_5.png',
+        opacity:0.7
+      });
+      var set_gpsMarkerRotation= function(){
+          if(typeof navigator!=='undefined'){
+              if(navigator.compass){
+                    navigator.compass.getCurrentHeading(function(compass_heading){
+                        //console.log('r:'+self.map.getView().getRotation());
+                        if(compass_heading &&!isNaN(compass_heading.trueHeading)){
+                            var symbolRotation=compass_heading.trueHeading * Math.PI/180 + self.map.getView().getRotation();
+                            gpsMarker.setRotation(symbolRotation)  ;
+                        // self.map.getView().setRotation(symbolRotation);
+                        
+                        }
+                    });
+            }
+        }
+      }
       positionFeature.setStyle(new ol.style.Style({
+       // image: gpsMarker
+
         image: new ol.style.Circle({
           radius: 6,
           fill: new  ol.style.Fill({
@@ -66,14 +96,88 @@ GeolocationTasks.prototype._init = function (dataObj) {
         })
       }));
 
+      view.on('change:rotation', function() {
+        //console.log("fired");
+        set_gpsMarkerRotation();
+      });
       geolocation.on('change:position', function() {
         var coordinates = geolocation.getPosition();
+        var heading=geolocation.getHeading()* 180/Math.PI;
+       // console.log('heading:'+ heading);
+       if(typeof navigator!=='undefined'){
+            //navigator.geolocation.getCurrentPosition(function(position){
+            //    console.log(position.coords.heading);
+           // });
+        }
+        var accuracy= geolocation.get('accuracy');
+        if(self.zoomToLocation && !isNaN(accuracy) && accuracy < 100){
+            self.zoomToLocation=false;
+            var zoom = map.getView().getZoom();
+            if(zoom<18){
+                zoom=18;
+            }
+            self.map.getView().animate({ zoom:zoom, center:coordinates });
+        }
+        if(self.keepCenter){
+            // navigator.compass.getCurrentHeading(function(compass_heading){
+            //     //console.log('r:'+self.map.getView().getRotation());
+            //     if(compass_heading &&!isNaN(compass_heading.trueHeading)){
+            //         var headingRotation=compass_heading.trueHeading * Math.PI/180;// + self.map.getView().getRotation();
+            //         self.map.getView().setRotation(-headingRotation);
+                   
+            //       }
+            // });
+          
+            var mapExtent = self.map.getView().calculateExtent(self.map.getSize());
+            var dx= (mapExtent[2]- mapExtent[0])/20.0;
+            var dy= (mapExtent[3]- mapExtent[1])/20.0;
+            //var accuracy= geolocation.get('accuracy');
+            if(!isNaN(accuracy)){
+                if(accuracy < (mapExtent[2]- mapExtent[0])/4
+                 && accuracy< (mapExtent[3]- mapExtent[1])/4
+                ){
+                    if(accuracy> dx)
+                    {
+                        dx= accuracy;
+                    }
+                    if(accuracy> dy)
+                    {
+                        dy= accuracy;
+                    }
+                }
+            }
+            if(coordinates[0] < (mapExtent[0]+dx) || 
+                coordinates[0] > (mapExtent[2]-dx) ||
+                coordinates[1] < (mapExtent[1]+dy) ||
+                coordinates[1] > (mapExtent[3]-dy) 
+                )
+            {
+                
+                    self.map.getView().animate({      center:coordinates        });
+
+            }
+        }
         positionFeature.setGeometry(coordinates ?
           new ol.geom.Point(coordinates) : null);
+        //   if(!isNaN(heading)){
+        //     gpsMarker.setRotation(heading)  ;
+        //   }
+        //self.interactionSnap.addFeature(positionFeature);
+        if(self._tracking){
+            self.interactionSnap.setActive(true);
+            app.dispatchEvent('change:position',{
+                coordinates:coordinates
+            })
+        }
+        set_gpsMarkerRotation();
       });
     self.source = new ol.source.Vector({features: [accuracyFeature, positionFeature]});
     self.layer = new ol.layer.Vector({
         source: self.source,
+
+        updateWhileAnimating:true,
+        updateWhileInteracting:true,
+
         custom: {
             type: 'geolocation',
             keepOnTop:true,
@@ -96,7 +200,19 @@ GeolocationTasks.prototype._init = function (dataObj) {
             })
         })
     });
-
+    self.interactionSnap = new ol.interaction.Snap({
+        edge:false,
+        source: self.layer.getSource(),
+       // features:[positionFeature]
+    });
+    self.interactionSnap.setActive(false);
+    self.interactionSnap.removeFeature(accuracyFeature);
+    app.registerSnapInteraction(self.interactionSnap);
+    app.registerEventhandler('map-loaded',function(){
+        self.moveLayerToTop();  
+    })
+//    self.interactionSnap.addFeature(positionFeature);
+   // map.addInteraction(self.interactionSnap);
     // move layer to top of map
     map.getLayers().on('add', function (e) {
         if (e.element !== self.layer && e.element.get('custom')) {
@@ -122,19 +238,24 @@ GeolocationTasks.prototype._init = function (dataObj) {
         //html: '<span style="display:block;line-height:28px;background-position:center center" class="measure_length_24_Icon" >&nbsp;</span>',
         html: '<i class=" glyphicon glyphicon-lock"></i>',
         className:'myOlbutton24',
-        title: 'Keep center',
+        title: 'Keep me in map view',
+        _statusTip:'<i  class="status_tip_glyph glyphicon glyphicon-lock"></i> Keep me in map view',
         onToggle: function (toggle) {
             //console.log(toggle);
-           
+           if(toggle){
+            mapContainer.showTopStatus(this._statusTip,3000);
+           }else{
+            mapContainer.showTopStatus('');
+           }
             if (!toggle) {
-                self.zoomToLocation=false;
+                self.keepCenter=false;
                 return;
             }
-            self.zoomToLocation=true;
+            self.keepCenter=true;
         }
         ,
         // autoActivate: true,
-         active: self.zoomToLocation
+         active: self.keepCenter
     });
     this.keepCenterCmd = keepCenterCmd;
     this._subBar.addControl(keepCenterCmd);
@@ -147,22 +268,72 @@ GeolocationTasks.prototype._init = function (dataObj) {
         html: '<i class=" glyphicon glyphicon-record"></i>',
         className:'myOlbutton24',
         title: "My location",
+        _statusTip:'<i  class="status_tip_glyph glyphicon glyphicon-record"></i> My location',
         onToggle:function(toggle){
+            if(toggle){
+                var controls= this.getSubBar().getControls();
+                var control_index= 0;
+                var control_n= controls.length;
+                var showControlStatus= function(){
+                    if(control_index>=0 && control_index<control_n){
+                        var control=controls[control_index];
+                        var _statusTip=control._statusTip || control.get('title') || '  ';
+                        var delay=3000;
+                        if(_statusTip=='  '){
+                            delay=100;
+                        }
+                        if(_statusTip){
+                            mapContainer.showTopStatus(_statusTip,delay,control.element,function(){
+                                control_index++;
+                                showControlStatus();
+                            });
+                        }
+                    }
+                }
+                mapContainer.showTopStatus(this._statusTip,3000,undefined,function(){
+                       showControlStatus();
+                });
+                
+            }else{
+                mapContainer.showTopStatus('');
+            }
             if(!toggle){
+                self.zoomToLocation=false;
                 self.deActivate();
-
+                
+                self.geolocation.setTracking(false);
+                self._tracking=false;
+                self.interactionSnap.setActive(false);
                 return;
             }
+            self.interactionSnap.setActive(true);
             self.layer.setVisible(true);
             self.geolocation.setTracking(toggle);
-            //self.measureLength.setActive(true);
-            //activateInteraction('LineString');
+            self._tracking=toggle;
+            if(toggle){
+                self.zoomToLocation=true;
+                // self.map.getView().animate({
+                //     center:self.geolocation.getPosition()
+                // });
+            }
+            // if(cordova.plugins && cordova.plugins.diagnostic){
+            //     cordova.plugins.diagnostic.isGpsLocationEnabled(function(enabled){
+            //         if(!enabled){
+            //             cordova.plugins.diagnostic.switchToLocationSettings();
+            //         }
+            //     }, function(error){
+            //         cordova.plugins.diagnostic.switchToLocationSettings();
+
+            //     });    
+            // }
+           
         }
-        //,
-       // bar: this._subBar
+        , bar: this._subBar
     });
 
     this._toolbar.addControl(this.taskCtrl);
+
+    
 }
 GeolocationTasks.prototype.OnActivated = function (dataObj) {
     this._activated = true;
@@ -211,8 +382,10 @@ GeolocationTasks.prototype.deActivate = function () {
     this._activated = false;
 }
 GeolocationTasks.prototype.moveLayerToTop = function () {
+   // this.map.removeInteraction(this.interactionSnap);
     this.map.getLayers().remove(this.layer);
     this.map.getLayers().push(this.layer);
+   // this.map.addInteraction(this.interactionSnap);
 }
 
 GeolocationTasks.prototype.formatLength = function (line) {
@@ -229,18 +402,20 @@ GeolocationTasks.prototype.formatLength = function (line) {
 };
 
 
-GeolocationTasks.prototype.createMeasureTooltip = function () {
-    if (this.measureTooltipElement) {
-        this.measureTooltipElement.parentNode.removeChild(this.measureTooltipElement);
-    }
-    this.measureTooltipElement = document.createElement('div');
-    this.measureTooltipElement.className = 'tooltip tooltip-measure';
-    this.measureTooltip = new ol.Overlay({
-        element: this.measureTooltipElement,
-        offset: [0, -15],
-        positioning: 'bottom-center'
-    });
-    this.overlays.push(this.measureTooltip);
-    this.map.addOverlay(this.measureTooltip);
-    this.measureTooltip.getElement().parentNode.style.zIndex = this.map.getOverlays().getLength();
+
+GeolocationTasks.prototype.isTracking=function(){
+    return this._tracking;
+}
+
+GeolocationTasks.prototype.isTracking=function(){
+    return this._tracking;
+}
+GeolocationTasks.prototype.getPosition=function(){
+    var coordinates = this.geolocation.getPosition();  
+   // var view = this.map.getView();
+//var mapProjectionCode = view.getProjection().getCode();
+  //  var transform= ol.proj.getTransform("EPSG:4326",mapProjectionCode);
+  //  transform(coordinates,coordinates);
+    return coordinates;
+
 }
