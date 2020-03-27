@@ -219,6 +219,9 @@ module.exports = function (postgresWorkspace, datasetController) {
             item._wms_layers=item.title;
             item._wmts= process.env.APP_HOST+'/ows/wmts/'+datasetId;
           }else if (item.format && item.format.indexOf('vector')>-1){
+            item._wms= process.env.APP_HOST+'/ows/wms/'+datasetId;
+            item._wms_layers=item.title;
+            
             item._wfs= process.env.APP_HOST+'/ows/wfs/'+datasetId;
             item._wfs_typename='ns:L_'+ datasetId;
             if( item.format.indexOf('-')>-1){
@@ -317,6 +320,9 @@ module.exports = function (postgresWorkspace, datasetController) {
                 item._wms_layers=item.title;
                 item._wmts= process.env.APP_HOST+'/ows/wmts/'+datasetId;
               }else if (item.format && item.format.indexOf('vector')>-1){
+                item._wms= process.env.APP_HOST+'/ows/wms/'+datasetId;
+                item._wms_layers=item.title;
+            
                 item._wfs= process.env.APP_HOST+'/ows/wfs/'+datasetId;
                 item._wfs_typename='ns:L_'+ datasetId;
                 if( item.format.indexOf('-')>-1){
@@ -1563,7 +1569,10 @@ module.exports = function (postgresWorkspace, datasetController) {
     var tableName = details.datasetName || item.name;
     var oidField = details.oidField || 'rid';
     var rasterField = details.rasterField || 'raster';
-    var srid = details.spatialReference.srid || 3857;
+    var srid = 3857;
+    if (details.spatialReference) {
+      srid = details.spatialReference.srid || 3857;
+    }
     var getZoomForResolution = function (resolution) {
       let minZoom_ = 0;
       let maxResolution_ = 156543.03392804097;
@@ -1673,9 +1682,11 @@ module.exports = function (postgresWorkspace, datasetController) {
         return false;
       }
       var srs;
+      var query_srs=req.query['srs'] || req.query['crs'];
       srs = req.query['srs'] || req.query['crs'] || 'epsg:3857';
       srs = srs.toLowerCase();
       var bbox = req.query['bbox'];
+      var query_bbox=bbox;
       bbox = bbox.split(',').map(function (num) {
         return parseFloat(num);
       });
@@ -1711,7 +1722,7 @@ module.exports = function (postgresWorkspace, datasetController) {
         return await makeError(`invalid srs: ${srs}`, 'InvalidSRS');
       }
 
-      var out_srid = 3857; //req.query.srid;// reproject to srid
+      //var out_srid = 3857; //req.query.srid;// reproject to srid
       var imageFormat = req.query.format || 'image/png';
 
 
@@ -1726,7 +1737,115 @@ module.exports = function (postgresWorkspace, datasetController) {
       }
       try {
 
-        return await datasetController.rasterGetImage(req, res, item, details, bbox, zoom, ref_z, width, height, imageFormat, display);
+        if(item.dataType=='raster'){
+          return await datasetController.rasterGetImage(req, res, item, details, bbox, zoom, ref_z, width, height, imageFormat, display);
+        }else if(item.dataType=='vector'){
+          var tableName = details.datasetName || item.name;
+          var oidField = details.oidField || 'gid';
+          var shapeField = details.shapeField || 'geom';
+          var datasetType = details.datasetType || 'vector';
+          var shapeType = details.shapeType || 'Point';
+          var fields = details.fields || [];
+          var out_srid = srid;
+          var srs_array = srs.split(':');
+          out_srid = srs_array[1];
+          var filter;
+          if (!filter) {
+            filter = {};
+          }
+
+          if (bbox) {
+            //  var bboxExpr=`ST_Intersects(${shapeField},ST_MakeEnvelope(${bbox}))`;
+            var bboxExpr = `ST_Intersects(${shapeField},ST_Transform(ST_MakeEnvelope(${bbox},4326),${srid}))`;
+            if (!filter.expression)
+              filter.expression = bboxExpr;
+            else
+              filter.expression = '(' + filter.expression + ') AND (' + bboxExpr + ')';
+          }
+          var geojson = await postgresWorkspace.getGeoJson({
+            tableName: tableName,
+            datasetType: datasetType,
+            oidField: oidField,
+            shapeField: shapeField,
+            filter: filter,
+            onlyIds: false,
+            srid: srid,
+            //out_srid: out_srid,
+            out_srid: 4326,
+            fields: details.fields
+          });
+
+          const mapnik = require('mapnik');//npm install mapnik@3.6.2
+          mapnik.register_default_input_plugins();
+          const mapnikify = require('@mapbox/geojson-mapnikify');//npm install  @mapbox/geojson-mapnikify
+          var isPng =function  (data) {
+            return data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4E &&
+            data[3] === 0x47 && data[4] === 0x0D && data[5] === 0x0A &&
+            data[6] === 0x1A && data[7] === 0x0A
+          };
+          var normalizeBbox =function  (bboxStr) {
+            const bboxStrArr = bboxStr ? bboxStr.split(',') : []
+            if (bboxStrArr.length !== 4) {
+              let err = new Error('Invalid bbox: ' + util.inspect(bboxStrArr))
+              err.code = 400
+              return { err }
+            }
+            const coordinates = bboxStrArr.map(parseFloat)
+            if (coordinates.some(isNaN)) {
+              let err = new Error('Invalid bbox: ' + util.inspect(coordinates))
+              err.code = 400
+              return { err }
+            }
+          
+            return { coordinates }
+          };
+          var callback=function (err, tile) {
+            if (err || !tile || !isPng(tile)) {
+              res.status(err.code || 500).json(err || new Error("Rendering didn't produce a proper tile"))
+            } else {
+              res.status(200)
+                .set('Content-Length', tile.length)
+                .set('Content-Type', 'image/png')
+                .send(tile)
+            }
+          };
+          var bbox_norm = normalizeBbox(query_bbox)
+          // Convert GeoJSON to Mapnik XML
+          // if(geojson && geojson.features){
+          //   for(var i=0;i<geojson.features.length;i++){
+          //     var f= geojson.features[i];
+          //     //fill":"#555555","fill-opacity":0.6,"stroke":"#555555"
+          //     f.properties['fill']='#0000ff';
+          //     f.properties['stroke']='#ff0000';
+          //   }
+          // }
+          var options={};
+          mapnikify(geojson, false, function (err, xml) {
+            if (err) return callback(err)
+            var map = new mapnik.Map(256, 256)
+
+            // Create map from XML string
+            map.fromString(xml, function (err, map) {
+              if (err) return callback(err)
+              // Configure and render
+              map.resize(width, height)
+              if (query_srs) map.srs = `+init=${query_srs.toLowerCase()}`
+              map.extent = bbox_norm.coordinates;
+             try{
+            //  map.zoomAll();
+             }catch(xx){
+
+             }
+              var canvas = new mapnik.Image(width, height)
+              map.render(canvas, function (err, image) {
+                if (err) return callback(err)
+                if (options && options.palette) return image.encode('png8:z=1', {palette: options.palette}, callback)
+                image.encode('png32:z=1', callback)
+              })
+            })
+          });
+
+        }
       } catch (ex) {
         res.set('Content-Type', 'text/plain');
         res.status(404).end('Not found.(' + ex.message + ')');

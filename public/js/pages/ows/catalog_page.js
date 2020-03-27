@@ -186,22 +186,6 @@ var pageTask={
         html+='<label>Published Service(s):</label><br/>';
       
         html+='     <ul class="">';
-        if(item.wms){
-          html+='      <li> <a target="_blank"  href="'+item.wms+'" >WMS</a>';
-          var viewOptions={
-            layerType:'WMS',
-            url:item.wms,
-            title:item.name,
-            layers: item.wms_layers|| '',
-            bbox:item.bbox
-          };
-
-          html+='&nbsp;&nbsp;&nbsp;<a target="_blank"  href="/map/preview?options='+encodeURIComponent(JSON.stringify(viewOptions)) +'" ><span class="glyphicon glyphicon-globe">View</span></a>';
-          html+='      </li>';
-        }
-        if(item.wmts){
-          html+='      <li> <a target="_blank"  href="'+item.wmts+'" >WMTS</a></li>';
-        }
         if(item.wfs){
           html+='      <li> <a target="_blank"  href="'+item.wfs+'" >WFS</a>';
           var viewOptions={
@@ -216,6 +200,23 @@ var pageTask={
           html+='&nbsp;&nbsp;&nbsp;<a target="_blank"  href="/map/preview?options='+encodeURIComponent(JSON.stringify(viewOptions)) +'" ><span class="glyphicon glyphicon-globe">View</span></a>';
           html+='      </li>';
         }
+        if(item.wms){
+          html+='      <li> <a target="_blank"  href="'+item.wms+'" >WMS</a>';
+          var viewOptions={
+            layerType:'WMS',
+            url:item.wms,
+            title:item.name,
+            layers: item.wms_layers|| '',
+            bbox:item.bbox
+          };
+
+          html+='&nbsp;&nbsp;&nbsp;<a target="_blank"  href="/map/preview?options='+encodeURIComponent(JSON.stringify(viewOptions)) +'" ><span class="glyphicon glyphicon-globe">View</span></a>';
+          html+='      </li>';
+        }
+        if(item.wmts){
+         // html+='      <li> <a target="_blank"  href="'+item.wmts+'" >WMTS</a></li>';
+        }
+        
         html+='     </ul>';
       }
       html+='<label>Downlad:</label> <a target="_blank"  href="'+item.metaDataLink+'" >Metadata</a>';

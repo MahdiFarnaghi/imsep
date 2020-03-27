@@ -7,6 +7,8 @@
     * Vash syntax
     * vscode-icons (Optional)
     * Bracket Pair Colorizer (Optional)
+4. Note:
+   * currently there is no binary for mapnik v4.4.0 so install version 3.6.2 (npm install mapnik@3.6.2) for windows then change package version in  package.json to 4.4.0    
 ## Executing's Parameters
 * All usable executing/environment parameters are in [.env](.env) file
 ## Debug
