@@ -1625,10 +1625,12 @@ module.exports = function (postgresWorkspace, datasetController) {
         abstract: item.description || '',
         keywords: item.keywords ? (item.keywords.split(/[;؛]+/)) : [],
         //host: makeHost(layers.host),
+        dataType:item.dataType,
         host: process.env.APP_HOST + req.path + '?',
         layers: [{
           name: item.id,
           title: item.name,
+          dataType:item.dataType,
           bbox: layer_bbox,
           minx: layer_bbox[0],
           miny: layer_bbox[1],
@@ -1775,9 +1777,10 @@ module.exports = function (postgresWorkspace, datasetController) {
             fields: details.fields
           });
 
+          const tinycolor = require("tinycolor2");
           const mapnik = require('mapnik');//npm install mapnik@3.6.2
           mapnik.register_default_input_plugins();
-          const mapnikify = require('@mapbox/geojson-mapnikify');//npm install  @mapbox/geojson-mapnikify
+          //const mapnikify = require('@mapbox/geojson-mapnikify');//npm install  @mapbox/geojson-mapnikify
           var isPng =function  (data) {
             return data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4E &&
             data[3] === 0x47 && data[4] === 0x0D && data[5] === 0x0A &&
@@ -1811,22 +1814,109 @@ module.exports = function (postgresWorkspace, datasetController) {
           };
           var bbox_norm = normalizeBbox(query_bbox)
           // Convert GeoJSON to Mapnik XML
-          // if(geojson && geojson.features){
-          //   for(var i=0;i<geojson.features.length;i++){
-          //     var f= geojson.features[i];
-          //     //fill":"#555555","fill-opacity":0.6,"stroke":"#555555"
-          //     f.properties['fill']='#0000ff';
-          //     f.properties['stroke']='#ff0000';
-          //   }
-          // }
+          var fillColor='#555555';
+          var strokeColor='#555555';
+          var strokeWidth=2;
+          var stroke_linecap='round';
+          var stroke_linejoin='round';
+          var marker_width=5;
+          var marker_height=5;
+          if(details && details.renderer && (details.renderer.style || details.renderer.defaultStyle)){
+            var style=(details.renderer.style || details.renderer.defaultStyle);
+            if(style.fill){
+              try{
+                fillColor= tinycolor(style.fill.color).toString('hex6');
+              }catch(ex){}
+            }
+            if(style.stroke && style.stroke.color)
+            {
+              try{
+                strokeColor= tinycolor(style.stroke.color).toString('hex6');
+              }catch(ex){}
+            }
+            if(style.stroke && style.stroke.width)
+            {
+              strokeWidth=style.stroke.width;
+            }
+            if(style.stroke && style.stroke.lineCap)
+            {
+              stroke_linecap=style.stroke.lineCap;
+            }
+            if(style.stroke && style.stroke.lineJoin)
+            {
+              stroke_linejoin=style.stroke.lineJoin;
+            }
+            if(style.circle && style.circle.radius){
+              marker_width=marker_height=style.circle.radius;
+            }
+            
+          }
+          if(geojson && geojson.features){
+            for(var i=0;i<geojson.features.length;i++){
+              var f= geojson.features[i];
+              //fill":"#555555","fill-opacity":0.6,"stroke":"#555555"
+              if(typeof fillColor !=='undefined'){
+                f.properties['fill']=fillColor;
+              }
+              if(typeof strokeColor !=='undefined'){
+                f.properties['stroke']=strokeColor;
+              }
+              if(typeof strokeWidth !=='undefined'){
+                f.properties['stroke-width']=strokeWidth;
+              }
+
+              f.properties['stroke-linecap']=stroke_linecap;
+              f.properties['stroke-linejoin']=stroke_linejoin;
+              f.properties['marker-width']=marker_width;
+              f.properties['marker-height']=marker_height;
+              //f.properties['placement']='point';
+              //f.properties['marker-type']='ellipse';
+              delete f.properties['marker-path'];
+              
+              
+            }
+          }
           var options={};
-          mapnikify(geojson, false, function (err, xml) {
-            if (err) return callback(err)
+          var xml=`
+          <Map srs="+init=epsg:3857">
+              <Style name="geoms">
+                  <Rule>
+                      <Filter>[mapnik::geometry_type]=polygon</Filter>
+                      <PolygonSymbolizer fill="[fill]" fill-opacity="0.6" />
+                  </Rule>
+                  <Rule>
+                      <Filter>[mapnik::geometry_type]=linestring or [stroke]</Filter>
+                      <LineSymbolizer stroke="[stroke]" stroke-width="[stroke-width]" stroke-opacity="1" />
+                  </Rule>
+              </Style>
+              <Style name="points" filter-mode="first">
+                  <Rule>
+                      <Filter>[mapnik::geometry_type]=point</Filter>
+                      <MarkersSymbolizer 
+                        fill="[fill]" opacity=".8" width="[marker-width]" height="[marker-height]" 
+                        stroke="[stroke]" stroke-width="[stroke-width]" stroke-opacity="0.8" placement="point" marker-type="ellipse"
+                      />
+                  </Rule>
+              </Style>
+              <Layer name="layer" srs="+init=epsg:4326">
+                  <StyleName>geoms</StyleName>
+                  <StyleName>points</StyleName>
+                  <Datasource>
+                      <Parameter name="type">geojson</Parameter>
+                      <Parameter name="inline"><![CDATA[${JSON.stringify(geojson)}]]></Parameter>
+                  </Datasource>
+              </Layer>
+          </Map>`
+         // mapnikify(geojson, false, function (err, xml) {
+         //   if (err) return callback(err)
             var map = new mapnik.Map(256, 256)
 
             // Create map from XML string
             map.fromString(xml, function (err, map) {
-              if (err) return callback(err)
+              if (err) {
+               // console.log(xml);
+                return callback(err)
+              }
               // Configure and render
               map.resize(width, height)
               if (query_srs) map.srs = `+init=${query_srs.toLowerCase()}`
@@ -1843,7 +1933,7 @@ module.exports = function (postgresWorkspace, datasetController) {
                 image.encode('png32:z=1', callback)
               })
             })
-          });
+       //   });
 
         }
       } catch (ex) {

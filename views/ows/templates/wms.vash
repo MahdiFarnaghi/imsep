@@ -32,7 +32,9 @@
     </GetCapabilities>
     <GetMap>
         <Format>image/png</Format>
-        <Format>image/tiff</Format>
+        @if(model.dataType=='raster'){
+          <Format>image/tiff</Format>
+        }
       <DCPType>
         <HTTP>
           <Get><OnlineResource xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="@(model.host)"/></Get>
