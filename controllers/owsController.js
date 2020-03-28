@@ -385,7 +385,10 @@ module.exports = function (postgresWorkspace, datasetController) {
               //uValues= await models.Metadata.findAll({ attributes: [[Sequelize.fn('DISTINCT', Sequelize.col(fieldName)) ,fieldName],]});
               uValues= await models.Metadata.findAll({
                 attributes: [fieldName,[Sequelize.fn('COUNT', Sequelize.col(fieldName)), 'total']] ,
-                group : [fieldName]
+                group : [fieldName],
+                where:{
+                  'publish_ogc_service':{[Op.eq]:true}
+                }
               });
             }catch(ex){
     
@@ -2673,14 +2676,14 @@ module.exports = function (postgresWorkspace, datasetController) {
       var pageTitle='Catalog';
       var viewPath='ows/catalog' ;
       var providers;
-
+try{
       providers = await models.CswProvider.findAll({where:{
         enabled:true
       }});
-      
+}catch(ex)  {}
       res.render(viewPath , {
           title: pageTitle,
-          providers:providers
+          providers:providers ||[]
       });
   };
   return module;
