@@ -94,7 +94,12 @@ var pageTask={
             //     self.fillUI(JSON.parse(data.item.details));
             //   }catch(ex){}
             // }
-            window.location.href=location.protocol + '//' + location.host + '/datalayer/'+data.id;
+            
+            if(data.datasetType){
+              window.location.href=location.protocol + '//' + location.host + '/datalayer/'+  data.id +'?dataType='+ data.datasetType ;
+            }else{
+              window.location.href=location.protocol + '//' + location.host + '/datalayers';
+            }
           }else{
             $.notify({
                 message:data.errors || data.error|| data.message || "Failed to save metadata"

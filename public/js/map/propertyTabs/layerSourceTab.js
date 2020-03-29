@@ -859,7 +859,7 @@ function LayerSourceTab() {
             LayerHelper.getDetails(self.layer).params.typename= newTypename;
             LayerHelper.getDetails(self.layer).params.typenameNamespace=typenameNamespace;
             
-            var vectorSource = mapContainer.sorceFactory.createWFSSource(layerCustom.dataObj,mapContainer);
+            var vectorSource = mapContainer.sourceFactory.createWFSSource(layerCustom.dataObj,mapContainer);
 
             self.layer.set('source',vectorSource );
             vectorSource.clear();

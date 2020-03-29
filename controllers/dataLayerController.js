@@ -5564,6 +5564,7 @@ module.exports = function (postgresWorkspace) {
         await metadata.save();
         result.status=true;
         result.id=datasetId;
+        result.datasetType=item.dataType;
         result.message= undefined;
         return res.json(result) ;
         }catch(ex){

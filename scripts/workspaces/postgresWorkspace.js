@@ -2047,13 +2047,13 @@ class PostgresWorkspace {
                 var allow_approximation = false;
                 var force = true;
                 var statistics = band.getStatistics(allow_approximation, force);
-                 var bandName=band.colorInterpretation;
+                var bandName=band.colorInterpretation ||band.description;
                 if(bandName=='Gray'){
                     bandName='Value';
                 }
                 layerInfo.bands.push({
                     id: band.id,
-                    name:bandName,
+                    name:bandName || ('band-'+band.id ),
                     dataType: band.dataType,
                     description: band.description,
                     minimum: band.minimum,
@@ -2343,13 +2343,22 @@ try {
 
                     if (layerInfo.numberOfBands > 1) {
                         layerInfo.rasterType='MultiBand';
-                        display = {
-                            displayType: 'RGB',
-                            RBand: RBand,
-                            GBand: GBand,
-                            BBand: BBand,
-                            ABand: undefined,
-                            reclass: false
+                        if(layerInfo.numberOfBands >=3){
+                            display = {
+                                displayType: 'RGB',
+                                RBand: RBand,
+                                GBand: GBand,
+                                BBand: BBand,
+                                ABand: undefined,
+                                reclass: false
+                            }
+                        }else{
+                            display = {
+                                displayType: 'colorMap',
+                                band: 1,
+                                colorMap: 'grayscale',
+                                reclass: false
+                            }
                         }
                     } else {
                         layerInfo.rasterType='SingleBand';
@@ -3171,11 +3180,9 @@ clipTileExpr +=`,cippedBands as (
     FROM ( Select 
      
                 ST_Reclass(
-                    --ST_Union(
-                        ${rasterField},${band}
-                       -- )
-                        ,
-                        --1,
+                    ST_Band(${rasterField},${band})
+                    ,
+                    1,
                          '[${minimum}-${maximum}]:${c_minimum}-${c_maximum}', '8BUI',${c_noDataValue} )
       --          ,1,'${colorMap}'
              as raster
@@ -3520,11 +3527,9 @@ clipTileExpr +=`,cippedBands as (
     FROM ( Select 
      
                 ST_Reclass(
-                    --ST_Union(
-                        ${rasterField},${band}
-                       -- )
-                        ,
-                        --1,
+                    ST_Band(${rasterField},${band})
+                    ,
+                    1,
                          '[${minimum}-${maximum}]:${c_minimum}-${c_maximum}', '8BUI',${c_noDataValue} )
       --          ,1,'${colorMap}'
              as raster

@@ -2,7 +2,8 @@ function MapContainer(app, options) {
   this.app = app;
   this.options = options || {};
   this.mapSettings = {};
-  this.sorceFactory= new SourceFactory(app,{});
+  this.sourceFactory= new SourceFactory(app,{});
+  this.sorceFactory=this.sourceFactory;
   this.leftToolbar=null;
 
   //this._currentEditAction=null;
@@ -837,7 +838,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
   if (layerInfo.custom && layerInfo.custom.type === 'ol.layer.Tile') {
     if (layerInfo.custom.source === 'ol.source.WMS') {
         var dataObj = layerInfo.custom.dataObj;
-        var wmsSource = this.sorceFactory.createWMSSource(dataObj);
+        var wmsSource = this.sourceFactory.createWMSSource(dataObj);
         if (wmsSource) {
             newLayer = new ol.layer.Tile({
                 title: layerInfo.title,
@@ -862,7 +863,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
         newLayer = new ol.layer.Tile({
             title: layerInfo.title,
             //  baseLayer:layerInfo.custom.baseLayer,
-            source: this.sorceFactory.createBaseTileSource({type:'OSM'}),
+            source: this.sourceFactory.createBaseTileSource({type:'OSM'}),
 
             opacity: layerInfo.opacity,
             noSwitcherInfo: true,
@@ -880,7 +881,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
         newLayer = new ol.layer.Tile({
             //  baseLayer:layerInfo.custom.baseLayer,
             title: layerInfo.title,
-            source:this.sorceFactory.createBaseTileSource({type:'BingMaps',key:layerInfo.custom.key ,imagerySet:layerInfo.custom.imagerySet}),
+            source:this.sourceFactory.createBaseTileSource({type:'BingMaps',key:layerInfo.custom.key ,imagerySet:layerInfo.custom.imagerySet}),
             noSwitcherInfo: true,
 
             opacity: layerInfo.opacity,
@@ -900,7 +901,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
         newLayer = new ol.layer.Tile({
             //  baseLayer:layerInfo.custom.baseLayer,
             title: layerInfo.title,
-            source:this.sorceFactory.createBaseTileSource({type:'XYZ',params:layerInfo.custom.params }),
+            source:this.sourceFactory.createBaseTileSource({type:'XYZ',params:layerInfo.custom.params }),
             noSwitcherInfo: true,
 
             opacity: layerInfo.opacity,
@@ -940,7 +941,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                  featureLabeler= new FeatureLabeler(dataObj.details.featureLabeler);
               }
 
-              var vectorSource = this.sorceFactory.createGeoJsonVectorSource(dataObj,this);
+              var vectorSource = this.sourceFactory.createGeoJsonVectorSource(dataObj,this);
               if (vectorSource) {
 
                   newLayer = new ol.layer.Vector({
@@ -989,7 +990,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
               if(dataObj.details && dataObj.details.featureLabeler){
                  featureLabeler= new FeatureLabeler(dataObj.details.featureLabeler);
               }
-            var vectorSource = this.sorceFactory.createWFSSource(dataObj,this);
+            var vectorSource = this.sourceFactory.createWFSSource(dataObj,this);
             if (vectorSource) {
 
                 newLayer = new ol.layer.Vector({
@@ -1037,7 +1038,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
               if(dataObj.details && dataObj.details.featureLabeler){
                  featureLabeler= new FeatureLabeler(dataObj.details.featureLabeler);
               }
-            var vectorSource = this.sorceFactory.createOsmVectorSource(dataObj,this);
+            var vectorSource = this.sourceFactory.createOsmVectorSource(dataObj,this);
             if (vectorSource) {
 
                 newLayer = new ol.layer.Vector({
@@ -1073,7 +1074,7 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                       dataObj.details = JSON.parse(dataObj.details);
                   }
               } catch (ex) {}
-            var geoImageSource = this.sorceFactory.createGeoImageSource(dataObj,this);
+            var geoImageSource = this.sourceFactory.createGeoImageSource(dataObj,this);
             if (geoImageSource) {
                 var metadata_3857= dataObj.details.metadata_3857;
                 var extent = 
