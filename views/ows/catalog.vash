@@ -112,7 +112,7 @@ background-color:#e6e5e5;
                              <div class="form-group">
                                 <label>Search in:</label>
                                 <select id="cmbCswProvider" class="form-control"  style="" name="cmbCatalog">
-                                        <option value="/ows/csw" selected >Current CSW</option> 
+                                        <option value="/ows/csw" selected >Default CSW</option> 
                                         @if(model.providers){
                                              @model.providers.forEach(function(provider) {
                                                     <option value="@provider.url"  >@provider.name</option> 
