@@ -333,6 +333,17 @@ module.exports = function (passportConfig) {
                      }   
                  }
                  if(emailVerified){
+                    var avatar=undefined;
+                     try{
+                         if(user.avatar){
+                            const avatarData = await sharp(user.avatar)
+                                .png()
+                                .toBuffer();
+                            avatar= 'data:image/png;base64,' + avatarData.toString('base64');
+                         }
+                        }catch(ex){
+                            
+                        }
                     const payload ={
                         id:user.id,
                         userName:user.userName,
@@ -364,8 +375,12 @@ module.exports = function (passportConfig) {
                     payload.isDataAnalyst = roles.includes('dataAnalysts');
             
                    
+                    var userInfo= JSON.parse(JSON.stringify(payload));
+                    userInfo.picture=user.picture;
+                    userInfo.avatar=avatar;
+                   
                     const token = jwt.sign(payload, process.env.JWT_SECRET);
-                     return res.json({success:true, user:payload,token:token});
+                     return res.json({success:true, user:userInfo,token:token});
                  }else{
                     
                     return res.status(400).json({
