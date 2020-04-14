@@ -263,7 +263,7 @@ app.use(InitIdentityInfo);
 //#region Routes  
 app.get('/captcha', captchaController.index);
 app.get('/proxy',
-    [Authenticated],
+    //[Authenticated],
     handleErrors( homeController.proxyGet));
 app.post('/proxy',
     [Authenticated],

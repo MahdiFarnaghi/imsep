@@ -32,8 +32,8 @@ SourceFactory.prototype.createWMSSource = function(dataObj) {
             details = JSON.parse(details);
         }
     } catch (ex) {}
-    //var url = details.url;
-    var url='/proxy/?url=' +encodeURIComponent(details.url);
+    var url = details.url;
+    //var url='/proxy/?url=' +encodeURIComponent(details.url);
     var params= details.params ||{};
     params['TILED']=true;       
     var wmsSource = new ol.source.TileWMS({
@@ -60,7 +60,7 @@ SourceFactory.prototype.createWFSSource = function(dataObj,mapContainer) {
     } catch (ex) {}
     //var url = details.url;
     var url=details.url;// '/proxy/?url=' +details.url;
-    var url='/proxy/?url=' + encodeURIComponent(details.url);
+    //var url='/proxy/?url=' + encodeURIComponent(details.url);
     var params= details.params ||{};
     params['version']=params['version'] || '1.1.0';       
     params['srsname']=params['srsname'] || 'EPSG:3857';

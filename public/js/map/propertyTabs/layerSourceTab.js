@@ -745,11 +745,13 @@ function LayerSourceTab() {
           || newLayers !==LayerHelper.getDetails(self.layer).params.LAYERS){
             LayerHelper.getDetails(self.layer).url=newUrl ;
             LayerHelper.getDetails(self.layer).params.LAYERS= newLayers;
-            var url='/proxy/?url=' +encodeURIComponent(LayerHelper.getDetails(self.layer).url);
+            //var url='/proxy/?url=' +encodeURIComponent(LayerHelper.getDetails(self.layer).url);
+            var url=LayerHelper.getDetails(self.layer).url;
             self.layer.get('source').setUrl(url);
             self.layer.get('source').updateParams(LayerHelper.getDetails(self.layer).params);
 
-            var url= '/proxy/?url='+ encodeURIComponent( LayerHelper.getDetails(self.layer).url +'?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
+           // var url= '/proxy/?url='+ encodeURIComponent( LayerHelper.getDetails(self.layer).url +'?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
+           var url= LayerHelper.getDetails(self.layer).url +'?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0';
               $.ajax(url, {
                   
                 type: 'GET',
@@ -863,7 +865,8 @@ function LayerSourceTab() {
 
             self.layer.set('source',vectorSource );
             vectorSource.clear();
-            var url= '/proxy/?url='+ encodeURIComponent( LayerHelper.getDetails(self.layer).url +'?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0');
+            //var url= '/proxy/?url='+ encodeURIComponent( LayerHelper.getDetails(self.layer).url +'?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0');
+            var url=  LayerHelper.getDetails(self.layer).url +'?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0';
             $.ajax(url, {
               type: 'GET',
                dataType: 'xml',
@@ -925,7 +928,8 @@ function LayerSourceTab() {
           
           if(!LayerHelper.getFields(self.layer)){
             var sUrl=LayerHelper.getDetails(self.layer).url +'?SERVICE=WFS&REQUEST=DescribeFeatureType&version=1.1.0&typeName='+layerCustom.dataObj.details.params.typename;
-            var url= '/proxy/?url='+ encodeURIComponent( sUrl);
+            //var url= '/proxy/?url='+ encodeURIComponent( sUrl);
+            var url= sUrl;
             $.ajax(url, {
                 
               type: 'GET',
@@ -1027,7 +1031,8 @@ function LayerSourceTab() {
                   self.WMS_downloding=true;
                   last_wms_downloading_url= newUrl;
 
-                  var url= '/proxy/?url='+ encodeURIComponent( newUrl +'?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
+                  //var url= '/proxy/?url='+ encodeURIComponent( newUrl +'?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0');
+                  var url= newUrl +'?SERVICE=WMS&REQUEST=GetCapabilities&VERSION=1.3.0';
                   $.ajax(url, {
                     type: 'GET',
                      dataType: 'xml',
@@ -1193,7 +1198,8 @@ function LayerSourceTab() {
                   self.WFS_downloding=true;
                   last_wfs_downloading_url= newUrl;
 
-                  var url= '/proxy/?url='+ encodeURIComponent( newUrl +'?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0');
+                 // var url= '/proxy/?url='+ encodeURIComponent( newUrl +'?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0');
+                 var url= newUrl +'?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0';
                   $.ajax(url, {
                     type: 'GET',
                      dataType: 'xml',
