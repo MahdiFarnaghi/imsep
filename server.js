@@ -195,8 +195,9 @@ app.use(bodyParser.urlencoded({limit: '50mb', extended: true}));
 app.use(expressValidator());
 app.use(cookieParser());
 app.use(methodOverride('_method'));
-app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
-//app.use(session({ secret: process.env.SESSION_SECRET, resave: true, saveUninitialized: true }));
+//app.use(session({ secret: process.env.SESSION_SECRET, resave: false, saveUninitialized: true }));
+app.use(session({ secret: process.env.SESSION_SECRET, resave: true, saveUninitialized: true }));
+
 app.use(flash());
 app.use(passport.initialize());
 app.use(passport.session());

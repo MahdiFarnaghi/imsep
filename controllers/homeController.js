@@ -272,7 +272,8 @@ module.aboutGet = function(req, res) {
   for(var key in req.query){
       if(key !=='url'){
         if(first){
-          target +='?'+ key +'='+ req.query[key];
+          //target +='?rnd=' + Date.now()+'&' + key +'='+ req.query[key];
+          target +='?' + key +'='+ req.query[key];
         }else
           target +='&'+ key +'='+ req.query[key];
         first=false;
@@ -302,7 +303,7 @@ module.aboutGet = function(req, res) {
       //   }
       // }
     
-      delete headers.host;
+      //delete headers.host;
     
       // req.pipe(request({
       //   url: target,
@@ -312,17 +313,27 @@ module.aboutGet = function(req, res) {
       //     console.log(err)
       //   })
       // ).pipe(res);
-      req.pipe(request(target)
+
+      delete headers.host;
+      req.pipe(request({
+          url:target
+        })
       .on('response', function(response) {
         if(response.statusCode != 200){
         //  console.log(response.statusCode) // 
           //console.log(response.headers['content-type']) // 'image/png'
+        }
+        if ('set-cookie' in response.headers){
+            delete response.headers['set-cookie'];
         }
       })
       .on('error', function(err) {
             console.log(err)
           })
         ).pipe(res);
+
+   // req.pipe(request(target)).pipe(res);
+    
   }
   
   /**
@@ -357,6 +368,9 @@ module.aboutGet = function(req, res) {
           if(response.statusCode != 200){
             console.log(response.statusCode) // 
             //console.log(response.headers['content-type']) // 'image/png'
+          }
+          if ('set-cookie' in response.headers){
+            delete response.headers['set-cookie'];
           }
         })
         .on('error', function(err) {

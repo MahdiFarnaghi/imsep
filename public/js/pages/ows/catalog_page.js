@@ -892,7 +892,11 @@ var pageTask={
     
     
     self.showWaiting();
-    $.ajax( {    url: url, type: 'POST',contentType:'text/xml',  dataType: 'xml',data:xmlTemplate
+    var url_=url;
+    if(app.url_needs_proxy(url)){
+      url_= '/proxy/?url='+ encodeURIComponent(url);
+    }
+    $.ajax( {    url: url_, type: 'POST',contentType:'text/xml',  dataType: 'xml',data:xmlTemplate
      , success: function (data) {
         if(!skipPushState){
           history.pushState({url:self.pageUrl}, document.title, self.pageUrl);
@@ -1041,7 +1045,11 @@ var pageTask={
   ,
   getUniqueValues:function(url){
     var self=this;
-    $.ajax( {    url: url,type:'GET',
+    var url_=url;
+    if(app.url_needs_proxy(url)){
+      url_= '/proxy/?url='+ encodeURIComponent(url);
+    }
+    $.ajax( {    url: url_,type:'GET',
       //contentType: "text/xml",
       dataType:'xml',
       data:{

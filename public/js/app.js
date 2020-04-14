@@ -161,6 +161,28 @@ var app = {
         for(var i=0;i<this.snapInteractions.length;i++){
             map.removeInteraction(this.snapInteractions[i]);
         }
+    },
+    url_needs_proxy:function(url){
+        var result=false;
+        if(!url){
+            return result;
+        }
+        url=(url +'').toLowerCase();
+        if(url.indexOf('/')==0){
+            return result;
+        }
+        var pageUrl = window.location.href;
+        var arr = pageUrl.split("/");
+        var pageBase =arr[0] + "//" + arr[2];
+        pageBase=pageBase.toLowerCase();
+        
+        if(url.indexOf(pageBase)==0){
+            result=false;
+        }else{
+            result=true;
+        }
+        return result;
+
     }
 
 };
