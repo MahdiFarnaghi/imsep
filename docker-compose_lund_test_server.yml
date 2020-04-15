@@ -2,7 +2,7 @@ version: '2'
 
 services:
   imsep_postgis_test:
-    container_name: imsep_postgis
+    container_name: imsep_postgis_test
     restart: unless-stopped
     image: mdillon/postgis:11
 #    ports: 
@@ -20,21 +20,21 @@ services:
     image: imsep
     build: .
     depends_on:
-      - imsep_postgis
+      - imsep_postgis_test
     links:
-      - imsep_postgis
+      - imsep_postgis_test
     environment:
       NODE_ENV: production
-      APP_HOST: https://imsep.gis.lu.se
-      DB_HOSTNAME: imsep_postgis 
+      APP_HOST: https://imsep_test.gis.lu.se
+      DB_HOSTNAME: imsep_postgis_test 
       DB_PORT: 5432
       DB_PASSWORD: d747db4520c046ccb5db14f39a014746
-      GDB_HOSTNAME: imsep_postgis
+      GDB_HOSTNAME: imsep_postgis_test
       GDB_PORT: 5432
       GDB_PASSWORD: d747db4520c046ccb5db14f39a014746
       DB_REBUILD: 'false'
     ports:
-      - "127.0.0.1:3336:1337"   
+      - "127.0.0.1:1338:1337"   
     # volumes:
     #   - /data/imsep/log:/usr/src/app/log
     #   - /data/imsep/app_data:/usr/src/app/app_data   
