@@ -15,7 +15,7 @@ services:
       POSTGRES_PASSWORD: d747db4520c046ccb5db14f39a014746
       POSTGIS_GDAL_ENABLED_DRIVERS: ENABLE_ALL  
   imsep_test:
-    container_name: imsep
+    container_name: imsep_test
     restart: unless-stopped
     image: imsep
     build: .
