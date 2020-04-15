@@ -150,6 +150,26 @@
     background-repeat: no-repeat;
 }
 
+.waitbar_h
+{
+    background-image: url(images/waitbar_h_t.gif) !important;
+    
+    background-repeat: repeat-x;
+    background-position: center;
+    background-size: contain;
+}
+.waitbar1
+{
+    background-image: url(images/waitbar1_t.gif) !important;
+    background-repeat:no-repeat;
+    background-position: center
+}
+.waitbar2
+{
+    background-image: url(images/waitbar2.gif) !important;
+    background-repeat:no-repeat;
+    background-position: center
+}
 .save24Icon
 {
     background-image: url(images/save_24.png) !important;

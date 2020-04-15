@@ -1025,12 +1025,20 @@ var pageTask={
         self.items=self.data.items;
         self.fillUI();
 
-        var msg=errorThrown ||textStatus  ||"Failed";
+        if(xhr.responseText){
+          try{
+            var responseTextJson = JSON.parse(xhr.responseText);
+            if(responseTextJson && responseTextJson.error){
+              errorThrown=responseTextJson.error;
+            }
+          }catch(ex){}
+        }
+        var msg=errorThrown ||textStatus  ||"Error";
         if(xhr && xhr.responseJSON && xhr.responseJSON.error){
           msg=xhr.responseJSON.error;
         } 
         $.notify({
-          message:  msg
+          message: "Failed to connect to catalog service: "+ msg
         },{
             type:'danger',
             delay:2000,
