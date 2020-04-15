@@ -25,7 +25,7 @@ services:
       - imsep_postgis_test
     environment:
       NODE_ENV: production
-      APP_HOST: https://imsep_test.gis.lu.se
+      APP_HOST: https://imseptest.gis.lu.se
       DB_HOSTNAME: imsep_postgis_test 
       DB_PORT: 5432
       DB_PASSWORD: d747db4520c046ccb5db14f39a014746
