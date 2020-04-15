@@ -183,6 +183,9 @@ var app = {
         }
         return result;
 
+    },
+    get_proxy_url:function(url){
+        return '/proxy/?url='+ encodeURIComponent(url);
     }
 
 };

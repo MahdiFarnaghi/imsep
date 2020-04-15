@@ -894,7 +894,7 @@ var pageTask={
     self.showWaiting();
     var url_=url;
     if(app.url_needs_proxy(url)){
-      url_= '/proxy/?url='+ encodeURIComponent(url);
+      url_= app.get_proxy_url(url);
     }
     $.ajax( {    url: url_, type: 'POST',contentType:'text/xml',  dataType: 'xml',data:xmlTemplate
      , success: function (data) {
@@ -1055,7 +1055,7 @@ var pageTask={
     var self=this;
     var url_=url;
     if(app.url_needs_proxy(url)){
-      url_= '/proxy/?url='+ encodeURIComponent(url);
+      url_= app.get_proxy_url(url);
     }
     $.ajax( {    url: url_,type:'GET',
       //contentType: "text/xml",
