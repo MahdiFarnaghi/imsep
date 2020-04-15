@@ -41,8 +41,14 @@ var pageTask={
           checkUrl += '?Service=CSW&Request=GetCapabilities' ;
         }
         $('#cmdCheckCapabilies').attr("href", checkUrl);
-
-        self.applyFilters();
+        self.showWaiting();
+        self.getUniqueValues(url,function(){
+          self.applyFilters();
+        },function(){
+          self.applyFilters();
+        });
+        
+        
 
     });
    
@@ -214,7 +220,7 @@ var pageTask={
           html+='      </li>';
         }
         if(item.wmts){
-         // html+='      <li> <a target="_blank"  href="'+item.wmts+'" >WMTS</a></li>';
+        //  html+='      <li> <a target="_blank"  href="'+item.wmts+'" >WMTS</a></li>';
         }
         
         html+='     </ul>';
@@ -1024,7 +1030,6 @@ var pageTask={
         self.pagination=self.data.pagination;
         self.items=self.data.items;
         self.fillUI();
-
         if(xhr.responseText){
           try{
             var responseTextJson = JSON.parse(xhr.responseText);
@@ -1051,7 +1056,7 @@ var pageTask={
      });
   }
   ,
-  getUniqueValues:function(url){
+  getUniqueValues:function(url,successCB,errorCB){
     var self=this;
     var url_=url;
     if(app.url_needs_proxy(url)){
@@ -1087,12 +1092,18 @@ var pageTask={
           }
         }
         self.createSideFilters(uniqueValues);
+        if(successCB){
+          successCB();
+        }
       },error: function (xhr, textStatus, errorThrown) {
         self.createSideFilters({});
         var msg=errorThrown ||textStatus  ||"Failed";
         if(xhr && xhr.responseJSON && xhr.responseJSON.error){
           msg=xhr.responseJSON.error;
         } 
+        if(errorCB){
+          errorCB();
+        }
         // $.notify({
         //   message:  msg
         // },{
