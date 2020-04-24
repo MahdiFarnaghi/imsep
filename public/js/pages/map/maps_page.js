@@ -407,7 +407,7 @@ deleteItemForReal:function(itemId){
           //,zoom:1
           ,zoom: app.initMap_Zoom || 4
           //,extent:ol.proj.get("EPSG:3857").getExtent()
-          //,extent: ol.proj.transform([-180,-90,180,90],'EPSG:4326', 'EPSG:3857')
+          ,extent: ol.extent.applyTransform([-180,-90,180,90], ol.proj.getTransform("EPSG:4326","EPSG:3857"))
       })
     });
     map.on('moveend', function(evt) {

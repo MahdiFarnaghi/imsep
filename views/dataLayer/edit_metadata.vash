@@ -93,6 +93,7 @@
                                         other</option>  *@   
                                 </select>
                             </div>
+                            <small class="col-sm-12 text-muted">Select one or more categories best describe the data </small>
                 </div>
                 
                 <div class="form-group">
@@ -108,6 +109,7 @@
                                 }
                                 </select>
                             </div>
+                            <small class="col-sm-12 text-muted">To add new keywords: Type the keyword and press Enter or ; </small>                            
                 </div>
                 <div class="form-group">
                      <label class="col-sm-3" >Type</label>
@@ -128,10 +130,197 @@
                         <span title="">@model.metadata.spatial</span>
                      </label>
                 </div> 
-                 <div class="form-group">
+                  <div class="form-group">
                     <label class="col-sm-3" for="language">Language</label>
-                    <div class="col-sm-7">
-                       <input type="text" name="language" id="language" value="@model.metadata.language"  placeholder="Language" class="form-control"  />
+                    <div class="col-sm-3">
+                    @*<input type="text" name="language" id="language" value="@model.metadata.language"  placeholder="Language" class="form-control"  />*@
+                       <select class="language form-control " data-initvalue="@model.metadata.language"   name="language" id="language" >
+                       <option value="Abkhazian" data-ln2="ab" data-ln3="abk"  >аҧсуа бызшәа, аҧсшәа</option>
+<option value="Afar" data-ln2="aa" data-ln3="aar"  >Afaraf</option>
+<option value="Afrikaans" data-ln2="af" data-ln3="afr"  >Afrikaans</option>
+<option value="Akan" data-ln2="ak" data-ln3="aka"  >Akan</option>
+<option value="Albanian" data-ln2="sq" data-ln3="sqi"  >Shqip</option>
+<option value="Amharic" data-ln2="am" data-ln3="amh"  >አማርኛ</option>
+<option value="Arabic" data-ln2="ar" data-ln3="ara"  >العربية</option>
+<option value="Aragonese" data-ln2="an" data-ln3="arg"  >aragonés</option>
+<option value="Armenian" data-ln2="hy" data-ln3="hye"  >Հայերեն</option>
+<option value="Assamese" data-ln2="as" data-ln3="asm"  >অসমীয়া</option>
+<option value="Avaric" data-ln2="av" data-ln3="ava"  >авар мацӀ, магӀарул мацӀ</option>
+<option value="Avestan" data-ln2="ae" data-ln3="ave"  >avesta</option>
+<option value="Aymara" data-ln2="ay" data-ln3="aym"  >aymar aru</option>
+<option value="Azerbaijani" data-ln2="az" data-ln3="aze"  >azərbaycan dili</option>
+<option value="Bambara" data-ln2="bm" data-ln3="bam"  >bamanankan</option>
+<option value="Bashkir" data-ln2="ba" data-ln3="bak"  >башҡорт теле</option>
+<option value="Basque" data-ln2="eu" data-ln3="eus"  >euskara, euskera</option>
+<option value="Belarusian" data-ln2="be" data-ln3="bel"  >беларуская мова</option>
+<option value="Bengali" data-ln2="bn" data-ln3="ben"  >বাংলা</option>
+<option value="Bihari languages" data-ln2="bh" data-ln3="bih"  >भोजपुरी</option>
+<option value="Bislama" data-ln2="bi" data-ln3="bis"  >Bislama</option>
+<option value="Bosnian" data-ln2="bs" data-ln3="bos"  >bosanski jezik</option>
+<option value="Breton" data-ln2="br" data-ln3="bre"  >brezhoneg</option>
+<option value="Bulgarian" data-ln2="bg" data-ln3="bul"  >български език</option>
+<option value="Burmese" data-ln2="my" data-ln3="mya"  >ဗမာစာ</option>
+<option value="Catalan, Valencian" data-ln2="ca" data-ln3="cat"  >català, valencià</option>
+<option value="Chamorro" data-ln2="ch" data-ln3="cha"  >Chamoru</option>
+<option value="Chechen" data-ln2="ce" data-ln3="che"  >нохчийн мотт</option>
+<option value="Chichewa, Chewa, Nyanja" data-ln2="ny" data-ln3="nya"  >chiCheŵa, chinyanja</option>
+<option value="Chinese" data-ln2="zh" data-ln3="zho"  >中文 (Zhōngwén), 汉语, 漢語</option>
+<option value="Chuvash" data-ln2="cv" data-ln3="chv"  >чӑваш чӗлхи</option>
+<option value="Cornish" data-ln2="kw" data-ln3="cor"  >Kernewek</option>
+<option value="Corsican" data-ln2="co" data-ln3="cos"  >corsu, lingua corsa</option>
+<option value="Cree" data-ln2="cr" data-ln3="cre"  >ᓀᐦᐃᔭᐍᐏᐣ</option>
+<option value="Croatian" data-ln2="hr" data-ln3="hrv"  >hrvatski jezik</option>
+<option value="Czech" data-ln2="cs" data-ln3="ces"  >čeština, český jazyk</option>
+<option value="Danish" data-ln2="da" data-ln3="dan"  >dansk</option>
+<option value="Divehi, Dhivehi, Maldivian" data-ln2="dv" data-ln3="div"  >ދިވެހި</option>
+<option value="Dutch, Flemish" data-ln2="nl" data-ln3="nld"  >Nederlands, Vlaams</option>
+<option value="Dzongkha" data-ln2="dz" data-ln3="dzo"  >རྫོང་ཁ</option>
+<option value="English" data-ln2="en" data-ln3="eng"  >English</option>
+<option value="Esperanto" data-ln2="eo" data-ln3="epo"  >Esperanto</option>
+<option value="Estonian" data-ln2="et" data-ln3="est"  >eesti, eesti keel</option>
+<option value="Ewe" data-ln2="ee" data-ln3="ewe"  >Eʋegbe</option>
+<option value="Faroese" data-ln2="fo" data-ln3="fao"  >føroyskt</option>
+<option value="Fijian" data-ln2="fj" data-ln3="fij"  >vosa Vakaviti</option>
+<option value="Finnish" data-ln2="fi" data-ln3="fin"  >suomi, suomen kieli</option>
+<option value="French" data-ln2="fr" data-ln3="fra"  >français, langue française</option>
+<option value="Fulah" data-ln2="ff" data-ln3="ful"  >Fulfulde, Pulaar, Pular</option>
+<option value="Galician" data-ln2="gl" data-ln3="glg"  >Galego</option>
+<option value="Georgian" data-ln2="ka" data-ln3="kat"  >ქართული</option>
+<option value="German" data-ln2="de" data-ln3="deu"  >Deutsch</option>
+<option value="Greek, Modern (1453–)" data-ln2="el" data-ln3="ell"  >ελληνικά</option>
+<option value="Guarani" data-ln2="gn" data-ln3="grn"  >Avañe'ẽ</option>
+<option value="Gujarati" data-ln2="gu" data-ln3="guj"  >ગુજરાતી</option>
+<option value="Haitian, Haitian Creole" data-ln2="ht" data-ln3="hat"  >Kreyòl ayisyen</option>
+<option value="Hausa" data-ln2="ha" data-ln3="hau"  >(Hausa) هَوُسَ</option>
+<option value="Hebrew" data-ln2="he" data-ln3="heb"  >עברית</option>
+<option value="Herero" data-ln2="hz" data-ln3="her"  >Otjiherero</option>
+<option value="Hindi" data-ln2="hi" data-ln3="hin"  >हिन्दी, हिंदी</option>
+<option value="Hiri Motu" data-ln2="ho" data-ln3="hmo"  >Hiri Motu</option>
+<option value="Hungarian" data-ln2="hu" data-ln3="hun"  >magyar</option>
+@*<option value="Interlingua (International Auxiliary Language Association)" data-ln2="ia" data-ln3="ina"  >Interlingua</option>*@
+<option value="Indonesian" data-ln2="id" data-ln3="ind"  >Bahasa Indonesia</option>
+@*<option value="Interlingue, Occidental" data-ln2="ie" data-ln3="ile"  >(originally:) Occidental, (after WWII:) Interlingue</option>*@
+<option value="Irish" data-ln2="ga" data-ln3="gle"  >Gaeilge</option>
+<option value="Igbo" data-ln2="ig" data-ln3="ibo"  >Asụsụ Igbo</option>
+@*<option value="Inupiaq" data-ln2="ik" data-ln3="ipk"  >Iñupiaq, Iñupiatun</option>*@
+<option value="Ido" data-ln2="io" data-ln3="ido"  >Ido</option>
+<option value="Icelandic" data-ln2="is" data-ln3="isl"  >Íslenska</option>
+<option value="Italian" data-ln2="it" data-ln3="ita"  >Italiano</option>
+<option value="Inuktitut" data-ln2="iu" data-ln3="iku"  >ᐃᓄᒃᑎᑐᑦ</option>
+<option value="Japanese" data-ln2="ja" data-ln3="jpn"  >日本語 (にほんご)</option>
+<option value="Javanese" data-ln2="jv" data-ln3="jav"  >ꦧꦱꦗꦮ, Basa Jawa</option>
+@*<option value="Kalaallisut, Greenlandic" data-ln2="kl" data-ln3="kal"  >kalaallisut, kalaallit oqaasii</option>*@
+<option value="Kannada" data-ln2="kn" data-ln3="kan"  >ಕನ್ನಡ</option>
+<option value="Kanuri" data-ln2="kr" data-ln3="kau"  >Kanuri</option>
+<option value="Kashmiri" data-ln2="ks" data-ln3="kas"  >कश्मीरी, كشميري‎</option>
+<option value="Kazakh" data-ln2="kk" data-ln3="kaz"  >қазақ тілі</option>
+<option value="Central Khmer" data-ln2="km" data-ln3="khm"  >ខ្មែរ, ខេមរភាសា, ភាសាខ្មែរ</option>
+<option value="Kikuyu, Gikuyu" data-ln2="ki" data-ln3="kik"  >Gĩkũyũ</option>
+<option value="Kinyarwanda" data-ln2="rw" data-ln3="kin"  >Ikinyarwanda</option>
+<option value="Kirghiz, Kyrgyz" data-ln2="ky" data-ln3="kir"  >Кыргызча, Кыргыз тили</option>
+<option value="Komi" data-ln2="kv" data-ln3="kom"  >коми кыв</option>
+<option value="Kongo" data-ln2="kg" data-ln3="kon"  >Kikongo</option>
+<option value="Korean" data-ln2="ko" data-ln3="kor"  >한국어</option>
+<option value="Kurdish" data-ln2="ku" data-ln3="kur"  >Kurdî, کوردی‎</option>
+<option value="Kuanyama, Kwanyama" data-ln2="kj" data-ln3="kua"  >Kuanyama</option>
+<option value="Latin" data-ln2="la" data-ln3="lat"  >latine, lingua latina</option>
+<option value="Luxembourgish, Letzeburgesch" data-ln2="lb" data-ln3="ltz"  >Lëtzebuergesch</option>
+<option value="Ganda" data-ln2="lg" data-ln3="lug"  >Luganda</option>
+<option value="Limburgan, Limburger, Limburgish" data-ln2="li" data-ln3="lim"  >Limburgs</option>
+<option value="Lingala" data-ln2="ln" data-ln3="lin"  >Lingála</option>
+<option value="Lao" data-ln2="lo" data-ln3="lao"  >ພາສາລາວ</option>
+<option value="Lithuanian" data-ln2="lt" data-ln3="lit"  >lietuvių kalba</option>
+<option value="Luba-Katanga" data-ln2="lu" data-ln3="lub"  >Kiluba</option>
+<option value="Latvian" data-ln2="lv" data-ln3="lav"  >latviešu valoda</option>
+<option value="Manx" data-ln2="gv" data-ln3="glv"  >Gaelg, Gailck</option>
+<option value="Macedonian" data-ln2="mk" data-ln3="mkd"  >македонски јазик</option>
+<option value="Malagasy" data-ln2="mg" data-ln3="mlg"  >fiteny malagasy</option>
+<option value="Malay" data-ln2="ms" data-ln3="msa"  >Bahasa Melayu, بهاس ملايو‎</option>
+<option value="Malayalam" data-ln2="ml" data-ln3="mal"  >മലയാളം</option>
+<option value="Maltese" data-ln2="mt" data-ln3="mlt"  >Malti</option>
+<option value="Maori" data-ln2="mi" data-ln3="mri"  >te reo Māori</option>
+<option value="Marathi" data-ln2="mr" data-ln3="mar"  >मराठी</option>
+<option value="Marshallese" data-ln2="mh" data-ln3="mah"  >Kajin M̧ajeļ</option>
+<option value="Mongolian" data-ln2="mn" data-ln3="mon"  >Монгол хэл</option>
+<option value="Nauru" data-ln2="na" data-ln3="nau"  >Dorerin Naoero</option>
+<option value="Navajo, Navaho" data-ln2="nv" data-ln3="nav"  >Diné bizaad</option>
+<option value="North Ndebele" data-ln2="nd" data-ln3="nde"  >isiNdebele</option>
+<option value="Nepali" data-ln2="ne" data-ln3="nep"  >नेपाली</option>
+<option value="Ndonga" data-ln2="ng" data-ln3="ndo"  >Owambo</option>
+<option value="Norwegian Bokmål" data-ln2="nb" data-ln3="nob"  >Norsk Bokmål</option>
+<option value="Norwegian Nynorsk" data-ln2="nn" data-ln3="nno"  >Norsk Nynorsk</option>
+<option value="Norwegian" data-ln2="no" data-ln3="nor"  >Norsk</option>
+<option value="Sichuan Yi, Nuosu" data-ln2="ii" data-ln3="iii"  >ꆈꌠ꒿ Nuosuhxop</option>
+<option value="South Ndebele" data-ln2="nr" data-ln3="nbl"  >isiNdebele</option>
+<option value="Occitan" data-ln2="oc" data-ln3="oci"  >occitan, lenga d'òc</option>
+<option value="Ojibwa" data-ln2="oj" data-ln3="oji"  >ᐊᓂᔑᓈᐯᒧᐎᓐ</option>
+@*<option value="Church Slavic, Old Slavonic, Church Slavonic, Old Bulgarian, Old Church Slavonic" data-ln2="cu" data-ln3="chu"  >ѩзыкъ словѣньскъ</option>*@
+<option value="Oromo" data-ln2="om" data-ln3="orm"  >Afaan Oromoo</option>
+<option value="Oriya" data-ln2="or" data-ln3="ori"  >ଓଡ଼ିଆ</option>
+<option value="Ossetian, Ossetic" data-ln2="os" data-ln3="oss"  >ирон æвзаг</option>
+<option value="Punjabi, Panjabi" data-ln2="pa" data-ln3="pan"  >ਪੰਜਾਬੀ, پنجابی‎</option>
+<option value="Pali" data-ln2="pi" data-ln3="pli"  >पालि, पाळि</option>
+<option value="Persian" data-ln2="fa" data-ln3="fas"  >فارسی</option>
+<option value="Polish" data-ln2="pl" data-ln3="pol"  >język polski, polszczyzna</option>
+<option value="Pashto, Pushto" data-ln2="ps" data-ln3="pus"  >پښتو</option>
+<option value="Portuguese" data-ln2="pt" data-ln3="por"  >Português</option>
+<option value="Quechua" data-ln2="qu" data-ln3="que"  >Runa Simi, Kichwa</option>
+<option value="Romansh" data-ln2="rm" data-ln3="roh"  >Rumantsch Grischun</option>
+<option value="Rundi" data-ln2="rn" data-ln3="run"  >Ikirundi</option>
+<option value="Romanian, Moldavian, Moldovan" data-ln2="ro" data-ln3="ron"  >Română</option>
+<option value="Russian" data-ln2="ru" data-ln3="rus"  >русский</option>
+<option value="Sanskrit" data-ln2="sa" data-ln3="san"  >संस्कृतम्</option>
+<option value="Sardinian" data-ln2="sc" data-ln3="srd"  >sardu</option>
+<option value="Sindhi" data-ln2="sd" data-ln3="snd"  >सिन्धी, سنڌي، سندھی‎</option>
+<option value="Northern Sami" data-ln2="se" data-ln3="sme"  >Davvisámegiella</option>
+<option value="Samoan" data-ln2="sm" data-ln3="smo"  >gagana fa'a Samoa</option>
+<option value="Sango" data-ln2="sg" data-ln3="sag"  >yângâ tî sängö</option>
+<option value="Serbian" data-ln2="sr" data-ln3="srp"  >српски језик</option>
+<option value="Gaelic, Scottish Gaelic" data-ln2="gd" data-ln3="gla"  >Gàidhlig</option>
+<option value="Shona" data-ln2="sn" data-ln3="sna"  >chiShona</option>
+<option value="Sinhala, Sinhalese" data-ln2="si" data-ln3="sin"  >සිංහල</option>
+<option value="Slovak" data-ln2="sk" data-ln3="slk"  >Slovenčina, Slovenský Jazyk</option>
+<option value="Slovenian" data-ln2="sl" data-ln3="slv"  >Slovenski Jezik, Slovenščina</option>
+<option value="Somali" data-ln2="so" data-ln3="som"  >Soomaaliga, af Soomaali</option>
+<option value="Southern Sotho" data-ln2="st" data-ln3="sot"  >Sesotho</option>
+<option value="Spanish, Castilian" data-ln2="es" data-ln3="spa"  >Español</option>
+<option value="Sundanese" data-ln2="su" data-ln3="sun"  >Basa Sunda</option>
+<option value="Swahili" data-ln2="sw" data-ln3="swa"  >Kiswahili</option>
+<option value="Swati" data-ln2="ss" data-ln3="ssw"  >SiSwati</option>
+<option value="Swedish" data-ln2="sv" data-ln3="swe"  >Svenska</option>
+<option value="Tamil" data-ln2="ta" data-ln3="tam"  >தமிழ்</option>
+<option value="Telugu" data-ln2="te" data-ln3="tel"  >తెలుగు</option>
+<option value="Tajik" data-ln2="tg" data-ln3="tgk"  >тоҷикӣ, toçikī, تاجیکی‎</option>
+<option value="Thai" data-ln2="th" data-ln3="tha"  >ไทย</option>
+<option value="Tigrinya" data-ln2="ti" data-ln3="tir"  >ትግርኛ</option>
+<option value="Tibetan" data-ln2="bo" data-ln3="bod"  >བོད་ཡིག</option>
+<option value="Turkmen" data-ln2="tk" data-ln3="tuk"  >Türkmen, Түркмен</option>
+<option value="Tagalog" data-ln2="tl" data-ln3="tgl"  >Wikang Tagalog</option>
+<option value="Tswana" data-ln2="tn" data-ln3="tsn"  >Setswana</option>
+<option value="Tonga (Tonga Islands)" data-ln2="to" data-ln3="ton"  >Faka Tonga</option>
+<option value="Turkish" data-ln2="tr" data-ln3="tur"  >Türkçe</option>
+<option value="Tsonga" data-ln2="ts" data-ln3="tso"  >Xitsonga</option>
+<option value="Tatar" data-ln2="tt" data-ln3="tat"  >татар теле, tatar tele</option>
+<option value="Twi" data-ln2="tw" data-ln3="twi"  >Twi</option>
+<option value="Tahitian" data-ln2="ty" data-ln3="tah"  >Reo Tahiti</option>
+<option value="Uighur, Uyghur" data-ln2="ug" data-ln3="uig"  >ئۇيغۇرچە‎, Uyghurche</option>
+<option value="Ukrainian" data-ln2="uk" data-ln3="ukr"  >Українська</option>
+<option value="Urdu" data-ln2="ur" data-ln3="urd"  >اردو</option>
+<option value="Uzbek" data-ln2="uz" data-ln3="uzb"  >Oʻzbek, Ўзбек, أۇزبېك‎</option>
+<option value="Venda" data-ln2="ve" data-ln3="ven"  >Tshivenḓa</option>
+<option value="Vietnamese" data-ln2="vi" data-ln3="vie"  >Tiếng Việt</option>
+<option value="Volapük" data-ln2="vo" data-ln3="vol"  >Volapük</option>
+<option value="Walloon" data-ln2="wa" data-ln3="wln"  >Walon</option>
+<option value="Welsh" data-ln2="cy" data-ln3="cym"  >Cymraeg</option>
+<option value="Wolof" data-ln2="wo" data-ln3="wol"  >Wollof</option>
+<option value="Western Frisian" data-ln2="fy" data-ln3="fry"  >Frysk</option>
+<option value="Xhosa" data-ln2="xh" data-ln3="xho"  >isiXhosa</option>
+@*<option value="Yiddish" data-ln2="yi" data-ln3="yid"  >ייִדיש</option>*@
+<option value="Yoruba" data-ln2="yo" data-ln3="yor"  >Yorùbá</option>
+<option value="Zhuang, Chuang" data-ln2="za" data-ln3="zha"  >Saɯ cueŋƅ, Saw cuengh</option>
+<option value="Zulu" data-ln2="zu" data-ln3="zul"  >isiZulu</option>
+
+                       </select>  
                     </div>
                 </div>
                 
@@ -140,15 +329,22 @@
                 
                 <div class="form-group">
                      <label class="col-sm-3" >Creation date</label>
-                     <label class="col-sm-7" >
-                        <span title="">@model.metadata.created</span>
-                     </label>
-                </div> 
+                     <div class="col-sm-3" >
+                        
+                        <input type="date"  name="created" id="created" value="@model.metadata.created" placeholder="" class="filter-input form-control"/> 
+                     </div>
+                      <small class="col-sm-12 text-muted">The date that dataset is created </small>
+                </div>  
                 <div class="form-group">
                      <label class="col-sm-3" >Revision date</label>
-                     <label class="col-sm-7" >
-                        <span title="">@model.metadata.modified</span>
-                     </label>
+                     <div class="col-sm-3" >
+                        
+                        <input type="date"  name="modified" id="modified" value="@model.metadata.modified" placeholder="" class="filter-input form-control"
+                         data-val="true" data-val-dateafterorequal="Date must be equal or after Creation date" data-val-dateafterorequal-other="created"
+                        /> 
+                     </div>
+                     <small class="col-sm-12 text-muted">The last time dataset is modified or updated </small>
+                     <span class="field-validation-valid col-sm-offset-3 col-sm-9" data-valmsg-for="modified" data-valmsg-replace="true"></span>
                 </div> 
                  <div class="form-group">
                             <label class="col-sm-12" for="creator">Creator</label>
@@ -195,39 +391,41 @@ available?</small>
                                  <small class="text-muted"> Describe any relationship that exists between this dataset and any related resource</small>
                             </div>
                 </div>
-             <div class="panel">
-                    <div class="panel-body">
-                        <div class="form-horizontal">
-                            <legend><i class="fas fa-globe"></i> GeoExtent</legend>
-                             
-                             <div class="form-group">
-                                <label class="col-sm-offset-3 col-sm-1" for="ext_north">North</label>
-                                <div class="col-sm-3">
-                                    <input type="number" name="ext_north" id="ext_north" value="@model.metadata.ext_north"  placeholder="North" class="form-control"  />
+              <div class="form-group">   
+                 <label class="col-sm-12" > Geographical extent of data </label>   
+                <div class=" col-sm-12 panel">
+                        <div class="panel-body">
+                            <div class="form-horizontal">
+                                
+                                
+                                <div class="form-group">
+                                    <label class="col-sm-offset-3 col-sm-1" for="ext_north">North</label>
+                                    <div class="col-sm-3">
+                                        <input type="number" name="ext_north" id="ext_north" value="@model.metadata.ext_north"  placeholder="North" class="form-control"  />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-1" for="ext_west"> West</label>
+                                    <div class="col-sm-3">
+                                        <input type="number" name="ext_west" id="ext_west" value="@model.metadata.ext_west"  placeholder="West" class="form-control"  />
+                                    </div>
+                                @*</div>
+                                <div class="form-group">*@
+                                    <label class="col-sm-offset-3 col-sm-1" for="ext_east">East</label>
+                                    <div class="col-sm-3">
+                                        <input type="number" name="ext_east" id="ext_east" value="@model.metadata.ext_east"  placeholder="East" class="form-control"  />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-sm-offset-3 col-sm-1" for="ext_south">South</label>
+                                    <div class="col-sm-3">
+                                        <input type="number" name="ext_south" id="ext_south" value="@model.metadata.ext_south"  placeholder="South" class="form-control"  />
+                                    </div>
                                 </div>
                             </div>
-                             <div class="form-group">
-                                <label class="col-sm-1" for="ext_west"> West</label>
-                                <div class="col-sm-3">
-                                    <input type="number" name="ext_west" id="ext_west" value="@model.metadata.ext_west"  placeholder="West" class="form-control"  />
-                                </div>
-                            @*</div>
-                             <div class="form-group">*@
-                                <label class="col-sm-offset-3 col-sm-1" for="ext_east">East</label>
-                                <div class="col-sm-3">
-                                    <input type="number" name="ext_east" id="ext_east" value="@model.metadata.ext_east"  placeholder="East" class="form-control"  />
-                                </div>
-                            </div>
-                             <div class="form-group">
-                                <label class="col-sm-offset-3 col-sm-1" for="ext_south">South</label>
-                                <div class="col-sm-3">
-                                    <input type="number" name="ext_south" id="ext_south" value="@model.metadata.ext_south"  placeholder="South" class="form-control"  />
-                                </div>
-                            </div>
-                        </div>
-                    </div>    
-            </div>
-              
+                        </div>    
+                </div>
+              </div>
             </form>
            
 

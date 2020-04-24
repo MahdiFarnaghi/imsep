@@ -109,7 +109,8 @@ background-color:#e6e5e5;
                             </span>
                             
                         </div> 
-                             <div class="form-group">
+                        <div class="form-horizontal">
+                             <div class="form-group ">
                                 <label>Search in:</label>
                                 <select id="cmbCswProvider" class="form-control"  style="" name="cmbCatalog">
                                         <option value="/ows/csw" selected >Default CSW</option> 
@@ -119,16 +120,28 @@ background-color:#e6e5e5;
                                              })  
                                         }
                                 </select>
-                                <a id="cmdCheckCapabilies" href="/ows/csw?Service=CSW&Request=GetCapabilities" target='_blank' class="btn btn-xs btn-info   "><span class="glyphicon glyphicon-info-sign"></span> Check capabilitis</a>
+                                 
                             </div>
+                            <div class="form-group">
+                                    <span class="col-sm-12" for="CheckCapabiliesUrl">Service Capabilities Url:</span>
+                                    <div class="col-sm-12">
+                                        <input type="text" name="CheckCapabiliesUrl" id="CheckCapabiliesUrl" value="/ows/csw?Service=CSW&Request=GetCapabilities"  readonly class="form-control"  />
+                                    </div>
+                                    
+                                    <div class="col-sm-12">
+                                        <button  id="CopyCapabiliesUrl"  title="Copy Url"  class="btn btn-xs btn-info   "><span class="fa fa-copy"></span> Copy</button>
+                                        <a id="cmdCheckCapabilies"  title="Check Url" href="/ows/csw?Service=CSW&Request=GetCapabilities" target='_blank' class="btn btn-xs btn-link   "><span class="fa fa-check"></span> Check</a>
+                                    </div>    
+                              </div>
                             @*
                             @if(model.identity.isAdmin){
                                 <br/>
                                 <div class="form-group">
                                     <a href="/ows/csw/providers" class="btn btn-primary  "><span class="glyphicon glyphicon-book"></span> CSW Providers</a>
                                 </div>
-                            }*@
-                            
+                            }
+                            *@
+                        </div>    
                         
                     </div>
                 </div>
@@ -189,7 +202,7 @@ background-color:#e6e5e5;
                         <div class="panel-heading">
                             <button data-toggle="collapse" data-target="#pnlAuthor" aria-expanded="false" class="btn btn-link btn-block collapsed ">
                                     <i class="collapse-action glyphicon"></i>
-                                    <h4 class="title"><i class="fa fa-user"></i> User</h4>
+                                    <h4 class="title"><i class="fa fa-user"></i> Contributor</h4>
                             </button>
                         </div>
                         <div id="pnlAuthor" class="panel-collapse collapse ">
@@ -214,11 +227,25 @@ background-color:#e6e5e5;
                         <div id="pnlDate" class="panel-collapse collapse ">
                             <div class="panel-body" style="max-height: 400px;overflow: auto;">
                                     <div class="form-group">
-                                            <label class="" for="fromDate">From</label>
+                                            <label class="" >Creation date:</label>
+                                    </div>
+                                    <div class="form-group">
+                                            <span class="" for="c_fromDate">From</span>
+                                            <input type="date"  name="c_fromDate" id="c_fromDate" value="" placeholder="From Date" class="filter-input form-control"/> 
+                                    </div>
+                                    <div class="form-group">
+                                            <span class="" for="c_toDate">To</span>
+                                            <input type="date"  name="c_toDate" id="c_toDate" value="" placeholder="To Date" class="filter-input form-control"/> 
+                                    </div>
+                                    <div class="form-group">
+                                            <label class="" >Revision date:</label>
+                                    </div>
+                                    <div class="form-group">
+                                            <span class="" for="fromDate">From</span>
                                             <input type="date"  name="fromDate" id="fromDate" value="" placeholder="From Date" class="filter-input form-control"/> 
                                     </div>
                                     <div class="form-group">
-                                            <label class="" for="toDate">To</label>
+                                            <span class="" for="toDate">To</span>
                                             <input type="date"  name="toDate" id="toDate" value="" placeholder="To Date" class="filter-input form-control"/> 
                                     </div>
                             </div>
@@ -231,16 +258,16 @@ background-color:#e6e5e5;
                         
                             <button id="pnlExtentMapCmd" data-toggle="collapse" data-target="#pnlExtentMap" aria-expanded="false" class="btn btn-link btn-block collapsed_">
                                     <i class="collapse-action glyphicon"></i>
-                                    <h4 class="title"><i class="glyphicon glyphicon-globe"></i> Extent </h4>
+                                    <h4 class="title"><i class="glyphicon glyphicon-globe"></i> Geographical extent </h4>
                             </button>
                         </div>
                         <div id="pnlExtentMap" class="panel-collapse collapse_">
                             <div class="panel-body">
                                     <label class="col-sm-offset-1_ col-sm-12 checkbox">
                                         <input type="checkbox" id="applyMapExtent" name="applyMapExtent" />
-                                       Apply extent
+                                       Select resources that fall within the follwing map extet
                                     </label>
-                                 
+                                    <small class="col-sm-12 text-muted">Zoom or pan the map to the desired area </small>
                                     <div id="extMap" style="height:200px;">
 
                                     </div>

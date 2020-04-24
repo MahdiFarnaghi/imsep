@@ -4110,7 +4110,9 @@ module.exports = function (postgresWorkspace) {
         var tileSize=req.query.size || 256;
         var display= req.query.display;
         var itemId=req.params.id;
-        
+        if(!display && req.body){
+            display= req.body.display;
+        }
         if(display){
             try{
                 display= JSON.parse(display);
@@ -5415,7 +5417,10 @@ module.exports = function (postgresWorkspace) {
     req.sanitizeBody('source').escape();
     req.sanitizeBody('relation').trim();
     req.sanitizeBody('relation').escape();
-    
+    req.sanitizeBody('created').trim();
+    req.sanitizeBody('created').escape();
+    req.sanitizeBody('modified').trim();
+    req.sanitizeBody('modified').escape();
     req.sanitizeBody('updatedAt').toInt();
     var result={
         status:false
@@ -5555,7 +5560,8 @@ module.exports = function (postgresWorkspace) {
         metadata.set('source',req.body.source );
         metadata.set('relation',req.body.relation );
         //metadata.set('spatial',req.body.spatial );
-        metadata.set('modified',util.getFormatedDate() );
+        metadata.set('created',req.body.created || util.getFormatedDate() );
+        metadata.set('modified',req.body.modified || util.getFormatedDate() );
         metadata.set('ext_west',req.body.ext_west?req.body.ext_west:null);
         metadata.set('ext_south',req.body.ext_south?req.body.ext_south:null);
         metadata.set('ext_east',req.body.ext_east?req.body.ext_east:null);
@@ -5659,7 +5665,9 @@ module.exports = function (postgresWorkspace) {
                 metadata.set('title',item.name);
                 metadata.set('abstract',item.description);
                 metadata.set('subject',item.keywords);
-                metadata.set('modified',util.getFormatedDate() );
+                if(!metadata.modified){
+                    metadata.set('modified',util.getFormatedDate() );
+                }
                 metadata.set('ext_west',isNaN(item.ext_west)?null:item.ext_west);
                 metadata.set('ext_south',isNaN(item.ext_south)?null:item.ext_south);
                 metadata.set('ext_east',isNaN(item.ext_east)?null:item.ext_east);

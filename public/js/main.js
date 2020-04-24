@@ -346,6 +346,30 @@ $(function () {
 			options.messages['lessthanorequal'] = options.message;
 		}
 	});
+// used in edit_metadata.vash
+$.validator.addMethod('dateafterorequal', function (value, element, params) {
+	if(value==="")
+		return true;
+	try{
+		value=value+'';
+	}catch(e){}
+	var other = params.other;
+	var otherValue=value;
+	var $element = $(element);
+	var otherElem = $element.closest('form').find('[name=' + other + ']');
+	try{
+		otherValue=(otherElem.val()+'');
+	}catch(ex){}
+	
+	return value >= otherValue;
+}, '');
+
+$.validator.unobtrusive.adapters.add('dateafterorequal', ['other'], function (options) {
+	options.rules['dateafterorequal'] = options.params;
+	if (options.message) {
+		options.messages['dateafterorequal'] = options.message;
+	}
+});
 
     $.validator.addMethod('filesize', function (value, element, params) {
         var maxSize = params.maxsize;

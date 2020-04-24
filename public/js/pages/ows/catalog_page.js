@@ -41,15 +41,34 @@ var pageTask={
           checkUrl += '?Service=CSW&Request=GetCapabilities' ;
         }
         $('#cmdCheckCapabilies').attr("href", checkUrl);
+        $('#CheckCapabiliesUrl').val(checkUrl);
         self.showWaiting();
         self.getUniqueValues(url,function(){
           self.applyFilters();
         },function(){
           self.applyFilters();
         });
-        
-        
+    });
+    $('#CopyCapabiliesUrl').click(function(){
+      /* Get the text field */
+      var copyText = document.getElementById("CheckCapabiliesUrl");
 
+      /* Select the text field */
+      copyText.select();
+      copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+
+      /* Copy the text inside the text field */
+      document.execCommand("copy");
+      $.notify({
+        message: "Copied to clipboard"
+      },{
+          type:'info',
+          delay:1000,
+          animate: {
+              enter: 'animated fadeInDown',
+              exit: 'animated fadeOutUp'
+          }
+      });
     });
    
     $("#tblItems_search").on("keyup", function (evt) {
@@ -91,8 +110,12 @@ var pageTask={
     //this.applyFilters();
     
     var url=self.getCswUrl();
-    self.getUniqueValues(url);
-
+    
+    self.getUniqueValues(url,function(){
+      self.applyFilters();
+    },function(){
+      self.applyFilters();
+    });
     self.last_url=url;
     self.pageUrl='/catalog';
     history.pushState({url:self.pageUrl}, document.title, self.pageUrl);
@@ -161,17 +184,21 @@ var pageTask={
       if(item.subject){
         html+='<label>Subject and keywords:</label> <span>'+item.subject+'</span><br/>';
       }
+     
+      if(item.date){
+        html+='<label>Creation Date:</label> <span>'+item.date+'</span><br/>';
+      }
+      if(item.modified){
+        html+='<label>Revision Date:</label> <span>'+item.modified+'</span><br/>';
+      }
       if(item.creator){
         html+='<label>Creator:</label> <span>'+item.creator+'</span><br/>';
       }
       if(item.publisher){
         html+='<label>Publisher:</label> <span>'+item.publisher+'</span><br/>';
       }
-      if(item.date){
-        html+='<label>Date Created:</label> <span>'+item.date+'</span><br/>';
-      }
-      if(item.modified){
-        html+='<label>Date Modified:</label> <span>'+item.modified+'</span><br/>';
+      if(item.contributor){
+        html+='<label>Contributor:</label> <span>'+item.contributor+'</span><br/>';
       }
       if(item.type){
         html+='<label>Resource Type:</label> <span>'+item.type+'</span><br/>';
@@ -188,12 +215,15 @@ var pageTask={
       if(item.source){
         html+='<label>Source:</label> <span class="item-description"  >'+item.source+'</span><br/>';
       }
+      if(item.relation){
+        html+='<label>Relation to other resources:</label> <span class="item-description"  >'+item.relation+'</span><br/>';
+      }
+      
       if(item.wms ||item.wmts ||item.wfs){
         html+='<label>Published Service(s):</label><br/>';
       
         html+='     <ul class="">';
         if(item.wfs){
-          html+='      <li> <a target="_blank"  href="'+item.wfs+'" >WFS</a>';
           var viewOptions={
             layerType:'WFS',
             url:item.wfs,
@@ -202,12 +232,26 @@ var pageTask={
             typename:item.wfs_typename ||'',
             bbox:item.bbox
           };
-
-          html+='&nbsp;&nbsp;&nbsp;<a target="_blank"  href="/map/preview?options='+encodeURIComponent(JSON.stringify(viewOptions)) +'" ><span class="glyphicon glyphicon-globe">View</span></a>';
-          html+='      </li>';
+          html+='<li>WFS';
+          html+=' <div class="form-horizontal">';
+          html+='   <div class="form-group ">'
+          
+          html+='                   <span class="col-sm-12" >Service Url:</span>';
+          html+='                   <div class="col-sm-12">';
+          html+='                      <input type="text" name="" id="" value="'+item.wfs+ '"  readonly class="form-control"  />';
+          html+='                       <button  title="Copy Url" class="btn btn-xs btn-info  copy-service-url "><span class="fa fa-copy"></span> Copy</button>';
+          html+='                       <a target="_blank" href="'+item.wfs+'" title="Check Url" class="btn btn-xs btn-link   "><span class="fa fa-check"></span> Check</a>';
+          html+='                   </div> ';   
+          
+          html+='   </div>';
+          
+          html+='   <div class="form-group "><div class="col-sm-12">';
+          html+='     <a target="_blank" class="btn btn-xs btn-info" href="/map/preview?options='+encodeURIComponent(JSON.stringify(viewOptions)) +'" ><span class="glyphicon glyphicon-globe"></span> View service in a map</a>';
+          html+='   </div></div>';
+          html+=' </div>';
+          html+='</li>';
         }
         if(item.wms){
-          html+='      <li> <a target="_blank"  href="'+item.wms+'" >WMS</a>';
           var viewOptions={
             layerType:'WMS',
             url:item.wms,
@@ -216,16 +260,50 @@ var pageTask={
             bbox:item.bbox
           };
 
-          html+='&nbsp;&nbsp;&nbsp;<a target="_blank"  href="/map/preview?options='+encodeURIComponent(JSON.stringify(viewOptions)) +'" ><span class="glyphicon glyphicon-globe">View</span></a>';
-          html+='      </li>';
+          
+
+          html+='<li>WMS';
+          html+=' <div class="form-horizontal">';
+          html+='   <div class="form-group ">'
+          
+          html+='                   <span class="col-sm-12" >Service Url:</span>';
+          html+='                   <div class="col-sm-12">';
+          html+='                      <input type="text" name="" id="" value="'+item.wms+ '"  readonly class="form-control"  />';
+          html+='                       <button  title="Copy Url" class="btn btn-xs btn-info  copy-service-url "><span class="fa fa-copy"></span> Copy</button>';
+          html+='                       <a target="_blank" href="'+item.wms+'" title="Check Url" class="btn btn-xs btn-link   "><span class="fa fa-check"></span> Check</a>';
+          html+='                   </div> ';   
+          
+          html+='   </div>';
+          
+          html+='   <div class="form-group "><div class="col-sm-12">';
+          html+='     <a target="_blank" class="btn btn-xs btn-info" href="/map/preview?options='+encodeURIComponent(JSON.stringify(viewOptions)) +'" ><span class="glyphicon glyphicon-globe"></span> View service in a map</a>';
+          html+='   </div></div>';
+          html+=' </div>';
+          html+='</li>';
         }
-        if(item.wmts){
-        //  html+='      <li> <a target="_blank"  href="'+item.wmts+'" >WMTS</a></li>';
+        if(item.wmts && false){
+          
+          html+='<li>WMTS';
+          html+=' <div class="form-horizontal">';
+          html+='   <div class="form-group ">'
+          
+          html+='                   <span class="col-sm-12" >Service Url:</span>';
+          html+='                   <div class="col-sm-12">';
+          html+='                      <input type="text" name="" id="" value="'+item.wmts+ '"  readonly class="form-control"  />';
+          html+='                       <button  title="Copy Url" class="btn btn-xs btn-info  copy-service-url "><span class="fa fa-copy"></span> Copy</button>';
+          html+='                       <a target="_blank" href="'+item.wmts+'" title="Check Url" class="btn btn-xs btn-link   "><span class="fa fa-check"></span> Check</a>';
+          html+='                   </div> ';   
+          
+          html+='   </div>';
+          
+          html+=' </div>';
+          html+='</li>';
         }
         
         html+='     </ul>';
       }
-      html+='<label>Downlad:</label> <a target="_blank"  href="'+item.metaDataLink+'" >Metadata</a>';
+      //html+='<label>Downlad:</label> <a target="_blank"  href="'+item.metaDataLink+'" >Metadata</a>';
+      html+='<a target="_blank" title="View source of metadata" class="btn btn-xs btn-primary" href="'+item.metaDataLink+'" >View Metadata</a>';
 
       html+= '</div>';
       html+='     <ul class="list-inline">';
@@ -255,11 +333,15 @@ var pageTask={
          html+='       </li>';
         }
       
-      if(item.OwnerUser && item.OwnerUser.userName){
+      var userName= item.contributor;
+      if(!userName){
+        if(item.OwnerUser && item.OwnerUser.userName){
+          userName=item.OwnerUser.userName;
+        }
+      } 
+      if(userName){
         html+='       <li>';
-        html+='           <i class="fa fa-user" title="Owner" ></i>';
-      
-        html+='           <span title="Contributor">'+item.OwnerUser.userName+'</span>';
+        html+='           <i class="fa fa-user" ></i><span title="Contributor">'+item.OwnerUser.userName+'</span>';
         html+='       </li>';
       }
       
@@ -294,6 +376,31 @@ var pageTask={
       }
     });
 
+    detailsContainer.find('.copy-service-url').click(function(){
+      var input =$(this).siblings('input');
+      var copyText;
+      if(input.length>0){
+        copyText=input[0];
+      }
+      if(!copyText){
+        return;
+      }
+      //var copyText = document.getElementById("CheckCapabiliesUrl");
+      copyText.select();
+      copyText.setSelectionRange(0, 99999); /*For mobile devices*/
+      document.execCommand("copy");
+      $.notify({
+        message: "Copied to clipboard"
+      },{
+          type:'info',
+          delay:1000,
+          animate: {
+              enter: 'animated fadeInDown',
+              exit: 'animated fadeOutUp'
+          }
+      });
+    });
+    
   },
 
   fillUI:function(){
@@ -413,6 +520,24 @@ var pageTask={
       self.applyFilters();
     });
     $("#toDate").change(function(){
+      var val=$(this).val();
+      if(val){
+        $(this).addClass('active');
+      }else{
+        $(this).removeClass('active');
+      }
+      self.applyFilters();
+    });
+    $("#c_fromDate").change(function(){
+      var val=$(this).val();
+      if(val){
+        $(this).addClass('active');
+      }else{
+        $(this).removeClass('active');
+      }
+      self.applyFilters();
+    });
+    $("#c_toDate").change(function(){
       var val=$(this).val();
       if(val){
         $(this).addClass('active');
@@ -547,7 +672,8 @@ var pageTask={
       //html+='     <span  class="list-group-item glyphicon glyphicon-sort-by-attributes-alt" data-filtertype="orderby" data-filter="-name" > نـــام</span>';
      // html+='     <span  class="list-group-item glyphicon glyphicon-sort-by-attributes" data-filtertype="orderby" data-filter="size" > انــدازه</span>';
       //html+='     <span  class="list-group-item glyphicon glyphicon-sort-by-attributes-alt" data-filtertype="orderby" data-filter="-size" > انــدازه</span>';
-      html+='     <span  class="list-group-item glyphicon glyphicon-sort-by-attributes" data-filtertype="orderby" data-filter="modified" > Date</span>';
+      html+='     <span  class="list-group-item glyphicon glyphicon-sort-by-attributes" data-filtertype="orderby" data-filter="created" > Creation date</span>';
+      html+='     <span  class="list-group-item glyphicon glyphicon-sort-by-attributes" data-filtertype="orderby" data-filter="modified" > Revision date</span>';
       //html+='     <span  class="list-group-item glyphicon glyphicon-sort-by-attributes-alt" data-filtertype="orderby" data-filter="-updatedAt" > تــاریخ</span>';
       html+= '</li>';
    
@@ -608,12 +734,14 @@ var pageTask={
             })
       ],
       view: new ol.View({
-          center: ol.proj.fromLonLat([(app.initMap_Lon|| 0), (app.initMap_Lat ||0)])
+         // center: ol.proj.fromLonLat([(app.initMap_Lon|| 0), (app.initMap_Lat ||0)])
           //center: ol.proj.fromLonLat([53,32])
           //,zoom:1
-          ,zoom: app.initMap_Zoom || 4
-          //,extent:ol.proj.get("EPSG:3857").getExtent()
-          //,extent: ol.proj.transform([-180,-90,180,90],'EPSG:4326', 'EPSG:3857')
+         // ,zoom: app.initMap_Zoom || 4
+         // extent:ol.proj.get("EPSG:3857").getExtent(),
+          extent: ol.extent.applyTransform([-180,-90,180,90], ol.proj.getTransform("EPSG:4326","EPSG:3857")),
+          center: ol.proj.fromLonLat([0,0]),
+          zoom: 0
       })
     });
     map.on('moveend', function(evt) {
@@ -628,6 +756,10 @@ var pageTask={
         miny: extent[1],
         maxx: extent[2],
         maxy: extent[3]
+      }
+      if(self.mapExtent.minx>180){
+        self.mapExtent.minx= (self.mapExtent.minx%360)-360;
+        self.mapExtent.maxx= self.mapExtent.minx+ (extent[3]-extent[0])
       }
       if(self.applyMapExtent){
         self.applyFilters();
@@ -788,6 +920,22 @@ var pageTask={
       filter+= '</ogc:PropertyIsLessThanOrEqualTo>';
     }
     
+    var c_fromDate=$('#c_fromDate').val();
+    var c_toDate=$('#c_toDate').val();
+    if(c_fromDate){
+      hasFilter=true;
+      filter+= '<ogc:PropertyIsGreaterThanOrEqualTo>';
+      filter+= '  <ogc:PropertyName>created</ogc:PropertyName>';
+      filter+= '  <ogc:Literal>'+ c_fromDate+'</ogc:Literal>';
+      filter+= '</ogc:PropertyIsGreaterThanOrEqualTo>';
+    }
+    if(c_toDate){
+      hasFilter=true;
+      filter+= '<ogc:PropertyIsLessThanOrEqualTo>';
+      filter+= '  <ogc:PropertyName>created</ogc:PropertyName>';
+      filter+= '  <ogc:Literal>'+ c_toDate+'</ogc:Literal>';
+      filter+= '</ogc:PropertyIsLessThanOrEqualTo>';
+    }
     var authorsFilter='';
     $("#authors .list-group-item.active ").each(function(){
         var filterValue= $(this).data('filter')+'';

@@ -2420,7 +2420,7 @@ MapContainer.prototype.refreshLegend_addRasterLayer=function(layer){
     }
 
     if(customColorMap){
-        for(var i=0;i<customColorMap.length;i++){
+        for(var i=0;i<customColorMap.length && i<50;i++){
             var item= customColorMap[i];
             var caption= item.caption;
             if(typeof caption==='undefined' || caption===''){

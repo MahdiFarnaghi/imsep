@@ -2002,8 +2002,7 @@ class PostgresWorkspace {
 
         var filePathFolder = path.dirname(filePath);
 
-        var vat_dbfFile = filePath + '.vat.dbf';
-        var vat_encodingFile = filePath + '.vat.cpg';
+        
         
         var thumbnailFile_png = path.join(filePathFolder, filebaseName + '.png');
         if (thumbnailFile_png.toLowerCase() == filePath.toLowerCase()) {
@@ -2229,6 +2228,8 @@ try {
         errors = (errors ? ('<br /> <span style="color:red;">' + errors + '</span>') : '');
         if (status) {
             try{
+                var vat_dbfFile = filePath + '.vat.dbf';
+                var vat_encodingFile = filePath + '.vat.cpg';
                 if (fs.existsSync(vat_dbfFile)) {
                     var vatInfo= await this.readRasterVat(vat_dbfFile,vat_encodingFile);
                     layerInfo.vatInfo=vatInfo;
@@ -2236,6 +2237,19 @@ try {
 
             }catch(ex){
 
+            }
+            for(var b= 0;b<layerInfo.bands.length;b++){
+                try{
+                    var band_vat_dbfFile = filePath+ '.'+ layerInfo.bands[b].id + '.vat.dbf';
+                    var band_vat_encodingFile = filePath +'.'+ layerInfo.bands[b].id+ '.vat.cpg';
+                    if (fs.existsSync(band_vat_dbfFile)) {
+                        var vatInfo= await this.readRasterVat(band_vat_dbfFile,band_vat_encodingFile);
+                        layerInfo.bands[b].vatInfo=vatInfo;
+                    }
+    
+                }catch(ex){
+    
+                } 
             }
             try {
                 var maxSize= Math.max(layerInfo.rasterWidth,layerInfo.rasterHeight);

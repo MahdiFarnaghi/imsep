@@ -21,7 +21,7 @@ th:nth-child(n)
     <div class="panel">
         <div class="panel-body">
         <legend>@(model.title)
-  
+                          <a title="Help" class="close help-link" style=" " target="_blank" href="/help#cswProviders">?</a>
        </legend>
 
             @if(!model.readOnly){

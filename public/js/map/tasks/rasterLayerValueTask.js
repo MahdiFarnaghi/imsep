@@ -37,12 +37,25 @@ RasterLayerValueTask.prototype.init = function (dataObj) {
         return;
     var details = source.get('details');
     var vatInfo;
-    var vatInfoDic={}
+    var vatInfoDics={}
+    
     if (details) {
         oidField = details.oidField
         if(details.vatInfo && details.vatInfo.rows){
+            var vatInfoDic={};
             for(var i=0;i<details.vatInfo.rows.length;i++){
                 vatInfoDic[details.vatInfo.rows[i]['value']]=details.vatInfo.rows[i];
+            }
+            vatInfoDics['default']= vatInfoDic;
+        }
+        for(var b=0;details.bands && b<details.bands.length;b++){
+            var band= details.bands[b];
+            if(band && band.vatInfo && band.vatInfo.rows){
+                var vatInfoDic={};
+                for(var i=0;i<band.vatInfo.rows.length;i++){
+                    vatInfoDic[band.vatInfo.rows[i]['value']]=band.vatInfo.rows[i];
+                }
+                vatInfoDics[(band.name+'').toLowerCase()]= vatInfoDic;
             }
         }
     }
@@ -82,7 +95,7 @@ RasterLayerValueTask.prototype.init = function (dataObj) {
                                         content += data[key];
                                         content += '</td>';
                                         content += '</tr>';
-                                    
+                                        var vatInfoDic= vatInfoDics[key.toLowerCase()] || vatInfoDics['default'];
                                         if(vatInfoDic && vatInfoDic[data[key]]){
                                             var vat=vatInfoDic[data[key]];
 

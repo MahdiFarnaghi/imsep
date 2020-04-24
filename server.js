@@ -578,7 +578,9 @@ app.post('/admin/user/:id',  [Authenticated, authorize({
     app.get('/datalayer/:id/raster',   [Authenticated],  handleErrors(dataLayerController.rasterGet));
     app.get('/api/dataset/:id/raster', passport.authenticate('jwt', {session: false}),InitIdentityInfo, handleErrors(dataLayerController.rasterGet));
     app.get('/datalayer/:id/rastertile',   [Authenticated],  handleErrors(dataLayerController.rasterTileGet));
+    app.post('/datalayer/:id/rastertile',   [Authenticated],  handleErrors(dataLayerController.rasterTileGet));
     app.get('/api/dataset/:id/rastertile',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(dataLayerController.rasterTileGet));
+    app.post('/api/dataset/:id/rastertile',passport.authenticate('jwt', {session: false}),InitIdentityInfo,handleErrors(dataLayerController.rasterTileGet));
     
     app.get('/datalayer/:id/analysis',   [Authenticated, authorize({anyOfRoles: 'administrators,powerUsers,dataAnalysts'})],
     handleErrors(dataLayerController.analysisGet));

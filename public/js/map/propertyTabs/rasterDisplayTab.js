@@ -142,6 +142,13 @@ this.tab=$('<div class="tab-pane '+ active +'" id="' +self.tabId+'"></div>').app
    var band= details.bands[displayBand-1];
    var rasterMinimum= band.minimum;
    var rasterMaximum= band.maximum;
+   var vatInfo;
+   if(details.vatInfo && details.vatInfo.rows){
+    vatInfo= details.vatInfo;
+    }
+    if(band.vatInfo){
+      vatInfo=band.vatInfo;
+    }
 
    var minimum=rasterMinimum;
    var maximum=rasterMaximum;
@@ -233,6 +240,10 @@ this.tab=$('<div class="tab-pane '+ active +'" id="' +self.tabId+'"></div>').app
    htm+='  <tfoot>';
    htm+='         <tr>';
    htm+='   <td colspan="" style="text-align: left;"><input type="button" class="btn btn-info btn-xs_ btn-block_ " id="addRange" value="Add range"></td>';
+   if(vatInfo){
+    htm+='   <td colspan="" style="text-align: left;"><input type="button" class="btn btn-info btn-xs_ btn-block_ " id="addAllRange" value="Add all values"></td>';
+   }
+   htm+='   <td colspan="" style="text-align: left;"><input type="button" class="btn btn-danger btn-xs_ btn-block_ " id="deleteAllRanges" value="Delete all"></td>';
    htm+='  </tr>';
    htm+='  </tfoot>';
    htm+='  </table>';
@@ -310,6 +321,49 @@ this.tab=$('<div class="tab-pane '+ active +'" id="' +self.tabId+'"></div>').app
      content.find("#tblColors .colorpicker-component").colorpicker();
      counter++;
  });
+ content.find("#addAllRange").unbind('click').on("click", function () {
+  if(!vatInfo){
+    return;
+  }
+  var captionKey='count';
+  if(vatInfo.fields&& vatInfo.fields.length>=3 ){
+    captionKey=vatInfo.fields[2].name;
+  }
+  
+  content.find("#tblColors").find("tbody tr").remove();       
+  counter =0;
+
+  for(var i=0;i<vatInfo.rows.length;i++){
+   var v =vatInfo.rows[i]['value'];
+   var caption=vatInfo.rows[i][captionKey];
+   if(typeof caption ==='undefined'){
+     caption=v;
+   }
+   var newRow = $("<tr>");
+   var colorStr= StyleFactory.randomColor(null,1);
+   var cols = "";
+ 
+   cols += '<td><input type="text" class="form-control range-rasterValue nospinner" value="'+v+'"  name="rasterValue' + counter + '"  data-val="true" data-val-required="Value is required"/><span class="field-validation-valid" data-valmsg-for="rasterValue'+counter+'" data-valmsg-replace="true"></span></td>';
+   cols += '<td>';
+   cols +='    <div id="fillColorPicker' + counter + '" class="input-group colorpicker-component">';
+   cols +='      <input type="text" value="'+colorStr+'" id="fillColor' + counter + '" class="colorpicker-item form-control" />';
+   cols +='      <span class="input-group-addon"><i class="raster-color" ></i></span>';
+   cols +='    </div>';
+   cols += '</td>';
+   cols += '<td><input type="text" class="form-control range-rasterCaption nospinner" value="'+caption+'"  name="rasterCaption' + counter + '" ></td>';
+   cols +=' <td><button type="button" class="ibtnDel btn btn-xs btn-danger	"  title="Delete"  style="" ><span class="glyphicon glyphicon-remove"></span> </button></td>';
+   newRow.append(cols);
+   content.find("#tblColors").append(newRow);
+   content.find("#tblColors .colorpicker-component").colorpicker();
+   counter++;
+ }
+ 
+});
+
+content.find("#deleteAllRanges").unbind('click').on("click",  function (event) {
+ content.find("#tblColors").find("tbody tr").remove();       
+ counter =0;
+});
  content.find("#tblColors").unbind('click').on("click", ".ibtnDel", function (event) {
    $(this).closest("tr").remove();       
    counter -= 1

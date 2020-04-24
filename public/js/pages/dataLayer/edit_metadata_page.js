@@ -24,6 +24,11 @@ var pageTask={
     var me= this;
         
     this.fillUI();
+    var initLanguage=$('#language').data('initvalue');
+    if(!initLanguage){
+      initLanguage='English';
+    }
+    $('#language').val( initLanguage);
     $('#cmdSave').click(function(){
       me.submit();
     })

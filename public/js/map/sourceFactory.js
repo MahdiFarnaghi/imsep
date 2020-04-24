@@ -566,7 +566,7 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
 }
 
 
-SourceFactory.prototype.createGeoImageSource = function(dataObj,mapContainer) {
+SourceFactory.prototype.createGeoImageSource_old = function(dataObj,mapContainer) {
     if (!dataObj)
         return null;
     var view = mapContainer.map.getView();
@@ -647,8 +647,22 @@ SourceFactory.prototype.createGeoImageSource = function(dataObj,mapContainer) {
   }
     var url = '/datalayer/' + dataObj.id + '/rastertile?size=256&x={x}&y={y}&z={z}&srid='+mapProjectionCode;
     url+='&ref_z='+(maxZoom -1-(0));
+    var postParams=undefined;
+    var method='GET';
     if(details.display){
-        url+='&display='+ encodeURIComponent(JSON.stringify(details.display));
+        var display= JSON.parse(JSON.stringify(details.display));
+        if(display && display.customColorMap){
+            for(var i=0;i<display.customColorMap.length;i++){
+                delete display.customColorMap[i].caption;
+            }
+        }
+        //url+='&display='+ encodeURIComponent(JSON.stringify(display));
+        method='POST';
+        postParams='display='+ encodeURIComponent(JSON.stringify(display));
+        if((url.length+ postParams.length)< 2000){
+            method='GET';
+            url += '&'+postParams;
+        }
     }
    
     var geoImageSource = new ol.source.XYZ({
@@ -669,6 +683,164 @@ SourceFactory.prototype.createGeoImageSource = function(dataObj,mapContainer) {
           return extent;
     }
     geoImageSource.set('details', details);
+
+    return geoImageSource;
+  }
+  SourceFactory.prototype.createGeoImageSource = function(dataObj,mapContainer) {
+    if (!dataObj)
+        return null;
+    var view = mapContainer.map.getView();
+     var mapProjectionCode = view.getProjection().getCode();
+     if(mapProjectionCode && mapProjectionCode.indexOf(':')){
+        mapProjectionCode= mapProjectionCode.split(':')[1];
+    }
+    if(!mapProjectionCode)
+    {
+        mapProjectionCode=3857;
+    }
+    var details = dataObj.details;
+    try {
+      if (typeof details === 'string' || details instanceof String){
+          details = JSON.parse(details);
+      }
+    } catch (ex) {}
+    var spatialReferenceCode;
+    var srid;
+    if (details['spatialReference'] && (details['spatialReference'].name || details['spatialReference'].srid)) {
+        srid=details['spatialReference'].srid;
+        if(details['spatialReference'].name){
+            spatialReferenceCode = details['spatialReference'].name;
+            if(!srid && spatialReferenceCode && spatialReferenceCode.indexOf(':')){
+                srid= spatialReferenceCode.split(':')[1];
+            }
+        }else{
+            spatialReferenceCode='EPSG:'+srid;
+        }
+        
+        if (details['spatialReference'].proj4 && !proj4.defs[spatialReferenceCode]) {
+            proj4.defs(spatialReferenceCode, details['spatialReference'].proj4);
+            ol.proj.proj4.register(proj4);
+        }
+    }
+    var metadata_3857= details.metadata_3857;
+    
+    // var url = '/dataset/' + dataObj.id + '/raster?srid='+mapProjectionCode;
+    // if(details.display){
+    //     url+='&display='+ encodeURIComponent(JSON.stringify(details.display));
+    // }
+  
+    // var geoImageSource = new ol.source.GeoImage({
+    //     url: url,
+    //     imageCenter: [
+    //             metadata_3857.upperleftx + (metadata_3857.scalex* (metadata_3857.width+2)/2.0) ,
+    //             metadata_3857.upperlefty + (metadata_3857.scaley* (metadata_3857.height+2)/2.0)
+    //         ],
+    //     //	imageScale: [metadata_3857.scalex*16,metadata_3857.scaley*16], pyramidLevel=16
+    //         imageScale: [metadata_3857.scalex,metadata_3857.scaley],
+	// 		imageCrop: [0,0,metadata_3857.width,metadata_3857.height],
+	// 		//imageRotate: Number($("#rotate").val()*Math.PI/180),
+	// 		projection: 'EPSG:'+ mapProjectionCode
+
+    //     //, strategy: ol.loadingstrategy.bbox
+    // });
+    // geoImageSource.getExtent=function(){
+    //     var extent = 
+    //     [metadata_3857.upperleftx ,
+    //       metadata_3857.upperlefty+  (metadata_3857.scaley* metadata_3857.height) ,
+    //       metadata_3857.upperleftx + (metadata_3857.scalex * metadata_3857.width),
+    //       metadata_3857.upperlefty];
+
+    //       return extent;
+    // }
+    // geoImageSource.set('details', details);
+  
+    var maxZoom=18;
+    var minZoom=0;
+  if(details.metadata_3857 && details.metadata_3857.scalex){
+    maxZoom= view.getZoomForResolution(details.metadata_3857.scalex);
+    maxZoom= Math.floor(maxZoom)-1-(0);
+    minZoom= maxZoom-4;
+    if(minZoom<0)
+    {
+        minZoom=0;
+    }
+  }
+    var url = '/datalayer/' + dataObj.id + '/rastertile?size=256&x={x}&y={y}&z={z}&srid='+mapProjectionCode;
+    url+='&ref_z='+(maxZoom -1-(0));
+    var postParams=undefined;
+    var method='GET';
+    if(details.display){
+        var display= JSON.parse(JSON.stringify(details.display));
+        if(display && display.customColorMap){
+            for(var i=0;i<display.customColorMap.length;i++){
+                delete display.customColorMap[i].caption;
+            }
+        }
+        //url+='&display='+ encodeURIComponent(JSON.stringify(display));
+        method='POST';
+        postParams='display='+ encodeURIComponent(JSON.stringify(display));
+        if((url.length+ postParams.length)< 2000){
+            method='GET';
+            url += '&'+postParams;
+        }
+    }
+   
+    var geoImageSource = new ol.source.XYZ({
+        url: url
+        ,tileSize:[256,256]
+        ,maxZoom:maxZoom
+        ,minZoom:minZoom
+        //,maxZoom:12//view.getZoomForResolution(0.5)
+        //,minZoom:11
+    });
+    geoImageSource.setTileLoadFunction(function(tile, src) {
+        var xhr = new XMLHttpRequest();
+        xhr.responseType = 'blob';
+        geoImageSource.set('loading_details', '');
+        geoImageSource.set('loading_status', 'started');
+        xhr.addEventListener('loadend', function (evt) {
+          var data = this.response;
+          var xx= xhr;
+          if(data && data.type=='text/plain'){
+            
+            geoImageSource.set('loading_details', xhr.statusText|| 'Failed');
+            geoImageSource.set('loading_status', 'failed');
+            tile.setState(3);
+          }else{
+            if (data ) {
+                tile.getImage().src = URL.createObjectURL(data);
+                geoImageSource.set('loading_details', '');
+                geoImageSource.set('loading_status', 'compelete');
+            } else {
+                //tile.setState(TileState.ERROR);
+                tile.setState(3);
+            }
+            }
+        });
+        xhr.addEventListener('error', function () {
+          //tile.setState(TileState.ERROR);
+          tile.setState(3);
+        });
+        if(method=='POST'){
+          
+            xhr.open(method, src);
+            xhr.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
+            xhr.send(postParams);
+        }else{
+            xhr.open(method, src);
+            xhr.send();
+        }
+      });
+    geoImageSource.getExtent=function(){
+        var extent = 
+        [metadata_3857.upperleftx ,
+          metadata_3857.upperlefty+  (metadata_3857.scaley* metadata_3857.height) ,
+          metadata_3857.upperleftx + (metadata_3857.scalex * metadata_3857.width),
+          metadata_3857.upperlefty];
+
+          return extent;
+   }
+   geoImageSource.set('details', details);
 
     return geoImageSource;
   }
