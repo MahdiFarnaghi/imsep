@@ -741,8 +741,10 @@ function LayerSourceTab() {
       if(sourceType=='WMS'){
         var newUrl=content.find('#url').val();
         var newLayers=content.find('#layers').val();
-        if(newUrl !== LayerHelper.getDetails(self.layer).url
-          || newLayers !==LayerHelper.getDetails(self.layer).params.LAYERS){
+        if((newUrl !== LayerHelper.getDetails(self.layer).url
+            || newLayers !==LayerHelper.getDetails(self.layer).params.LAYERS
+          ) || self.parentDialog.isNew
+          ){
             LayerHelper.getDetails(self.layer).url=newUrl ;
             LayerHelper.getDetails(self.layer).params.LAYERS= newLayers;
             //var url='/proxy/?url=' +encodeURIComponent(LayerHelper.getDetails(self.layer).url);
@@ -793,7 +795,10 @@ function LayerSourceTab() {
                           {
                             var elemnt_Name= $(elements[j]).text();
                             if(elemnt_Name ==layers[i]){
+                              
                               var EX_GeographicBoundingBox= $(elements[j]).siblings('EX_GeographicBoundingBox');
+                              var LatLonBoundingBox= $(elements[j]).siblings('LatLonBoundingBox');
+                              var BoundingBox=$(elements[j]).siblings('BoundingBox');
                               if(EX_GeographicBoundingBox.length){
                                 var westBoundLongitude= EX_GeographicBoundingBox.first().find('westBoundLongitude');
                                 var eastBoundLongitude= EX_GeographicBoundingBox.first().find('eastBoundLongitude');
@@ -834,16 +839,46 @@ function LayerSourceTab() {
                                   }
 
                                 }catch(ex){}
+                              }else if(LatLonBoundingBox.length){
+                                try{
+                                  var vWest= parseFloat(LatLonBoundingBox.attr('minx'));
+                                      if(!isNaN(vWest)){
+                                        if(typeof west =='undefined')
+                                          west= vWest;
+                                        west= Math.min(west,vWest); 
+                                      }
+                                  var vEast= parseFloat(LatLonBoundingBox.attr('maxx'));
+                                    if(!isNaN(vEast)){
+                                      if(typeof east =='undefined')
+                                        east= vEast;
+                                       east= Math.max(east,vEast); 
+                                    }
+                                    var vSouth= parseFloat(LatLonBoundingBox.attr('miny'));
+                                      if(!isNaN(vSouth)){
+                                        if(typeof south =='undefined')
+                                          south= vSouth;
+                                         south= Math.min(south,vSouth); 
+                                      }
+                                  var vNorth= parseFloat(LatLonBoundingBox.attr('maxy'));
+                                    if(!isNaN(vNorth)){
+                                      if(typeof north =='undefined')
+                                        north= vNorth;
+                                       north= Math.max(north,vNorth); 
+                                    }
+                                  }catch(ex){}
                               }
                             }
                           }
                         }
-                        LayerHelper.getDetails(self.layer).ext_north=north;
-                        LayerHelper.getDetails(self.layer).ext_south=south;
-                        LayerHelper.getDetails(self.layer).ext_east=east;
-                        LayerHelper.getDetails(self.layer).ext_west=west;
-
-                        mapContainer.setGeoExtent(west,south,east,north)
+                        if(!isNaN(north)){
+                          if(typeof north !=='undefined'){
+                            LayerHelper.getDetails(self.layer).ext_north=north;
+                            LayerHelper.getDetails(self.layer).ext_south=south;
+                            LayerHelper.getDetails(self.layer).ext_east=east;
+                            LayerHelper.getDetails(self.layer).ext_west=west;
+                            mapContainer.setGeoExtent(west,south,east,north)
+                          }
+                        }
                       }
                     }
                 },
@@ -858,8 +893,9 @@ function LayerSourceTab() {
         var typenameNamespace=content.find('#typename').data('namespace');
         var newShapeType= content.find('#shapeType').val();
         LayerHelper.setShapeType(self.layer,newShapeType);
-        if(newUrl !== LayerHelper.getDetails(self.layer).url
+        if((newUrl !== LayerHelper.getDetails(self.layer).url
           || newTypename !==LayerHelper.getDetails(self.layer).params.typename
+        ) || self.parentDialog.isNew
           ){
             //layerCustom.dataObj.details.fields=null;
             LayerHelper.setFields(self.layer,null);
@@ -921,12 +957,16 @@ function LayerSourceTab() {
                           }
                         }
                       
-                      LayerHelper.getDetails(self.layer).ext_north=north;
-                      LayerHelper.getDetails(self.layer).ext_south=south;
-                      LayerHelper.getDetails(self.layer).ext_east=east;
-                      LayerHelper.getDetails(self.layer).ext_west=west;
-
-                      mapContainer.setGeoExtent(west,south,east,north)
+                        if(!isNaN(north)){
+                          if(typeof north !=='undefined'){
+                            LayerHelper.getDetails(self.layer).ext_north=north;
+                            LayerHelper.getDetails(self.layer).ext_south=south;
+                            LayerHelper.getDetails(self.layer).ext_east=east;
+                            LayerHelper.getDetails(self.layer).ext_west=west;
+      
+                            mapContainer.setGeoExtent(west,south,east,north)
+                          }
+                        }
                     }
                   }
               },

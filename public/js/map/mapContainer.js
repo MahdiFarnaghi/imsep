@@ -609,8 +609,15 @@ MapContainer.prototype.zoomToLayer = function(layer) {
             }
 
     }
-    if(layerCustom && layerCustom.dataObj && 
-        (layerCustom.format=='ol.format.GeoJSON' || layerCustom.source === 'ol.source.GeoImage'))  {
+    if (layerCustom && layerCustom.dataObj &&
+        (
+        (layerCustom.format == 'ol.format.GeoJSON' || layerCustom.source === 'ol.source.GeoImage')
+        ||
+        (layerCustom.format == 'ol.format.WFS' )
+        ||
+        (layerCustom.format == 'ol.format.WMS' )
+        )
+        ) {
         var source= layer.getSource();
         var extent;
 
@@ -1479,6 +1486,14 @@ MapContainer.prototype.addTestWFS=function(){
         };
     
         var newLayer = this.createLayer(layerInfo);
+        if(options.bbox){
+            try{
+                LayerHelper.getDetails(newLayer).ext_north=options.bbox[3];
+                LayerHelper.getDetails(newLayer).ext_south=options.bbox[1];
+                LayerHelper.getDetails(newLayer).ext_east=options.bbox[2];
+                LayerHelper.getDetails(newLayer).ext_west=options.bbox[0];
+            }catch(ex){}
+        }
     
         var layerPropertiesDlg = new ObjectPropertiesDlg(self, newLayer, {
             isNew: true,
@@ -1523,6 +1538,15 @@ MapContainer.prototype.addTestWFS=function(){
         };
     
         var newLayer = this.createLayer(layerInfo);
+        if(options.bbox){
+            try{
+                LayerHelper.getDetails(newLayer).ext_north=options.bbox[3];
+                LayerHelper.getDetails(newLayer).ext_south=options.bbox[1];
+                LayerHelper.getDetails(newLayer).ext_east=options.bbox[2];
+                LayerHelper.getDetails(newLayer).ext_west=options.bbox[0];
+            }catch(ex){}
+        }
+    
     
         var layerPropertiesDlg = new ObjectPropertiesDlg(self, newLayer, {
             isNew: true,
