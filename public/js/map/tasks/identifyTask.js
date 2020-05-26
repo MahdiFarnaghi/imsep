@@ -204,6 +204,9 @@ IdentifyTask.prototype._getHtml=function(feature){
                 if (typeof fld.hidden !== 'undefined') {
                     visible = !fld.hidden;
                 }
+                if(fld.type==='nill'){
+                    visible=false;
+                }
                 var fldValue=properties[fldName];
                 if(fld.codedValues){
                     

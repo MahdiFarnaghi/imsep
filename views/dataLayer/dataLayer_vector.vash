@@ -347,6 +347,7 @@
                                     <option value="date">Date</option>
                                     <option value="timestamp with time zone">DateTime</option>
                                     <option value="_filelink">File</option>
+                                    <option value="nill">NONE</option>
                                     
                                 </select>
                                 

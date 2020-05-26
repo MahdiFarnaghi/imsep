@@ -90,7 +90,8 @@ var pageTask={
       'date':'Date',
       'timestamp with time zone':'DateTime',
       '_filelink':'File',
-      '_documentslink':'Link to documents'
+      '_documentslink':'Link to documents',
+      'nill':'None'
     }
     var detailsStr=$('#details').val();
     var details= {};
@@ -718,7 +719,8 @@ function EditFieldDlg(options) {
     'timestamp with time zone':'8 bytes	both date and time with time zone, example:2018-08-28 12:22:01.673<span class="label label-info">+04:30</span>',
     'bytea':'BLOB, Binary Large OBject',
     '_filelink':'Keeps a link to an uploaded file',
-    '_documentslink':'Keeps links to uploaded document files'
+    '_documentslink':'Keeps links to uploaded document files',
+    'nill':'Dummy field used for adding descriptions to attribute form'
   }    
 
     this.options = options || {};

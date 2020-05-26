@@ -74,7 +74,7 @@ function LayerLabelTab() {
     htm+='    <select class="form-control " id="fieldName" >';
     for(var i=0;i< fields.length;i++){
       var fld= fields[i];
-      if(fld.type !=='bytea'){
+      if(fld.type !=='bytea' && fld.type!=='nill'){
         var fldName=fld.name;
         var fldCaption= fld.alias|| fldName;
         var selected= (fld.name=== labeler.fieldName);

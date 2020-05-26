@@ -26,7 +26,7 @@ DlgVectorTableView.prototype.createUI_0=function(){
   var columns=[];
   for(var i=0;i< fields.length;i++){
     var fld= fields[i];
-    if(fld.type !=='bytea'){
+    if(fld.type !=='bytea'  && fld.type!=='nill'){
       var fldName=fld.name;
       var title= fld.alias|| fldName;
       columns.push({
@@ -148,7 +148,7 @@ DlgVectorTableView.prototype.createUI_1=function(){
   var columns=[];
   for(var i=0;i< fields.length;i++){
     var fld= fields[i];
-    if(fld.type !=='bytea'){
+    if(fld.type !=='bytea'  && fld.type!=='nill'){
       var fldName=fld.name;
       var title= fld.alias|| fldName;
       columns.push({
@@ -432,7 +432,7 @@ DlgVectorTableView.prototype.createUI=function(){
   });
   for(var i=0;i< fields.length;i++){
     var fld= fields[i];
-    if(fld.type !=='bytea'){
+    if(fld.type !=='bytea'  && fld.type!=='nill'){
       var fldName=fld.name;
       var title= fld.alias|| fldName;
       var codedValues=undefined;

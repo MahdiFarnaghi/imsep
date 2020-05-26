@@ -10,6 +10,45 @@ FeatureAttributesTab.prototype.init=function(parentDialog){
 FeatureAttributesTab.prototype.activate=function(){
  $('.nav-tabs a[href="#' + this.tabId + '"]').tab('show');
 }
+FeatureAttributesTab.prototype.field_i18n=function(fld,key,defaultValue){
+  var i18n=app.i18n;
+  var k=key;
+  var returnValue=defaultValue;
+  if(i18n && (returnValue in i18n)){
+    returnValue = i18n[returnValue];
+  }
+  if(i18n && fld &&  fld.name){
+    k= fld.name+'.'+key;
+  
+    if((k in i18n)){
+      returnValue = i18n[k];
+    }
+    if(key=='codedValues'){
+      k= fld.name+'.codedValues.'+(defaultValue +'').trim();
+      if((k in i18n)){
+        returnValue = i18n[k];
+      }
+    }
+  }
+  
+  if(fld && fld.i18n && fld.i18n[app.language]){
+    i18n=fld.i18n[app.language];
+    if(key in i18n){
+      if(key=='codedValues'){
+        k = (defaultValue+'').trim();
+        if( k in i18n['codedValues'] ){
+          returnValue =i18n['codedValues'][k];
+        }
+      }else{
+        returnValue = i18n[key];
+      }
+    }
+  }
+  
+  return returnValue;
+ 
+  
+}
 FeatureAttributesTab.prototype.onshown=function(){
 var self=this;
 if(!this.$form){
@@ -103,6 +142,7 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
    //autosaveId+= '_'+ this.layer.get('title');
  }
 
+ 
 
 //  if(this.feature){
 //   if(this.feature.getId){
@@ -157,6 +197,7 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
  for(var i=0;i< fields.length;i++){
    var fld= fields[i];
    var group= fld.group;
+   group=self.field_i18n(fld,'group',fld.group);
    fieldsDic[fld.name]= fld;
    var fldKey='field_'+i;
    var fldType=fld.type.toLowerCase();
@@ -175,8 +216,9 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
    var fldHtml='';
  if(fld.isExpression){
    //continue;
+   var fld_alias = self.field_i18n(fld,'alias',fld.alias);
    fldHtml+='  <div class="form-group">';
-   fldHtml+='    <label class="" >'+  (fld.alias || fld.name)+ '</label>';
+   fldHtml+='    <label class="" >'+  (fld_alias || fld.name)+ '</label>';
    fldHtml+='    <p class="form-control-static">'+  properties[fld.name]+'</p>';
    fldHtml+='  </div>';
  }else if (codedValuesDomain){
@@ -187,6 +229,8 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
    }
  }else if(fldType=='varchar'){
        fldHtml+=this.getTextInput(fld,properties,fldKey);
+   }else if (fldType=='nill' ){
+        fldHtml+=this.getNillInput(fld,properties,fldKey);
    }else if (fldType=='date' ){
        fldHtml+=this.getDateInput(fld,properties,fldKey);
    }else if (fldType=='timestamp with time zone' ){
@@ -733,7 +777,8 @@ select2s.each(function(index){
     for(var i=0;i< fld.domain.items.length;i++){
       var item=fld.domain.items[i];
       data.push({
-        id:item.code,text:item.value
+        id:item.code,
+        text:self.field_i18n(fld,'codedValues',item.value)
       })
     }
   }
@@ -1292,7 +1337,7 @@ FeatureAttributesTab.prototype.getTextInput=function(fld,properties,fldKey){
  var name= fld.name;
 
  var value= properties[name];
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias) || name;
  var editable= true;
  var notNull= fld.notNull;
  if(typeof fld.editable !=='undefined' ){
@@ -1328,7 +1373,7 @@ FeatureAttributesTab.prototype.getTextInput=function(fld,properties,fldKey){
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -1358,17 +1403,40 @@ FeatureAttributesTab.prototype.getTextInput=function(fld,properties,fldKey){
      htm+='    />';
    }
    if(fld.hint){
-     htm+='      <small class="text-muted">'+fld.hint+'</small>';
+     htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint) +'</small>';
    }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
 
    return htm;
 }
+FeatureAttributesTab.prototype.getNillInput=function(fld,properties,fldKey){
+  var name= fld.name;
+ 
+  var value= properties[name];
+  var caption= this.field_i18n(fld,'alias',fld.alias) || name;
+  htm='';
+  var validate=false;
+  var useTextArea=false;
+  if(fld.description){
+   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
+   //htm+='  <hr style="margin-bottom: 0;" />';
+   htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
+   htm+='  </div>';
+ }
+  htm+='  <div class="form-group">';
+    htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
+    if(fld.hint){
+      htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint) +'</small>';
+    }
+    htm+='  </div>';
+ 
+    return htm;
+ }
 FeatureAttributesTab.prototype.getDateTimeInput=function(fld,properties,fldKey){
  var name= fld.name;
  var value= properties[name];
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias)  || name;
  var editable= true;
  var notNull= fld.notNull;
  if(typeof fld.editable !=='undefined' ){
@@ -1400,7 +1468,7 @@ FeatureAttributesTab.prototype.getDateTimeInput=function(fld,properties,fldKey){
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -1417,7 +1485,7 @@ FeatureAttributesTab.prototype.getDateTimeInput=function(fld,properties,fldKey){
    }
    htm+='    />';
    if(fld.hint){
-     htm+='      <small class="text-muted">'+fld.hint+'</small>';
+     htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint)+'</small>';
    }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
@@ -1427,7 +1495,7 @@ FeatureAttributesTab.prototype.getDateTimeInput=function(fld,properties,fldKey){
 FeatureAttributesTab.prototype.getDateInput=function(fld,properties,fldKey){
  var name= fld.name;
  var value= properties[name];
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias) || name;
  var editable= true;
  var notNull= fld.notNull;
  if(typeof fld.editable !=='undefined' ){
@@ -1459,7 +1527,7 @@ FeatureAttributesTab.prototype.getDateInput=function(fld,properties,fldKey){
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -1476,7 +1544,7 @@ FeatureAttributesTab.prototype.getDateInput=function(fld,properties,fldKey){
    }
    htm+='    />';
    if(fld.hint){
-     htm+='      <small class="text-muted">'+fld.hint+'</small>';
+     htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint)+'</small>';
    }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
@@ -1488,7 +1556,7 @@ FeatureAttributesTab.prototype.getIntegerInput=function(fld,properties,fldKey){
  var name= fld.name;
  var fldType=fld.type.toLowerCase();
  var value= properties[name];
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias)  || name;
  var editable= true;
  var notNull= fld.notNull;
  if(typeof fld.editable !=='undefined' ){
@@ -1520,7 +1588,7 @@ FeatureAttributesTab.prototype.getIntegerInput=function(fld,properties,fldKey){
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -1587,7 +1655,7 @@ FeatureAttributesTab.prototype.getIntegerInput=function(fld,properties,fldKey){
    }
    htm+='    />';
    if(fld.hint){
-     htm+='      <small class="text-muted">'+fld.hint+'</small>';
+     htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint)+'</small>';
    }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
@@ -1599,7 +1667,7 @@ FeatureAttributesTab.prototype.getNumberInput=function(fld,properties,fldKey){
  var name= fld.name;
  var fldType=fld.type.toLowerCase();
  var value= properties[name];
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias)  || name;
  var editable= true;
  var notNull= fld.notNull;
  if(typeof fld.editable !=='undefined' ){
@@ -1632,7 +1700,7 @@ FeatureAttributesTab.prototype.getNumberInput=function(fld,properties,fldKey){
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -1689,7 +1757,7 @@ FeatureAttributesTab.prototype.getNumberInput=function(fld,properties,fldKey){
    }
    htm+='    />';
    if(fld.hint){
-     htm+='      <small class="text-muted">'+fld.hint+'</small>';
+     htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint)+'</small>';
    }
    htm+='    <span class="field-validation-valid" data-valmsg-for="'+fldKey+'" data-valmsg-replace="true"></span>';
    htm+='  </div>';
@@ -1700,7 +1768,7 @@ FeatureAttributesTab.prototype.getBoolInput=function(fld,properties,fldKey){
  var name= fld.name;
  var fldType=fld.type.toLowerCase();
  var value= properties[name];
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias)  || name;
  var editable= true;
  var notNull= fld.notNull;
  if(typeof fld.editable !=='undefined' ){
@@ -1741,7 +1809,7 @@ FeatureAttributesTab.prototype.getBoolInput=function(fld,properties,fldKey){
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -1767,7 +1835,7 @@ FeatureAttributesTab.prototype.getBoolInput=function(fld,properties,fldKey){
      htm+='    </select>';
  } 
  if(fld.hint){
-   htm+='      <small class="text-muted">'+fld.hint+'</small>';
+   htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint)+'</small>';
  }
    htm+='  </div>';
 
@@ -1784,7 +1852,7 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,initData,fl
    value=initData[name];
    attribute_value_changed='attribute-value-changed';
  }
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias)  || name;
  var editable= true;
  var notNull= fld.notNull;
  if(typeof fld.editable !=='undefined' ){
@@ -1830,7 +1898,7 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,initData,fl
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -1840,7 +1908,7 @@ FeatureAttributesTab.prototype.getFilesInput=function(fld,properties,initData,fl
  htm+='  <div class="form-group" id="'+fldKey+'-panel">';
  htm+= self.getFileListContent(fileInfos,fldKey);
  if(fld.hint){
-   htm+='      <small class="text-muted">'+fld.hint+'</small>';
+   htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint)+'</small>';
  }
  htm+='  </div>';
  if(editable){
@@ -1967,7 +2035,7 @@ FeatureAttributesTab.prototype.getDocumentListInput=function(fld,properties,fldK
  var name= fld.name;
  var fldType=fld.type.toLowerCase();
  var value= properties[name];
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias)  || name;
  var editable= true;
  var notNull= fld.notNull;
  if(typeof fld.editable !=='undefined' ){
@@ -2010,7 +2078,7 @@ FeatureAttributesTab.prototype.getDocumentListInput=function(fld,properties,fldK
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -2036,7 +2104,7 @@ FeatureAttributesTab.prototype.getDocumenListContent=function(docIds,fldKey){
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  for(var i=0;docIds && i<docIds.length;i++){
@@ -2090,7 +2158,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
  var name= fld.name;
  var fldType=fld.type.toLowerCase();
  var value= properties[name];
- var caption= fld.alias || name;
+ var caption= this.field_i18n(fld,'alias',fld.alias)  || name;
  var editable= true;
  var notNull= fld.notNull;
 // if( typeof fld.default!=='undefined'){
@@ -2134,7 +2202,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
  if(fld.description){
   htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-  htm+='      <p class="">'+fld.description+'</p>';
+  htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
   htm+='  </div>';
 }
  htm+='  <div class="form-group">';
@@ -2144,7 +2212,9 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
      htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="form-control" >';
      for(var i=0;i< codedValues.length;i++){
        var item=codedValues[i];
-       htm+='    <option value="'+item.code+'" '+ (((value+'')==(item.code+'')) ? 'selected="selected"' : '' ) +' >'+ item.value+'</option>';  
+       var item_value=this.field_i18n(fld,'codedValues',item.value);
+       
+       htm+='    <option value="'+item.code+'" '+ (((value+'')==(item.code+'')) ? 'selected="selected"' : '' ) +' >'+ item_value+'</option>';  
      }
      if(!isRequired){
        //htm+='<option disabled ="disabled" role="separator" />';
@@ -2152,7 +2222,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
      }
      htm+='    </select>';
      if(fld.hint){
-       htm+='      <small class="text-muted">'+fld.hint+'</small>';
+       htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint)+'</small>';
      }
   
    htm+='  </div>';
@@ -2164,7 +2234,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput_select2=function(fld,properti
   var name= fld.name;
   var fldType=fld.type.toLowerCase();
   var value= properties[name];
-  var caption= fld.alias || name;
+  var caption= this.field_i18n(fld,'alias',fld.alias)  || name;
   var editable= true;
   var notNull= fld.notNull;
  // if( typeof fld.default!=='undefined'){
@@ -2215,7 +2285,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput_select2=function(fld,properti
   if(fld.description){
     htm+='  <div class="form-group" style="margin-bottom: 0;"  >';
   //htm+='  <hr style="margin-bottom: 0;" />';
-    htm+='      <p class="">'+fld.description+'</p>';
+    htm+='      <p class="">'+this.field_i18n(fld,'description',fld.description)+'</p>';
     htm+='  </div>';
   }
   htm+='  <div class="form-group">';
@@ -2249,7 +2319,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput_select2=function(fld,properti
             value_str=item.value;
           }
         }
-        htm+='    <option value="'+value+'" selected="selected" >'+ value_str+'</option>';  
+        htm+='    <option value="'+value+'" selected="selected" >'+  this.field_i18n(fld,'codedValues',value_str)+'</option>';  
       }
 
       if(!isRequired){
@@ -2258,7 +2328,7 @@ FeatureAttributesTab.prototype.getCodedValuesInput_select2=function(fld,properti
       }
       htm+='    </select>';
       if(fld.hint){
-        htm+='      <small class="text-muted">'+fld.hint+'</small>';
+        htm+='      <small class="text-muted">'+this.field_i18n(fld,'hint',fld.hint)+'</small>';
       }
    
     htm+='  </div>';

@@ -106,6 +106,9 @@ class PostgresWorkspace {
         if (layerInfo.fields) {
             for (var i = 0; i < layerInfo.fields.length; i++) {
                 layerInfo.fields[i].name = layerInfo.fields[i].name.toLowerCase();
+                if(layerInfo.fields[i].type=='nill'){
+                    continue;
+                }
                 namesArray.push(layerInfo.fields[i].name);
             }
         }
@@ -144,6 +147,10 @@ class PostgresWorkspace {
             var fld = fields[i];
             var fldType= fld.type;
             var fldLength=fld.length;
+            if(fldType=='nill'){
+                delete fld._action;
+                continue;
+            }
             if(fldType=='_filelink' || fldType=='_documentslink'){
                 fldType= 'varchar';
             }
@@ -292,6 +299,9 @@ class PostgresWorkspace {
         if (layerInfo.fields) {
             for (var i = 0; i < layerInfo.fields.length; i++) {
                 layerInfo.fields[i].name = layerInfo.fields[i].name.toLowerCase();
+                if(layerInfo.fields[i].type=='nill'){
+                    continue;
+                }
                 namesArray.push(layerInfo.fields[i].name);
             }
         }
@@ -342,6 +352,10 @@ class PostgresWorkspace {
             var fld = fields[i];
             var fieldExpression = '';
             var renameExpression = '';
+            if(fld.type=='nill'){
+                delete fld._action;
+                continue;
+            }
             if (!fld._action) {
                 _fields.push(fld);
                 continue;
@@ -538,6 +552,9 @@ class PostgresWorkspace {
         if (layerInfo.fields) {
             for (var i = 0; i < layerInfo.fields.length; i++) {
                 layerInfo.fields[i].name = layerInfo.fields[i].name.toLowerCase();
+                if(layerInfo.fields[i].type=='nill'){
+                    continue;
+                }
                 if(!layerInfo.fields[i].isExpression){
                     fieldNames.push(layerInfo.fields[i].name);
                     fieldNames_safe.push('"' + layerInfo.fields[i].name + '"');
@@ -581,6 +598,9 @@ class PostgresWorkspace {
                     for (var i = 0; i < fields.length; i++) {
                         var fld = fields[i];
                         var fldName = fld.name;
+                        if (fld.type === 'nill'){
+                            continue;
+                        }
                         var fValue = f.value.properties[fldName];
                         if (typeof fValue === 'undefined') {
                             fValue = fld.default;
@@ -754,6 +774,9 @@ class PostgresWorkspace {
             for (var i = 0; i < layerInfo.fields.length; i++) {
                 
                layerInfo.fields[i].name = layerInfo.fields[i].name.toLowerCase();
+               if (layerInfo.fields[i].type === 'nill'){
+                continue;
+             }
                if(!layerInfo.fields[i].isExpression){                    
                     fieldNames.push(layerInfo.fields[i].name);
                     fieldNames_safe.push('"' + layerInfo.fields[i].name + '"');
@@ -805,6 +828,9 @@ class PostgresWorkspace {
                     for (var i = 0; i < fields.length; i++) {
                         var fld = fields[i];
                         var fldName = fld.name;
+                        if (fld.type === 'nill'){
+                            continue;
+                         }
                         if (!(fldName in f.value.properties)) {
                             continue;
                         }
@@ -1017,7 +1043,9 @@ class PostgresWorkspace {
             }
 
             for (var i = 0; i < fields.length; i++) {
-                
+                if (fields[i].type === 'nill'){
+                    continue;
+                 }
                 if(fields[i].isExpression ){
                     if(typeof fields[i].expression==='undefined' || (fields[i].expression +'').trim()===''){
                         fields[i].expression='NULL';
@@ -5366,6 +5394,9 @@ var createVectorResult= await this.createVectorTable(outDetails);
         var fieldNames_safe = [];
         if (fields) {
             for (var i = 0; i < fields.length; i++) {
+                if (fields[i].type === 'nill'){
+                    continue;
+                 }
                 fields[i].name = fields[i].name.toLowerCase();
                 fieldNames.push(fields[i].name);
                 fieldNames_safe.push('"' + fields[i].name + '"');
