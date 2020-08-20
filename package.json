@@ -14,7 +14,7 @@
     "@mapbox/geojson-mapnikify": "^3.0.2-dev",
     "@mapbox/sphericalmercator": "^1.1.0",
     "archiver": "^3.0.0",
-    "bcrypt": "^3.0.4",
+    "bcrypt": "^5.0.0",
     "body-parser": "^1.15.0",
     "child_process": "^1.0.2",
     "comma-separated-values": "^3.6.4",
