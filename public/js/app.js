@@ -67,6 +67,15 @@ var app = {
             return 'vash engine is not loaded';
         }
     },
+    sanitizeHtml:function(html,options){
+        //options:{SAFE_FOR_JQUERY: true}
+       return DOMPurify.sanitize(html,options );
+    },
+    sanitizeHtml_JQuery:function(html,options){
+        options=options||{};
+        options['SAFE_FOR_JQUERY']= true;
+       return DOMPurify.sanitize(html,options );
+    },
     htmlEncode:function(value){
         //return $('<div/>').text(value).html();
         if(!value){

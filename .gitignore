@@ -271,3 +271,4 @@ log/
 log/*
 
 cmd
+node_modules*/

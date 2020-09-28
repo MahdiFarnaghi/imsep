@@ -46,7 +46,6 @@ FeatureAttributesTab.prototype.field_i18n=function(fld,key,defaultValue){
   }
   
   return returnValue;
- 
   
 }
 FeatureAttributesTab.prototype.onshown=function(){
@@ -374,6 +373,7 @@ FeatureAttributesTab.prototype.create=function(obj,isActive){
    
  htm+='</form></div>';
  
+ htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
  
  var content=$(htm).appendTo( this.tab); 
  content.find('[data-toggle="collapse"]').unbind().click(function(e){
@@ -827,12 +827,23 @@ var placeholder=select2Elm.data('placeholder');
 
          var errElm=$form.find('.input-validation-error').first();
          if(errElm){
+          if(errElm.scrollintoview){
+            errElm.scrollintoview({
+              duration: 1000,
+             // direction: "vertical",
+              viewPadding: { y: 80 },
+              complete: function() {
+                  // highlight the element so user's focus gets where it needs to be
+              }
+            });
+          }else{
            var offset=errElm.offset().top;
            var tabOffset= tabHeader.offset().top;
-           self.tab.animate({
-                 scrollTop: offset - tabOffset -60//-160
-               }, 1000);
-       
+            self.tab.animate({
+                  scrollTop: offset - tabOffset -60//-160
+                }, 1000);
+         
+          }
          }
        }else{
          tabHeader.find('a').removeClass('text-danger');
@@ -889,6 +900,9 @@ var placeholder=select2Elm.data('placeholder');
         if(Array.isArray(v)){
           v= v.join(';');
         }
+      }
+      if(v){
+        v=DOMPurify.sanitize(v);
       }
       if(fldType=='varchar' || fldType=='_documentslink'){
         if(v=='Null'){

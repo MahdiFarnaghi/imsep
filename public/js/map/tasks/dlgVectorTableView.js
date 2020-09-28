@@ -26,9 +26,10 @@ DlgVectorTableView.prototype.createUI_0=function(){
   var columns=[];
   for(var i=0;i< fields.length;i++){
     var fld= fields[i];
-    if(fld.type !=='bytea'  && fld.type!=='nill'){
+    if(fld.type !=='bytea' && fld.type!=='nill'){
       var fldName=fld.name;
       var title= fld.alias|| fldName;
+      title= DOMPurify.sanitize(title, {SAFE_FOR_JQUERY: true});
       columns.push({
         title:title,
         name:fldName,
@@ -73,6 +74,7 @@ DlgVectorTableView.prototype.createUI_0=function(){
 
   htm += '</form>';
   htm+='  </div>';
+  htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
   var content=$(htm).appendTo( this.mainPanel); 
   
   var tableEl=content.find('#'+tableId);
@@ -148,9 +150,10 @@ DlgVectorTableView.prototype.createUI_1=function(){
   var columns=[];
   for(var i=0;i< fields.length;i++){
     var fld= fields[i];
-    if(fld.type !=='bytea'  && fld.type!=='nill'){
+    if(fld.type !=='bytea' && fld.type!=='nill'){
       var fldName=fld.name;
       var title= fld.alias|| fldName;
+      title= DOMPurify.sanitize(title, {SAFE_FOR_JQUERY: true});
       columns.push({
         title:title,
         name:fldName,
@@ -179,6 +182,7 @@ DlgVectorTableView.prototype.createUI_1=function(){
 
   htm += '</form>';
   htm+='  </div>';
+  htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
   var content=$(htm).appendTo( this.mainPanel); 
   
   var tableEl=content.find('#'+tableId);
@@ -275,7 +279,11 @@ DlgVectorTableView.prototype.createUI=function(){
         {
           selectedFeaturesCount=selectedFeatures.getLength();
           for (var i = 0, f; f = selectedFeatures.item(i); i++) {
-              selectedDic[f.getId()]=true;
+            var fid=f.getId()
+            if(!fid && f.get('_cacheInfo')){
+              fid=f.get('_cacheInfo').uid;
+            }
+              selectedDic[fid]=true;
           } 
           if(!self.isInitialized){
             self.isInitialized=true;
@@ -283,7 +291,75 @@ DlgVectorTableView.prototype.createUI=function(){
           } 
         }
     }
-   
+    var addNewRow= function(defaultFieldToEdit){
+      if(editable){
+        var feature = new ol.Feature();
+        
+        layerEditTask.addFeatureAttributes(feature,{
+          defaultFieldToEdit:defaultFieldToEdit,
+          onCommit:function(){
+            // if($tr){
+            //   $tr.removeClass('updating-record-faild');
+            //   $tr.addClass('wait-updating-record');
+            // }
+          },
+          onFailed:function(){
+            // if($tr){
+            //   $tr.removeClass('wait-updating-record');
+            //   $tr.addClass('updating-record-faild');
+              
+            // }
+          },
+          onSuccess:function(data){
+            // if($tr){
+            //   $tr.removeClass('updating-record-faild');
+            //   $tr.removeClass('wait-updating-record');
+            // }
+            //var feature=row._row_;
+           // source.clear();
+            //features= source.getFeatures();
+            if(!data){
+              return;
+            }
+            if(!data.id){
+              return;
+            }
+            var index =features.length;
+            if(feature.setId){
+              feature.setId(data.id);
+            }else{
+              feature.id=data.id;
+            }
+            var d={_row_:feature};
+           
+            for(var i=0;i<columns.length;i++){
+              //d[columns[i].field]=feature.get(columns[i].field );
+
+              if(columns[i].codedValues){
+
+                d[columns[i].field]=feature.get(columns[i].field );
+                var key=d[columns[i].field]+'';
+                if(columns[i].codedValues[key]){
+                  d[columns[i].field]=columns[i].codedValues[key];
+                }
+                
+              }else{
+                d[columns[i].field]=feature.get(columns[i].field );
+              }
+
+            }
+            d['_sys_featureid_']=data.id;
+            d['_sys_isSelected_']= false;
+          
+            table.bootstrapTable('insertRow', {
+              index: index,
+              row: d
+            });
+          }
+
+        });
+    }
+  };
     var editRow= function(row,index,defaultFieldToEdit,$tr){
       if(editable){
         layerEditTask.editFeatureAttributes(row._row_,{
@@ -372,7 +448,11 @@ DlgVectorTableView.prototype.createUI=function(){
    //opFormaterStr+='<a class="zoomTo" href="javascript:void(0)" title="Zoom to">';
    //opFormaterStr+= '<i  class="glyphicon glyphicon-zoom-in"></i>';
    //opFormaterStr+= '</a>  ';
-   opFormaterStr+= '<button style="margin: 2px;" type="button" class="zoomTo btn btn-xs btn-primary	" title="Zoomto" ><span class="glyphicon glyphicon-zoom-in"></span></button>';
+
+   if(layerCustom.type!=='table'){
+    opFormaterStr+= '<button style="margin: 2px;" type="button" class="zoomTo btn btn-xs btn-primary	" title="Zoomto" ><span class="glyphicon glyphicon-zoom-in"></span></button>';
+   }
+   
    if(editable){
     //opFormaterStr+='<a class="remove" href="javascript:void(0)" title="Remove">';
     //opFormaterStr+='<i class="fa fa-trash"></i>';
@@ -432,9 +512,10 @@ DlgVectorTableView.prototype.createUI=function(){
   });
   for(var i=0;i< fields.length;i++){
     var fld= fields[i];
-    if(fld.type !=='bytea'  && fld.type!=='nill'){
+    if(fld.type !=='bytea' && fld.type!=='nill'){
       var fldName=fld.name;
       var title= fld.alias|| fldName;
+      title= DOMPurify.sanitize(title, {SAFE_FOR_JQUERY: true});
       var codedValues=undefined;
       if(fld.domain && fld.domain.type=='codedValues' && fld.domain.items){
         codedValues={};
@@ -468,6 +549,9 @@ DlgVectorTableView.prototype.createUI=function(){
       }
     }
     var fid=row.getId()
+    if(!fid && row.get('_cacheInfo')){
+      fid=row.get('_cacheInfo').uid;
+    }
     d['_sys_featureid_']=fid;
     d['_sys_isSelected_']= (selectedDic[fid]?true:false);
     
@@ -481,7 +565,7 @@ DlgVectorTableView.prototype.createUI=function(){
     }
   }
   var tableId= self.id +'-table';
-  var htm='<div class="scrollable-content" ><form id="'+self.id+'_form" class="modal-body form-horizontal">';  
+  var htm='<div class="scrollable-content" ><form id="'+self.id+'_form" class="bootstrap_table_form modal-body form-horizontal">';  
   if(self.forceShowOnlySelection){
     if(self.showSelectedOnly){
       htm+='    <label><input id="showSelectedOnly" checked="checked" disabled="disabled" type="checkbox"> Show only selected rows</label>';
@@ -495,17 +579,31 @@ DlgVectorTableView.prototype.createUI=function(){
       htm+='    <label><input id="showSelectedOnly" type="checkbox"> Show only selected rows</label>';
     }
   }
+  htm+='<div class="form-group" >';
+  htm+='<div class="btn-toolbar">';
+  //htm += ' <button type="button" class="btn btn-xs btn-primary" id="generateReport" ><i class="fa fa-bar-chart"></i> Chart</button>';
+  htm += ' <button type="button" class="btn btn-xs btn-primary" id="downloadCSV" ><i class="fa fa-download"></i> Download CSV</button>';
+  htm+='</div>'; 
+  htm+='</div>'; 
   htm+='  <div class="form-group">';
   htm+='    <table id="'+ tableId+'" class="table table-condensed table-hover table-responsive" data-search="true" data-show-columns="true" data-pagination="false" >';
   htm+='  </table>';
   htm+='  </div>';
 
-  htm+='<div class="form-group">';
-  htm += '<button type="button" class="btn btn-primary" id="downloadCSV" ><i class="fa fa-download"></i> Download CSV file</button>';
-  htm+='</div>'; 
+  // htm+='<div class="form-group">';
+  // htm += '<button type="button" class="btn btn-primary" id="downloadCSV" ><i class="fa fa-download"></i> Download CSV file</button>';
+  // htm+='</div>'; 
 
+  if(editable && layerCustom.type=='table'){
+    htm+='<div class="form-group" >';
+    htm+='<div class="btn-toolbar">';
+    htm += ' <button type="button" class="btn btn-xs btn-primary" id="addNewRecord" ><i class="glyphicon glyphicon-plus"></i> New record</button>';
+    htm+='</div>'; 
+    htm+='</div>'; 
+  }
   htm += '</form>';
   htm+='  </div>';
+  htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
   var content=$(htm).appendTo( this.mainPanel); 
   
  // content.find('#showSelectedOnly').prop("checked",self.showSelectedOnly?false:true);
@@ -520,18 +618,51 @@ DlgVectorTableView.prototype.createUI=function(){
   
   if(!features.length){
     content.find('#downloadCSV').hide();
+    content.find('#generateReport').hide();
    }
+   content.find('#generateReport').click(function(){
+    // var reports= LayerHelper.getReports(self.layer)||[];
+    // var isNew=false;
+    // var report=undefined;
+    // if(!reports.length){
+    //   isNew=true;
+    // }else{
+    //   report=reports[reports.length-1];
+    // }
+    //   var dlg = new DlgReport(self.mapContainer, self.layer, {
+    //     isNew:isNew,
+    //     report:report,
+    //     forceShowOnlySelection:self.showSelectedOnly,
+    //     //title:self.title,
+    //     onapply:function(dlg,data){
+    //       var a=data;
+    //       if(data.report){
+    //         if(data.isNew){
+    //           reports.push(data.report);
+    //         }else{
+    //           report.chart=data.report.chart;
+    //           report.summary=data.report.summary;
+    //         }
+    //       }
+    //       LayerHelper.setReports(self.layer,reports);
+    //     }
+  
+    //   }).show();
+  
+    });
    content.find('#downloadCSV').click(function(){
-    
-
-    
-     var fileName= layer.get('title')|| details.shapefileName || details.tableName ;
+      var fileName= layer.get('title')|| details.shapefileName || details.tableName ;
     var fileContent= self.exportToCsv(columns,features,selectedDic);
   
     var blob = new Blob([fileContent], {type: "text/csv;charset=utf-8"});
     saveAs(blob, fileName +".csv");
 
 });
+
+content.find('#addNewRecord').click(function(){
+  addNewRow(undefined);
+});
+
   var tableEl=content.find('#'+tableId);
    table=tableEl.bootstrapTable({
     //showToggle:true,
@@ -728,7 +859,9 @@ DlgVectorTableView.prototype.exportToCsv=function(columns, rows,selectedDic) {
   for (var i = 0; i < rows.length; i++) {
     var row= rows[i];
     var fid=row.getId()
-    
+    if(!fid && row.get('_cacheInfo')){
+      fid=row.get('_cacheInfo').uid;
+    }
     var isSelected=(selectedDic[fid]?true:false);;
     if(this.showSelectedOnly){
       if(isSelected){

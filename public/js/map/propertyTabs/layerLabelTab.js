@@ -204,7 +204,7 @@ function LayerLabelTab() {
     htm+='  </div>';
 
     htm+='</form></div>';
-    
+    htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
     var content=$(htm).appendTo( this.tab); 
     
     function refreshLayer(){

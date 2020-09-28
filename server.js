@@ -832,13 +832,14 @@ app.set('port', process.env.PORT || 3000);
             //,passphrase: 'YOUR PASSPHRASE HERE'
         }, app)
         .listen(app.get('port'), function() {
-            console.log('\x1b[42m\x1b[42m%s\x1b[32m', 'iMSEP is running on local port:' + server.address().port+'(https)');  
-            console.log('');
+            //console.log('\x1b[42m\x1b[42m%s\x1b[32m', '*** iMSEP is running on local port:' + server.address().port+'(https)');  
+            //console.log('\x1b[0m','sss');
+            console.log('* iMSEP is running on local port:' + server.address().port+'(https)');  
         });
     }else{
       server = app.listen(app.get('port'), function () {
-      console.log('\x1b[42m\x1b[42m%s\x1b[32m', 'iMSEP is running on local port:' + server.address().port);  
-      console.log('');
+      console.log( '* iMSEP is running on local port:' + server.address().port);  
+      
     });
     }
 

@@ -78,7 +78,8 @@
     @html.include('_footer', model)
     <script src="/js/lib/jquery.min.js"></script>
     <script src="/js/lib/jquery-ui-1.12.1/jquery-ui.min.js"></script>
-
+    <script src="/js/lib/DOMPurify/purify.min.js"></script>
+    
     <script src="/js/lib/bootstrap.min.js"></script>
     <script src="/bootstrap3-dialog/js/bootstrap-dialog.min.js"></script>
     <script src="/bootstrap-colorpicker/js/bootstrap-colorpicker.min.js"></script>

@@ -260,7 +260,7 @@ this.tab=$('<div class="tab-pane '+ active +'" id="' +self.tabId+'"></div>').app
    htm+='    <div class="col-sm-3"><input class="form-control" type="number" min="' + rasterMinimum+ '" max="'+ rasterMaximum+'" value="' + maximum+'" name="maximum" style="direction:ltr; " id="maximum"  /></div>'
    htm+='  </div>';
 
-
+   htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
    content.find('#colormap_settings').html(htm);
    content.find('#colorMapBand').unbind('change').change(function(){
      self.display.band=  $(this).val();

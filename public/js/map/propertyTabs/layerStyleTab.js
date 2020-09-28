@@ -336,7 +336,7 @@ LayerStyleTab.prototype.populateUniqueValueRenderer=function(){
  }
  htm+=' </tbody>';
  htm+=' </table>';
-
+ htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
  this.rendererContent.html(htm);
  var defaultSym=StyleFactory.renderStyleSample(this.renderer.getDefaultStyle(),{width:80,height:40,type:shapeType || 'Polygon'});
  this.rendererContent.find('#renderer_defaultStyle').append(defaultSym);
@@ -553,7 +553,7 @@ LayerStyleTab.prototype.populateRangeRenderer=function(){
  }
  htm+=' </tbody>';
  htm+=' </table>';
-
+ htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
  this.rendererContent.html(htm);
  
  var defaultSym=StyleFactory.renderStyleSample(this.renderer.getDefaultStyle(),{width:80,height:40,type:shapeType || 'Polygon'});

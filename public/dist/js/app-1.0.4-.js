@@ -346,6 +346,30 @@ $(function () {
 			options.messages['lessthanorequal'] = options.message;
 		}
 	});
+// used in edit_metadata.vash
+$.validator.addMethod('dateafterorequal', function (value, element, params) {
+	if(value==="")
+		return true;
+	try{
+		value=value+'';
+	}catch(e){}
+	var other = params.other;
+	var otherValue=value;
+	var $element = $(element);
+	var otherElem = $element.closest('form').find('[name=' + other + ']');
+	try{
+		otherValue=(otherElem.val()+'');
+	}catch(ex){}
+	
+	return value >= otherValue;
+}, '');
+
+$.validator.unobtrusive.adapters.add('dateafterorequal', ['other'], function (options) {
+	options.rules['dateafterorequal'] = options.params;
+	if (options.message) {
+		options.messages['dateafterorequal'] = options.message;
+	}
+});
 
     $.validator.addMethod('filesize', function (value, element, params) {
         var maxSize = params.maxsize;
@@ -699,7 +723,8 @@ var app = {
     version: '1.0.0',
     identity: undefined,
     pageData:{},
-
+    eventHandlers:[],
+    snapInteractions:[],
     // init map extent settings are filled in layout.vash from env settings
     initMap_Lon:37.41,
     initMap_Lat:9,
@@ -748,6 +773,26 @@ var app = {
          this.routeServiceTokens= v.split(',');   
         }
     },
+    render:function(template,model){
+        if (!model){
+            model=this;
+        }
+        if(typeof vash !=='undefined'){
+            var tpl = vash.compile( template );
+            return tpl(model);
+        }else{
+            return 'vash engine is not loaded';
+        }
+    },
+    sanitizeHtml:function(html,options){
+        //options:{SAFE_FOR_JQUERY: true}
+       return DOMPurify.sanitize(html,options );
+    },
+    sanitizeHtml_JQuery:function(html,options){
+        options=options||{};
+        options['SAFE_FOR_JQUERY']= true;
+       return DOMPurify.sanitize(html,options );
+    },
     htmlEncode:function(value){
         //return $('<div/>').text(value).html();
         if(!value){
@@ -780,6 +825,93 @@ var app = {
             isMobile_ = true;
         }
         return isMobile_
+    },
+    registerEventhandler:function (type,handler) {
+        var handlers= this.eventHandlers[type];
+        if(!handlers){
+            handlers=[];
+            this.eventHandlers[type] =handlers;
+        }
+        handlers.push(handler);
+    },
+    unRegisterEventhandler:function (type,handler) {
+        var handlers= this.eventHandlers[type];
+        if(!handlers){
+            handlers=[];
+            this.eventHandlers[type] =handlers;
+        }
+        var index= handlers.findIndex(function (handler_) {
+            if(handler && (handler== handler_)){
+                return true;
+            }
+            return false;
+        });
+        if(index>-1){
+            handlers.splice(index,1);
+        }
+    },
+    dispatchEvent: function (type,eventArgs) {
+        var handlers= this.eventHandlers[type];
+        if(!handlers){
+            handlers=[];
+            this.eventHandlers[type] =handlers;
+        } 
+        var ii=handlers.length;
+        for (var i = 0; i < ii; i++) {
+
+            if (handlers[i] && (handlers[i].call(this, eventArgs) === false || (eventArgs && eventArgs.propagationStopped))) {
+              break;
+            }
+          } 
+          
+    },
+    registerSnapInteraction:function(interaction){
+        this.snapInteractions.push(interaction);
+
+    },
+    addSnapInteractions:function(map){
+        if(!map){
+            return;
+        }
+        for(var i=0;i<this.snapInteractions.length;i++){
+            map.removeInteraction(this.snapInteractions[i]);
+            if(this.snapInteractions[i].getActive()){
+                map.addInteraction(this.snapInteractions[i]);
+            }
+        }
+    },
+    removeSnapInteractions:function(map){
+        if(!map){
+            return;
+        }
+        for(var i=0;i<this.snapInteractions.length;i++){
+            map.removeInteraction(this.snapInteractions[i]);
+        }
+    },
+    url_needs_proxy:function(url){
+        var result=false;
+        if(!url){
+            return result;
+        }
+        url=(url +'').toLowerCase();
+        if(url.indexOf('/')==0){
+            return result;
+        }
+        var pageUrl = window.location.href;
+        var arr = pageUrl.split("/");
+        var pageBase =arr[0] + "//" + arr[2];
+        pageBase=pageBase.toLowerCase();
+        
+        if(url.indexOf(pageBase)==0){
+            result=false;
+        }else{
+            result=true;
+        }
+        return result;
+
+    },
+    get_proxy_url:function(url){
+        return '/proxy/?url='+ encodeURIComponent(url);
     }
 
 };

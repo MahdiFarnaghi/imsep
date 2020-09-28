@@ -215,6 +215,7 @@ DlgVectorSearch.prototype.createAttributesPanelUI=function(isActive){
 
   htm += '</form>';
   htm+='  </div>';
+  htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
   var content=$(htm).appendTo( this.tabAttrbutes); 
   
   var fieldNameEl=content.find('#fieldName');

@@ -347,7 +347,7 @@ IdentifyTask.prototype._getHtml=function(feature){
         html += '</div>';
 
         
-
+        html= DOMPurify.sanitize(html, {SAFE_FOR_JQUERY: true});
        
         
         //popup.show(labelPoint, content); 

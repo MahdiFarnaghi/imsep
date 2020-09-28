@@ -318,11 +318,11 @@ var pageTask={
       } 
       var fieldTypeCaption=this.fieldTypeCaptions[fld.type.toLowerCase()];         
       html+=' <tr class="'+rowClass +'" >';
-      html+=' <td>'+fld.name+ '</td>';    
-      html+=' <td class="hidden-xs hidden-sm" >'+(fld.alias?fld.alias:'')+ '</td>';    
+      html+=' <td>'+DOMPurify.sanitize(fld.name, {SAFE_FOR_JQUERY: true}) + '</td>';    
+      html+=' <td class="hidden-xs hidden-sm" >'+  DOMPurify.sanitize((fld.alias?fld.alias:''), {SAFE_FOR_JQUERY: true}) + '</td>';    
       html+=' <td class="hidden-xs hidden-sm">'+fieldTypeCaption +'</td>';    
-      html+=' <td class="hidden-xs ">'+((typeof fld.length!=='undefined')?fld.length:'')+'</td>';    
-      html+=' <td class="hidden-xs ">'+((typeof fld.default!=='undefined')?fld.default:'')+ '</td>';    
+      html+=' <td class="hidden-xs ">'+ DOMPurify.sanitize(((typeof fld.length!=='undefined')?fld.length:''), {SAFE_FOR_JQUERY: true}) +'</td>';    
+      html+=' <td class="hidden-xs ">'+ DOMPurify.sanitize(((typeof fld.default!=='undefined')?fld.default:''), {SAFE_FOR_JQUERY: true}) + '</td>';    
       html+=' <td>';
       if(!fld._action.delete){
         html+='<button type="button" class="btn btn-xs btn-info	" onclick="javascript:pageTask.editField('+i+');"><span class="glyphicon glyphicon-edit"></span> Edit</button>'; 

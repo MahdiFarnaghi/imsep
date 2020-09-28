@@ -64,6 +64,7 @@ DlgDissolve.prototype.createUI=function(){
 
   htm += '</form>';
   htm+='  </div>';
+  htm= DOMPurify.sanitize(htm, {SAFE_FOR_JQUERY: true});
   var content=$(htm).appendTo( this.mainPanel); 
   
 

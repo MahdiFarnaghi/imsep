@@ -2,7 +2,7 @@
 ## Visual Studio Code installing
 1. Install Node.js v8.15.0 (tested)
 2. Install Visual Studio Code
-3. Install follwing extensions
+3. Install following extensions
     * Debugger for Chrome
     * Vash syntax
     * vscode-icons (Optional)
