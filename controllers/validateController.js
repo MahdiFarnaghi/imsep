@@ -76,10 +76,15 @@ module.exports = function () {
      */
     module.validateUserEmailGet = async function (req, res) {
         var userId = req.params.id;
+        req.sanitize('email').normalizeEmail({
+            remove_dots: false,
+            gmail_remove_dots:false
+        });
         var email = req.query.email;
         try {
             userId = parseInt(userId);
         } catch (ex) { }
+
         var user;
         if (email) {
             email = email.toLowerCase();

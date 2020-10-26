@@ -293,7 +293,7 @@ RouteTasks.prototype.moveLayerToTop = function () {
     this.map.getLayers().remove(this.layer);
     this.map.getLayers().push(this.layer);
 }
-RouteTasks.prototype.findRoute = function () {
+RouteTasks.prototype.findRoute0 = function () {
     var self=this;
     if(this.routeStopPoints.length<2)
     {
@@ -318,6 +318,96 @@ RouteTasks.prototype.findRoute = function () {
             $.ajax(url, {
                 type: 'GET',
                 dataType: 'json',
+                success: function (data) {
+                    if (data) {
+                        var geojson=data;
+                        var featureProjection='EPSG:3857';
+                        var format = new ol.format.GeoJSON({ featureProjection:featureProjection,  dataProjection:'EPSG:4326'        });
+                        var features;
+                        try{
+                         features= format.readFeatures(geojson);
+                        }catch(ex){
+                            try{
+                             var geojsonObj=JSON.parse(geojson);
+                             features= format.readFeatures(geojsonObj);
+                            }catch(ex2){
+             
+                            }
+                        }
+                        if(features){
+                            for(var j=0;j<features.length;j++){
+                                features[j].set('isRoute',true) ;
+                                self.createRouteTooltip(features[j]);
+                                self.showRouteResult(features[j]);
+                            }
+                            self.source.addFeatures(features);
+                        }
+                    }
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    var msg= errorThrown || textStatus;
+                    if(xhr.responseJSON){
+                        if(xhr.responseJSON.error && xhr.responseJSON.error.message){
+                            msg= xhr.responseJSON.error.message;
+                        }
+                    }
+                    var a = 1;
+                    $.notify({
+                        message: "Failed to find route, "+ msg
+                    },{
+                        type:'danger',
+                        delay:2000,
+                        animate: {
+                            enter: 'animated fadeInDown',
+                            exit: 'animated fadeOutUp'
+                        }
+                    });
+               
+                  // source.refresh();
+                }
+            }).done(function() {
+               
+               // source.refresh();
+            });
+}
+// V2
+RouteTasks.prototype.findRoute = function () {
+    var self=this;
+    if(this.routeStopPoints.length<2)
+    {
+        return;
+    }
+    var coordinateList=[];
+    for(var i=0;i<this.routeStopPoints.length;i++){
+        coordinateList.push(
+            this.routeStopPoints[i].join(',')
+        );
+    }
+    var coordinates= coordinateList.join('|');
+    
+    var api_key = app.routeServiceTokens[Math.floor(Math.random()*app.routeServiceTokens.length)];
+    var url='https://api.openrouteservice.org/v2/directions/'+self.routeProfile +'/geojson';
+    
+    
+    
+var data={coordinates :this.routeStopPoints};
+    
+            $.ajax(url, {
+                type: 'POST',
+                dataType: 'json',
+                contentType: 'application/json; charset=utf-8',
+                data:JSON.stringify(data),
+                headers: {
+                    'Authorization': api_key
+                },
+                // beforeSend: function (xhr) {
+                //     if(api_key){   
+                //         xhr.setRequestHeader('Authorization', api_key);
+                //        // xhr.setRequestHeader('Accept', 'application/json, application/geo+json, application/gpx+xml, img/png; charset=utf-8');
+                //       //  xhr.setRequestHeader('Content-Type', 'application/json');
+                //        }
+                // },
+
                 success: function (data) {
                     if (data) {
                         var geojson=data;

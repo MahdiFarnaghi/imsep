@@ -437,7 +437,11 @@ module.exports = function (passportConfig) {
        // req.assert("password", "Password should be combination of one uppercase , one lower case, one special char, one digit and min 8 , max 20 char long").matches(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])[0-9a-zA-Z]{8,}$/, "i");
 
         req.assert('confirm', 'Passwords must match').equals(req.body.password);
-        req.sanitize('email').normalizeEmail({ remove_dots: false });
+        //req.sanitize('email').normalizeEmail({ remove_dots: false });
+        req.sanitize('email').normalizeEmail({
+            remove_dots: false,
+            gmail_remove_dots:false
+        });
         req.assert('captcha', 'Captcha check failed').equals(req.session.captcha);
 
         req.sanitizeBody('userName').trim();
@@ -568,7 +572,11 @@ module.exports = function (passportConfig) {
         } else {
             req.assert('email', 'Email is not valid').isEmail();
             req.assert('email', 'Email cannot be blank').notEmpty();
-            req.sanitize('email').normalizeEmail({ remove_dots: false });
+            //req.sanitize('email').normalizeEmail({ remove_dots: false });
+            req.sanitize('email').normalizeEmail({
+                remove_dots: false,
+                gmail_remove_dots:false
+            });
         }
         
         req.sanitizeBody('firstName').escape();
@@ -629,6 +637,7 @@ module.exports = function (passportConfig) {
             res.render('account/profile', {
                 title: 'My Account',
                 user: {
+                    'userName':req.user.userName,
                     'email': req.body.email,
                     'firstName': req.body.firstName,
                     'lastName': req.body.lastName,
@@ -856,7 +865,11 @@ module.exports = function (passportConfig) {
     module.forgotPost = async function (req, res, next) {
         req.assert('email', 'Email is not valid').isEmail();
         req.assert('email', 'Email cannot be blank').notEmpty();
-        req.sanitize('email').normalizeEmail({ remove_dots: false });
+        //req.sanitize('email').normalizeEmail({ remove_dots: false });
+        req.sanitize('email').normalizeEmail({
+            remove_dots: false,
+            gmail_remove_dots:false
+        });
         req.assert('captcha', 'Captcha check failed').equals(req.session.captcha);
 
         var errors = req.validationErrors();

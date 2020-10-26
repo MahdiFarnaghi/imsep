@@ -109,7 +109,8 @@ module.exports = function () {
         req.assert('email', 'Email is not valid').isEmail();
         req.assert('email', 'Email cannot be blank').notEmpty();
         req.sanitize('email').normalizeEmail({
-            remove_dots: false
+            remove_dots: false,
+            gmail_remove_dots:false
         });
         req.sanitizeBody('userName').escape();
         req.sanitizeBody('firstName').escape();
@@ -122,6 +123,7 @@ module.exports = function () {
         var errors = req.validationErrors();
         //prepare body fields
         req.body.status = ('status' in req.body) ? 'active' : 'inactive';
+     //   req.body.emailVerified=('emailVerified' in req.body) ? true:false;
         req.body.isAdministrator = ('isAdministrator' in req.body) ? true : false;
         req.body.isPowerUser = ('isPowerUser' in req.body) ? true : false;
         req.body.isDataManager = ('isDataManager' in req.body) ? true : false;
