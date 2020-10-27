@@ -75,11 +75,17 @@ exports.contactPost = function(req, res) {
 
     transporter.sendMail(mailOptions, function (err) {
       // in case of "Error: self signed certificate in certificate chain", disable antivirus
+      if (err) {
+        //console.log(error);
+        req.flash('error', {
+          msg: 'Failed to register the message.'
+        });
+      }else{
       req.flash('notify', {
         type:'success',
         notify:true,
         delay:3000, msg: 'Thank you! Your feedback has been submitted.' });
-        var a = 12;
+      }
 
       //  console.log('a ='+a);
     res.redirect('/contact');
