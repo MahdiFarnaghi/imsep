@@ -808,6 +808,8 @@ EditFieldDlg.prototype.initFrom=function(){
   $content.find('#scale').val(typeof me.field.scale==='undefined'?'':me.field.scale);
   //$content.find('#default').val(typeof me.field.default==='undefined'?'':me.field.default);
   $content.find('#default').val(me.field.default);
+
+  $content.find('#notNull').prop('checked',me.field.notNull?true:false);
   
  var srid;
  if(me.parent_details && me.parent_details.spatialReference) {
@@ -1060,7 +1062,9 @@ EditFieldDlg.prototype.apply=function(){
   if($form.find('#hidden').length){
     editField.hidden=$form.find('#hidden').prop('checked');   
   }
-
+  if($form.find('#notNull').length){
+    editField.notNull=$form.find('#notNull').prop('checked');   
+  }
   if($form.find('#_filelink_defaultMimeType').length){
     editField.defaultMimeType=$form.find('#defaultMimeType').val();   
   }

@@ -163,7 +163,7 @@ class PostgresWorkspace {
                 }
             }
             if (fld.notNull) {
-                fieldsExpression += ' NOT NULL ';
+                //fieldsExpression += ' NOT NULL ';
             }
             if (typeof fld.default != 'undefined') {
                 if (fldType == 'varchar' || fldType == 'timestamp with time zone' || fldType== 'date') {
@@ -377,7 +377,7 @@ class PostgresWorkspace {
                         }
                     }
                     if (fld.notNull) {
-                        fieldExpression += ' NOT NULL ';
+                       // fieldExpression += ' NOT NULL ';
                     }
                     if (typeof fld.default != 'undefined') {
                         if (fldType == 'varchar' || fldType == 'timestamp with time zone' || fldType == 'date') {
@@ -416,7 +416,7 @@ class PostgresWorkspace {
                     }
                     if (origFld.default !== fld.default) {
                         if (fieldExpression) {
-                            fieldExpression += ',';
+                            fieldExpression += ';';
                         }
 
                         if (typeof fld.default != 'undefined') {
@@ -431,10 +431,10 @@ class PostgresWorkspace {
                     }
                     if (origFld.notNull !== fld.notNull) {
                         if (fieldExpression) {
-                            fieldExpression += ',';
+                            fieldExpression += ';';
                         }
                         if (fld.notNull) {
-                            fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET NOT NULL ';
+                         //   fieldExpression += 'ALTER COLUMN "' + origFld.name + '" SET NOT NULL ';
                         } else {
                             fieldExpression += 'ALTER COLUMN "' + origFld.name + '" DROP NOT NULL ';
                         }
@@ -1792,7 +1792,7 @@ class PostgresWorkspace {
                     }
                 }
                 if (fld.notNull) {
-                    fieldsExpression += ' NOT NULL ';
+                  //  fieldsExpression += ' NOT NULL ';
                 }
                 if (typeof fld.default != 'undefined') {
                     if (fld.type == 'varchar' || fld.type == 'timestamp with time zone' || fld.type == 'date') {
