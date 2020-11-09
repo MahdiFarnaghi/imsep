@@ -806,6 +806,13 @@ var placeholder=select2Elm.data('placeholder');
 });
 });
 
+
+// var orIgnore= $.validator.defaults.ignore;
+// $.validator.setDefaults({ ignore:'' });
+// $.validator.unobtrusive.parse($form);
+// $.validator.setDefaults({ ignore:orIgnore });
+// $form.validate();
+
  this.parentDialog.beforeApplyHandlers.push(function(evt){
        //self.layer.set('title',content.find('#name').val());
        //$.validator.setDefaults({ ignore:':hidden' });
@@ -1397,6 +1404,9 @@ FeatureAttributesTab.prototype.getTextInput=function(fld,properties,fldKey){
    }else{
        htm+='    <input type="text" data-field-name="'+fld.name+'" '+ autofocus +' name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
    }
+   if(!editable){
+    htm+=' readonly ';
+   }
    if(isRequired){
      validate=true;
      htm+=' data-val-required="'+caption +' is required"';
@@ -1408,7 +1418,7 @@ FeatureAttributesTab.prototype.getTextInput=function(fld,properties,fldKey){
 
    
 
-   if(validate){
+   if(validate && editable){
      htm+=' data-val="true"';
    }
    if(useTextArea){
@@ -1488,13 +1498,15 @@ FeatureAttributesTab.prototype.getDateTimeInput=function(fld,properties,fldKey){
  htm+='  <div class="form-group">';
    htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
    htm+='    <input type="text" data-field-name="'+fld.name+'" '+ autofocus+' name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
-   
+   if(!editable){
+    htm+=' readonly ';
+   }
    if(isRequired){
      validate=true;
      htm+=' data-val-required="'+caption +' is required"';
    }
   
-   if(validate){
+   if(validate && editable){
      htm+=' data-val="true"';
    }
    htm+='    />';
@@ -1547,13 +1559,15 @@ FeatureAttributesTab.prototype.getDateInput=function(fld,properties,fldKey){
  htm+='  <div class="form-group">';
    htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
    htm+='    <input type="date" data-field-name="'+fld.name+'" '+ autofocus+'  name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
-   
+   if(!editable){
+    htm+=' readonly ';
+   }
    if(isRequired){
      validate=true;
      htm+=' data-val-required="'+caption +' is required"';
    }
    
-   if(validate){
+   if(validate && editable){
      htm+=' data-val="true"';
    }
    htm+='    />';
@@ -1612,7 +1626,9 @@ FeatureAttributesTab.prototype.getIntegerInput=function(fld,properties,fldKey){
    }else{
     htm+='    <input type="number"  data-field-name="'+fld.name+'" '+ autofocus+' name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
    }
-   
+   if(!editable){
+    htm+=' readonly ';
+   }
    validate=true;
    htm+=' data-val-integer="Input an integer" ';
    if(isRequired){
@@ -1621,50 +1637,60 @@ FeatureAttributesTab.prototype.getIntegerInput=function(fld,properties,fldKey){
    }
    var rangeValueHtml='';
    if(fldType=='smallint'){
-     validate=true;
-     rangeValueHtml+=' data-val-range="Input a number  from -32768 to +32767" data-val-range-min="-32768" data-val-range-max="32767" ';
-   }else if(fldType=='integer'){
-     validate=true;
-     rangeValueHtml+=' data-val-range="Input a number  from -2147483648 to +2147483647" data-val-range-min="-2147483648" data-val-range-max="2147483647" ';
-   }else if(fldType=='bigint'){
-     validate=true;
-     rangeValueHtml+=' data-val-range="Input a number  from -9223372036854775808 to +9223372036854775807" data-val-range-min="-9223372036854775808" data-val-range-max="9223372036854775807" ';
-   }
+    validate=true;
+    rangeValueHtml+=' data-val-range="Input a number  from -32768 to +32767" data-val-range-min="-32768" data-val-range-max="32767" ';
+    rangeValueHtml+=' min="-32768" max="32767" ';
+  }else if(fldType=='integer'){
+    validate=true;
+    rangeValueHtml+=' data-val-range="Input a number  from -2147483648 to +2147483647" data-val-range-min="-2147483648" data-val-range-max="2147483647" ';
+    rangeValueHtml+=' min="-2147483648" max="2147483647" ';
+  }else if(fldType=='bigint'){
+    validate=true;
+    rangeValueHtml+=' data-val-range="Input a number  from -9223372036854775808 to +9223372036854775807" data-val-range-min="-9223372036854775808" data-val-range-max="9223372036854775807" ';
+    rangeValueHtml+=' min="-9223372036854775808" max="9223372036854775807" ';
+  }
 
-   if(fld.domain && fld.domain.type=='range'){
-     var error_msg='';
-     var val_htm='';
-     if(typeof fld.domain.minValue !=='undefined' && fld.domain.minValue!=='undefined' && fld.domain.minValue!==''){
-       val_htm=' data-val-range-min="' +fld.domain.minValue+'"  ';
-       val_htm+=' data-val-range-max="9223372036854775807"  ';
-       error_msg=' data-val-range="Value must be >= '+ fld.domain.minValue+'"';
-       validate=true;
-     }
-     if(typeof fld.domain.maxValue !=='undefined' && fld.domain.maxValue!=='undefined'  && fld.domain.maxValue!==''){
-       val_htm=' data-val-range-min="-9223372036854775808"  ';
-       val_htm+=' data-val-range-max="' +fld.domain.maxValue+'"  ';
-       error_msg=' data-val-range="Value must be <= '+ fld.domain.maxValue+'"';
-       validate=true;
-     }
-     if((typeof fld.domain.minValue !=='undefined' && fld.domain.minValue!=='undefined' && fld.domain.minValue!=='')
-       && (typeof fld.domain.maxValue !=='undefined' && fld.domain.maxValue!=='undefined' && fld.domain.maxValue!=='')
-       )
-     {
-       val_htm=' data-val-range-min="' +fld.domain.minValue+'"  ';
-       val_htm+=' data-val-range-max="' +fld.domain.maxValue+'"  ';
-       error_msg=' data-val-range="Value must be between '+  fld.domain.minValue + ' and '+ fld.domain.maxValue +'"';
-       validate=true;
-     }
-     if(error_msg){
-       htm+=val_htm;
-       htm+= error_msg ;
-       rangeValueHtml='';
-     }
-   }
+  if(fld.domain && fld.domain.type=='range'){
+    var error_msg='';
+    var val_htm='';
+    if(typeof fld.domain.minValue !=='undefined' && fld.domain.minValue!=='undefined' && fld.domain.minValue!==''){
+      val_htm=' min="' +fld.domain.minValue+'"  ';
+      val_htm+=' max="9223372036854775807"  ';
+      val_htm+=' data-val-range-min="' +fld.domain.minValue+'"  ';
+      val_htm+=' data-val-range-max="9223372036854775807"  ';
+      error_msg=' data-val-range="Value must be >= '+ fld.domain.minValue+'"';
+      validate=true;
+    }
+    if(typeof fld.domain.maxValue !=='undefined' && fld.domain.maxValue!=='undefined'  && fld.domain.maxValue!==''){
+     val_htm=' min="-9223372036854775808"  ';
+     val_htm+=' max="' +fld.domain.maxValue+'"  ';
+      val_htm+=' data-val-range-min="-9223372036854775808"  ';
+      val_htm+=' data-val-range-max="' +fld.domain.maxValue+'"  ';
+      error_msg=' data-val-range="Value must be <= '+ fld.domain.maxValue+'"';
+      validate=true;
+    }
+    if((typeof fld.domain.minValue !=='undefined' && fld.domain.minValue!=='undefined' && fld.domain.minValue!=='')
+      && (typeof fld.domain.maxValue !=='undefined' && fld.domain.maxValue!=='undefined' && fld.domain.maxValue!=='')
+      )
+    {
+     val_htm=' min="' +fld.domain.minValue+'"  ';
+     val_htm+=' max="' +fld.domain.maxValue+'"  ';
+
+      val_htm+=' data-val-range-min="' +fld.domain.minValue+'"  ';
+      val_htm+=' data-val-range-max="' +fld.domain.maxValue+'"  ';
+      error_msg=' data-val-range="Value must be between '+  fld.domain.minValue + ' and '+ fld.domain.maxValue +'"';
+      validate=true;
+    }
+    if(error_msg){
+      htm+=val_htm;
+      htm+= error_msg ;
+      rangeValueHtml='';
+    }
+  }
 
    htm+= rangeValueHtml + ' ';
 
-   if(validate){
+   if(validate && editable){
      htm+=' data-val="true"';
    }
    htm+='    />';
@@ -1724,7 +1750,9 @@ FeatureAttributesTab.prototype.getNumberInput=function(fld,properties,fldKey){
    }else{
     htm+='    <input type="number"  data-field-name="'+fld.name+'" '+autofocus+'  name="'+fldKey+'" id="' +fldKey +'" value="'+value+'" placeholder="'+placeholder+'" class="form-control" ';
    }
-  
+   if(!editable){
+    htm+=' readonly ';
+   }
    if(isRequired){
      validate=true;
      htm+=' data-val-required="'+caption +' is required"';
@@ -1738,35 +1766,41 @@ FeatureAttributesTab.prototype.getNumberInput=function(fld,properties,fldKey){
      htm+=' data-val-regex="Incorrect number"  data-val-regex-pattern="' + pattern+'"';
    }
    if(fld.domain && fld.domain.type=='range'){
-     var error_msg='';
-     var val_htm='';
-     if(typeof fld.domain.minValue !=='undefined' && fld.domain.minValue!=='undefined' && fld.domain.minValue!==''){
-       val_htm=' data-val-range-min="' +fld.domain.minValue+'"  ';
-       val_htm+=' data-val-range-max="9223372036854775807"  ';
-       error_msg=' data-val-range="Value must be >= '+ fld.domain.minValue+'"';
-       validate=true;
-     }
-     if(typeof fld.domain.maxValue !=='undefined' && fld.domain.maxValue!=='undefined'  && fld.domain.maxValue!==''){
-       val_htm=' data-val-range-min="-9223372036854775808"  ';
-       val_htm+=' data-val-range-max="' +fld.domain.maxValue+'"  ';
-       error_msg=' data-val-range="Value must be <= '+ fld.domain.maxValue+'"';
-       validate=true;
-     }
-     if((typeof fld.domain.minValue !=='undefined' && fld.domain.minValue!=='undefined' && fld.domain.minValue!=='')
-       && (typeof fld.domain.maxValue !=='undefined' && fld.domain.maxValue!=='undefined' && fld.domain.maxValue!=='')
-       )
-     {
-       val_htm=' data-val-range-min="' +fld.domain.minValue+'"  ';
-       val_htm+=' data-val-range-max="' +fld.domain.maxValue+'"  ';
-       error_msg=' data-val-range="Value must be between '+  fld.domain.minValue + ' and '+ fld.domain.maxValue +'"';
-       validate=true;
-     }
-     if(error_msg){
-       htm+=val_htm;
-       htm+= error_msg ;
-     }
-   }
-   if(validate){
+    var error_msg='';
+    var val_htm='';
+    if(typeof fld.domain.minValue !=='undefined' && fld.domain.minValue!=='undefined' && fld.domain.minValue!==''){
+     val_htm=' min="' +fld.domain.minValue+'"  ';
+     val_htm+=' max="9223372036854775807"  ';
+      val_htm+=' data-val-range-min="' +fld.domain.minValue+'"  ';
+      val_htm+=' data-val-range-max="9223372036854775807"  ';
+      error_msg=' data-val-range="Value must be >= '+ fld.domain.minValue+'"';
+      validate=true;
+    }
+    if(typeof fld.domain.maxValue !=='undefined' && fld.domain.maxValue!=='undefined'  && fld.domain.maxValue!==''){
+     val_htm=' min="-9223372036854775808"  ';
+     val_htm+=' max="' +fld.domain.maxValue+'"  ';
+      val_htm+=' data-val-range-min="-9223372036854775808"  ';
+      val_htm+=' data-val-range-max="' +fld.domain.maxValue+'"  ';
+      error_msg=' data-val-range="Value must be <= '+ fld.domain.maxValue+'"';
+      validate=true;
+    }
+    if((typeof fld.domain.minValue !=='undefined' && fld.domain.minValue!=='undefined' && fld.domain.minValue!=='')
+      && (typeof fld.domain.maxValue !=='undefined' && fld.domain.maxValue!=='undefined' && fld.domain.maxValue!=='')
+      )
+    {
+     val_htm=' min="' +fld.domain.minValue+'"  ';
+     val_htm+=' max="' +fld.domain.maxValue+'"  ';
+      val_htm+=' data-val-range-min="' +fld.domain.minValue+'"  ';
+      val_htm+=' data-val-range-max="' +fld.domain.maxValue+'"  ';
+      error_msg=' data-val-range="Value must be between '+  fld.domain.minValue + ' and '+ fld.domain.maxValue +'"';
+      validate=true;
+    }
+    if(error_msg){
+      htm+=val_htm;
+      htm+= error_msg ;
+    }
+  }
+   if(validate && editable){
      htm+=' data-val="true"';
    }
    htm+='    />';
@@ -1836,13 +1870,21 @@ FeatureAttributesTab.prototype.getBoolInput=function(fld,properties,fldKey){
    if(value){
      htm+='    checked="checked"';
    }
+   if(!editable){
+    htm+=' readonly ';
+   }
    htm+=' />';
    htm+= caption ;
    htm+='    </label>';
  }else{
 
      htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
-     htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="form-control" >';
+     
+     htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="form-control" ';
+     if(!editable){
+      htm+=' disabled ';
+     }
+     htm+=' >';
      htm+='    <option value="1" '+ ((value) ? 'selected="selected"' : '' ) +' >True</option>';
      htm+='    <option value="0" '+ ((value) ? '':'selected="selected"' ) +' >False</option>';
      htm+='    <option value="" '+ ((value=='Null') ? 'selected="selected"':'' ) +' >'+app.DROPDOWN_NULL || 'Null'+'</option>';
@@ -1989,7 +2031,7 @@ FeatureAttributesTab.prototype.getFileListContent=function(fileInfos,fldKey){
             htm+='<img style="display: block;max-width: 100%;" src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id,true)+'" />';
           }
           htm+='</a>';
-          if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4'|| fileInfo.mimeType=='audio/mpeg'){
+          if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4' ||fileInfo.mimeType=='audio/m4a' || fileInfo.mimeType=='audio/x-m4a'|| fileInfo.mimeType=='audio/mpeg'){
             htm+=' <audio controls style="display:block;    width: 100%; max-width: 300px;" >';
             htm+='    <source src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id)+'" type="'+fileInfo.mimeType+'">';
             htm+='           Player not supported.';
@@ -2016,7 +2058,7 @@ FeatureAttributesTab.prototype.getFileListContent=function(fileInfos,fldKey){
         }
       }
       if(fileInfo.dataUrl){  
-        if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4'|| fileInfo.mimeType=='audio/mpeg'){
+        if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4' ||fileInfo.mimeType=='audio/m4a' || fileInfo.mimeType=='audio/x-m4a' || fileInfo.mimeType=='audio/mpeg'){
           htm+=' <audio controls style="display:block;    width: 100%; max-width: 300px;" >';
           //htm+='    <source src="horse.ogg" type="audio/ogg">';
           htm+='    <source src="'+fileInfo.dataUrl +'" type="'+fileInfo.mimeType+'">';
@@ -2223,7 +2265,12 @@ FeatureAttributesTab.prototype.getCodedValuesInput=function(fld,properties,fldKe
 
 
      htm+='    <label class="" for="'+ fldKey+'">'+ caption+ '</label>';
-     htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="form-control" >';
+     
+     htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="form-control" ';
+     if(!editable){
+      htm+=' disabled ';
+     }
+     htm+='>';
      for(var i=0;i< codedValues.length;i++){
        var item=codedValues[i];
        var item_value=this.field_i18n(fld,'codedValues',item.value);
@@ -2311,6 +2358,9 @@ FeatureAttributesTab.prototype.getCodedValuesInput_select2=function(fld,properti
       }else{
         htm+='    <select data-field-name="'+fld.name+'" '+autofocus+' name="'+fldKey+'" id="' +fldKey +'"  class="select2Single form-control" style="width:auto;_width_:100%;" ';
       }
+      if(!editable){
+        htm+=' disabled ';
+       }
       if(fld.domain.editable){
         htm+='   data-tags="true" ';        
       }

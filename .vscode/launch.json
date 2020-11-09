@@ -8,6 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Server",
+            "runtimeVersion": "8.15.0",
             "program": "${workspaceFolder}\\server",
             // Capture "std" instead of "console" fro winston
             "outputCapture": "std"
