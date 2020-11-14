@@ -589,7 +589,7 @@ function LayerSourceTab() {
       formdata.append('layerInfo',JSON.stringify(layerInfo));
 
       var processNotify= $.notify({
-        message: '<i class="wait-icon-with-padding">The processing is running in the background</i><br /> Copying features to new data layer...'
+        message: '<i class="wait-icon-with-padding">The processing is running in the background</i><br /> Creating Shapefile...'
         },{
           z_index:50000,
             type:'info',

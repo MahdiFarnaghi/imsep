@@ -2596,6 +2596,7 @@ module.exports = function (postgresWorkspace) {
               //todo: workspace selection
 
              var tableName= details.datasetName || item.name;
+             var filebaseName=details.filebaseName || details.fileName || item.name;
              var oidField= details.oidField || 'gid';
              var datasetType=details.datasetType || 'vector';
              var shapeField=details.shapeField || 'geom';
