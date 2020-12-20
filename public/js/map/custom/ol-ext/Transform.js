@@ -80,7 +80,7 @@ ol.interaction.Transform = function(options) {
     // setstyle
     this.setDefaultStyle();
   };
-  ol.inherits(ol.interaction.Transform, ol.interaction.Pointer);
+  ol.ext.inherits(ol.interaction.Transform, ol.interaction.Pointer);
   /** Cursors for transform
   */
   ol.interaction.Transform.prototype.Cursors = {

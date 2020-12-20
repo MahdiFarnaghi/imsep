@@ -16,7 +16,7 @@
 }
 .ol-search input
 {	display: inline-block;
-	border: 0;
+	/*border: 0;*/
 	margin: 1px 1px 1px 2px;
 	font-size: 1.14em;
 	padding-left: 0.3em;
@@ -65,8 +65,22 @@
 {	background-color: rgba(0,60,136,.5);
 	color: #fff;
 }
+.ol-search ul li.mysearch-group {
+    
+    color: #464444;
+}
+.ol-search ul li.mysearch-group:hover
+{	background-color:transparent;
+	color: #464444;
+	
+}
+.ol-search ul li .mysearch-group-title:hover
+{	
+	text-decoration: underline;
+}
+
 .ol-search ul li img {
-	float: left;
+	float: right;
 	max-height: 2em;
 }
 .ol-search li.copy {
@@ -148,4 +162,47 @@
 
 .ol-search li.clear-history{
 color:red;	
+}
+
+
+/* Style the caret/arrow */
+.mysearch-caret {
+	cursor: pointer;
+	user-select: none; /* Prevent text selection */
+  }
+  
+  /* Create the caret/arrow with a unicode, and style it */
+  .mysearch-caret::before {
+	/*content: "\25B6";*/
+/*	content: "\00B1";*/
+	content: "➕";
+	/*color: black;*/
+	/* display: inline-block; */
+	/*margin-right: 6px;*/
+	margin-right: 2px;
+    margin-left: -4px;
+	/*transform: rotate(180deg);*/
+	float:left;
+	font-size: 0.5em;
+    line-height: 2.8em;
+  }
+  
+  /* Rotate the caret/arrow icon when clicked on (using JavaScript) */
+  .mysearch-caret-down::before {
+	/*transform: rotate(90deg);*/
+	content: "➖";
+  }
+  
+  /* Hide the nested list */
+  .mysearch-nested {
+	display: none!important;
+  }
+  
+  /* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
+  .mysearch-active {
+	display: block!important;
+  }
+   
+  .ol-search input[type=search]::-webkit-search-cancel-button {
+    -webkit-appearance: searchfield-cancel-button;
 }

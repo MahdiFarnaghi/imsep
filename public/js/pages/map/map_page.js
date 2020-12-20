@@ -141,7 +141,7 @@ var pageTask={
                     app.mapContainer.map.updateSize();
                 },3000);  
             }
-            $('.tab-fixed-height').outerHeight(mapHeight+mousePosition-41);
+            $('.tab-fixed-height').outerHeight(mapHeight+mousePosition-41-5);
     },
     init:function(){
         var self=this;

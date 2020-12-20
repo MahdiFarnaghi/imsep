@@ -58,7 +58,7 @@ ol.style.Chart = function(opt_options)
 	}
 	this.renderChart_();
 };
-ol.inherits(ol.style.Chart, ol.style.RegularShape);
+ol.ext.inherits(ol.style.Chart, ol.style.RegularShape);
 /** Default color set: classic, dark, pale, pastel, neon
 */
 ol.style.Chart.colors =
@@ -386,7 +386,7 @@ ol.style.FillPattern = function(options)
 	}
 	ol.style.Fill.call (this, { color: pattern });
 };
-ol.inherits(ol.style.FillPattern, ol.style.Fill);
+ol.ext.inherits(ol.style.FillPattern, ol.style.Fill);
 /**
  * Clones the style. 
  * @return {ol.style.FillPattern}
@@ -864,7 +864,7 @@ ol.style.FontSymbol = function(options)
 	this.glyph_ = this.getGlyph(options.glyph) || "";
 	this.renderMarker_();
 };
-ol.inherits(ol.style.FontSymbol, ol.style.RegularShape);
+ol.ext.inherits(ol.style.FontSymbol, ol.style.RegularShape);
 /** Cool stuff to get the image symbol for a style
 */
 ol.style.Image.prototype.getImagePNG = function()
@@ -1264,7 +1264,7 @@ ol.style.Photo = function(options)
 	if (typeof(options.rotation)=='number') this.setRotation(options.rotation);
 	this.renderPhoto_();
 };
-ol.inherits(ol.style.Photo, ol.style.RegularShape);
+ol.ext.inherits(ol.style.Photo, ol.style.RegularShape);
 /**
  * Clones the style. 
  * @return {ol.style.Photo}
@@ -1591,7 +1591,7 @@ ol.style.TextPath = function(options)
 	this.textOverflow_ = typeof(options.textOverflow)!="undefined" ?  options.textOverflow : "visible";
 	this.minWidth_ = options.minWidth || 0;
 }
-ol.inherits(ol.style.TextPath, ol.style.Text);
+ol.ext.inherits(ol.style.TextPath, ol.style.Text);
 ol.style.TextPath.prototype.getTextOverflow = function()
 {	return this.textOverflow_; 
 };
@@ -1728,7 +1728,7 @@ ol.style.Shadow = function(options)
 	this.offset_ = [options.offsetX ? options.offsetX : 0, options.offsetY ? options.offsetY : 0];
 	this.renderShadow_();
 };
-ol.inherits(ol.style.Shadow, ol.style.RegularShape);
+ol.ext.inherits(ol.style.Shadow, ol.style.RegularShape);
 /**
  * Clones the style. 
  * @return {ol.style.Shadow}
@@ -1923,7 +1923,7 @@ ol.style.StrokePattern = function(options)
 	options.color = pattern;
 	ol.style.Stroke.call (this, options);
 };
-ol.inherits(ol.style.StrokePattern, ol.style.Stroke);
+ol.ext.inherits(ol.style.StrokePattern, ol.style.Stroke);
 /**
  * Clones the style. 
  * @return {ol.style.StrokePattern}

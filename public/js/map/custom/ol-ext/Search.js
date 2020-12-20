@@ -151,7 +151,7 @@ ol.control.Search = function(options) {
 	  this.restoreHistory();
 	  this.drawList_();
   };
-  ol.inherits(ol.control.Search, ol.control.Control);
+  ol.ext.inherits(ol.control.Search, ol.control.Control);
   /** Returns the text to be displayed in the menu
   *	@param {any} f feature to be displayed
   *	@return {string} the text to be displayed in the index, default f.name
@@ -382,7 +382,7 @@ ol.control.Search = function(options) {
 	  // Overwrite handleResponse
 	  if (typeof(options.handleResponse)==='function') this.handleResponse = options.handleResponse;
   };
-  ol.inherits(ol.control.SearchJSON, ol.control.Search);
+  ol.ext.inherits(ol.control.SearchJSON, ol.control.Search);
   /** Autocomplete function (ajax request to the server)
   * @param {string} s search string
   * @param {function} cback a callback function that takes an array of {name, feature} to display in the autocomplete field
@@ -492,7 +492,7 @@ ol.control.Search = function(options) {
 	  this.set('position', options.position);
 	  this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
   };
-  ol.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
+  ol.ext.inherits(ol.control.SearchPhoton, ol.control.SearchJSON);
   /** Returns the text to be displayed in the menu
   *	@param {ol.Feature} f the feature
   *	@return {string} the text to be displayed in the index
@@ -588,7 +588,7 @@ ol.control.Search = function(options) {
 	  this.set("copy","<a href='http://www.openstreetmap.org/copyright' target='new'>&copy; OpenStreetMap contributors</a>");
 	  this.set("polygon", options.polygon);
   };
-  ol.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
+  ol.ext.inherits(ol.control.SearchNominatim, ol.control.SearchJSON);
   /** Returns the text to be displayed in the menu
    *	@param {ol.Feature} f the feature
    *	@return {string} the text to be displayed in the index

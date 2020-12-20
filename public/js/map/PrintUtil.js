@@ -1164,7 +1164,8 @@ var PrintUtil={
         var renderPdf=function  (event) {
           //map.getView().setRotation(map.getView().getRotation()+(30*Math.PI/180.0));
           var mapRotation=map.getView().getRotation()* 180/Math.PI;   
-          var canvas = event.context.canvas;
+          //var canvas = event.context.canvas;
+          var canvas= mapContainer.getMapRenderedCanvas();
           var mapImageData = canvas.toDataURL('image/png');
           var pdf = new jsPDF(template.orientation, undefined, pageSize);
          

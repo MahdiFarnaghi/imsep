@@ -24,7 +24,10 @@ ol.control.Button = function(options)
 					{	e.preventDefault();
 						e.stopPropagation();
 					}
-					if (options.handleClick) options.handleClick.call(self, e);
+					if(!self.getDisable()){
+						if (options.handleClick) options.handleClick.call(self, e);
+					}
+
 				})
 				.appendTo(element);
 	// Try to get a title in the button content
@@ -35,7 +38,7 @@ ol.control.Button = function(options)
 	});
 	if (options.title) this.set("title", options.title);
 };
-ol.inherits(ol.control.Button, ol.control.Control);
+ol.ext.inherits(ol.control.Button, ol.control.Control);
 /** Set the control visibility
 * @param {boolean} b
 */
@@ -49,7 +52,23 @@ ol.control.Button.prototype.setVisible = function (val) {
 ol.control.Button.prototype.getVisible = function ()
 {	return ($(this.element).css('display') != 'none');
 }
-
+ol.control.Button.prototype.getDisable = function()
+{	//return $("button", this.element).prop("disabled");
+	return $("button", this.element).hasClass("disabled");
+};
+/** Disable the control. If disable, the control will be deactivated too.
+* @param {bool} b disable (or enable) the control, default false (enable)
+*/
+ol.control.Button.prototype.setDisable = function(b)
+{	if (this.getDisable()==b) return;
+	//$("button", this.element).prop("disabled", b);
+	if(b){
+		$("button", this.element).addClass("disabled");
+	}else{
+		$("button", this.element).removeClass("disabled");
+	}
+	this.dispatchEvent({ type:'change:disable', key:'disable', oldValue:!b, disable:b });
+};
 /** A simple push button control drawn as text
  * @constructor
  * @extends {ol.control.Button}
@@ -64,7 +83,7 @@ ol.control.TextButton = function(options)
     options.className = (options.className||"") + " ol-text-button";
     ol.control.Button.call(this, options);
 };
-ol.inherits(ol.control.TextButton, ol.control.Button);
+ol.ext.inherits(ol.control.TextButton, ol.control.Button);
 
 
 /** A simple toggle control
@@ -111,7 +130,7 @@ ol.control.Toggle = function(options)
 	this.setActive (options.active);
 	this.setDisable (options.disable);
 };
-ol.inherits(ol.control.Toggle, ol.control.Button);
+ol.ext.inherits(ol.control.Toggle, ol.control.Button);
 /**
  * Set the map instance the control is associated with
  * and add interaction attached to it to this map.
@@ -230,7 +249,7 @@ ol.control.Bar = function(options)
 		}
 	}
 };
-ol.inherits(ol.control.Bar, ol.control.Control);
+ol.ext.inherits(ol.control.Bar, ol.control.Control);
 /** Set the control visibility
 * @param {boolean} b
 */

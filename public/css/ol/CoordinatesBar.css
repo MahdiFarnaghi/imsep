@@ -1,0 +1,25 @@
+.ol-viewport .ol-coordinates-bar {
+	right: 2px;
+    bottom: 1em;
+      position: absolute;
+      background-color: rgba(255,255,255,.4);
+    border-radius: 4px;
+    padding: 3px;
+    direction: ltr;
+}
+.ol-viewport .ol-coordinates-bar .ol-coordinates-panel {
+    display: inline;
+    margin: 0 4px;
+   
+}
+.ol-viewport .ol-coordinates-bar button {
+    float: right;
+    margin-bottom: 3px;
+    color: white;
+    border: none;
+    background-color: rgba(85, 175, 167, 0.7);
+}
+.ol-viewport .ol-coordinates-bar button:hover {
+    background-color: rgba(85, 175, 167, 0.9);
+}
+

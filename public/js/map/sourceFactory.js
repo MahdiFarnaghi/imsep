@@ -177,7 +177,7 @@ SourceFactory.prototype.createOsmVectorSource = function(dataObj,mapContainer) {
           if(initFeatures){
             doAddFeatures(initFeatures);
             OSMvectorSource.set('initFeatures',null);
-            OSMvectorSource.set('loading_status', 'compelete');
+            OSMvectorSource.set('loading_status', 'complete');
             return;
           }
 
@@ -188,7 +188,7 @@ SourceFactory.prototype.createOsmVectorSource = function(dataObj,mapContainer) {
               featureProjection: view.getProjection()
             });
             doAddFeatures(features);
-            OSMvectorSource.set('loading_status', 'compelete');
+            OSMvectorSource.set('loading_status', 'complete');
           });
         //   //var query = '(node["highway"](' +
         //   var query = '(node(' +
@@ -331,7 +331,7 @@ SourceFactory.prototype.createGeoJsonVectorSource = function(dataObj,mapContaine
                                 vectorSource.addFeatures(features);
                         }
                         vectorSource.set('loading_details', '');
-                        vectorSource.set('loading_status', 'compelete');
+                        vectorSource.set('loading_status', 'complete');
                         
                         vectorSource.dispatchEvent({
                             type: "loading_complete"
@@ -515,7 +515,7 @@ SourceFactory.prototype.createGeoJsonVectorSource_native = function(dataObj) {
               if (this instanceof ol.source.Vector) {
                   this.addFeatures(features);
                   this.set('loading_details', '');
-                  this.set('loading_status', 'compelete');
+                  this.set('loading_status', 'complete');
                   
                   this.dispatchEvent({
                       type: "loading_complete"
@@ -810,7 +810,7 @@ SourceFactory.prototype.createGeoImageSource_old = function(dataObj,mapContainer
             if (data ) {
                 tile.getImage().src = URL.createObjectURL(data);
                 geoImageSource.set('loading_details', '');
-                geoImageSource.set('loading_status', 'compelete');
+                geoImageSource.set('loading_status', 'complete');
             } else {
                 //tile.setState(TileState.ERROR);
                 tile.setState(3);

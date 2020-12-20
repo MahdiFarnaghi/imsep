@@ -298,3 +298,9 @@
  .myOlbuttonVertical button{
 	display: block !important;
 }
+
+.ol-control button.disabled,.ol-control button.disabled:hover {
+	background-color: rgba(150, 150, 150, 0.67)!important;
+	cursor: default;
+	outline:none;
+}

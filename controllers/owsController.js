@@ -1945,6 +1945,260 @@ module.exports = function (postgresWorkspace, datasetController) {
         return;
         // return await makeError('Not found','InvalidParameterValue','');
       }
+    } else if (request == 'getfeatureinfo') {
+
+      var getZoom = function (bounds, dimensions, minzoom, maxzoom) {
+        minzoom = (minzoom === undefined) ? 0 : minzoom;
+        maxzoom = (maxzoom === undefined) ? 21 : maxzoom;
+
+
+        var bl = sphericalmercator.px([bounds[0], bounds[1]], maxzoom);
+        var tr = sphericalmercator.px([bounds[2], bounds[3]], maxzoom);
+        var width = tr[0] - bl[0];
+        var height = bl[1] - tr[1];
+        var ratios = [width / dimensions[0], height / dimensions[1]];
+        var adjusted = Math.ceil(Math.min(
+          maxzoom - (Math.log(ratios[0]) / Math.log(2)),
+          maxzoom - (Math.log(ratios[1]) / Math.log(2))));
+        //return Math.max(minzoom, Math.min(maxzoom, adjusted));
+        return adjusted;
+
+      }
+      var checkExtent = function (minZoom, maxZoom, z, layer_bbox, bbox) {
+        // if (z < minZoom || z > maxZoom) {
+        //   return 'Scale';
+        // }
+
+        // minx: layer_bbox[0],
+        // miny: layer_bbox[1],
+        // maxx: layer_bbox[2],
+        // maxy: layer_bbox[3],
+        if (bbox[0] > layer_bbox[2] || bbox[2] < layer_bbox[0] ||
+          bbox[1] > layer_bbox[3] || bbox[3] < layer_bbox[1]
+        ) {
+          return 'Extent';
+        }
+
+        return false;
+      }
+      var srs;
+      var query_srs=req.query['srs'] || req.query['crs'];
+      srs = req.query['srs'] || req.query['crs'] || 'epsg:3857';
+      srs = srs.toLowerCase();
+      var bbox = req.query['bbox'];
+      var query_bbox=bbox;
+      bbox = bbox.split(',').map(function (num) {
+        return parseFloat(num);
+      });
+      var orig_bbox=bbox;
+      if (['epsg:900913', 'epsg:3857'].indexOf(srs) > -1) {
+        bbox = sphericalmercator.inverse([bbox[0], bbox[1]]).concat(sphericalmercator.inverse([bbox[2], bbox[3]]));
+      }
+      var x_i = parseInt(req.query.x || req.query.i);
+      var y_j = parseInt(req.query.y || req.query.j);
+      var feature_count=1;
+      if(req.query.feature_count){
+        try{
+          feature_count= parseInt(req.query.feature_count);
+        }catch(ex){}
+      }
+      var width = parseInt(req.query.width, 10);
+      if (width < 1) {
+        return await makeError('width must be greater then 0', 'InvalidParameterValue', 'WIDTH');
+      }
+      var height = parseInt(req.query.height, 10);
+      if (height < 1) {
+        return await makeError('height must be greater then 1', 'InvalidParameterValue', 'HEIGHT');
+      }
+
+      var zoom = getZoom(bbox, [width, height], minZoom, maxZoom);
+
+      var ref_z = req.query.ref_z || 10;
+      try {
+        if (ref_z) {
+          ref_z = parseInt(ref_z);
+        }
+      } catch (ex) {}
+      ref_z = (maxZoom - 1 - (0));
+
+
+      var extentError = checkExtent(minZoom, maxZoom, zoom, layer_bbox, bbox);
+      if (extentError) {
+        return await makeError(`${extentError} is out of range`, 'OutOfRange');
+      }
+      srs = srs.toLowerCase();
+      if (['epsg:900913', 'epsg:3857' /*, 'epsg:4326'*/ ].indexOf(srs) === -1) {
+        return await makeError(`invalid srs: ${srs}`, 'InvalidSRS');
+      }
+
+      //var out_srid = 3857; //req.query.srid;// reproject to srid
+      var info_format = req.query.info_format || 'text/html';
+
+
+      var tileSize = 256;
+      var display = req.query.display;
+
+      var xm= bbox[0] + x_i/width* ((bbox[2]-bbox[0]));
+      var ym= bbox[3] - y_j/height* ((bbox[3]-bbox[1]));
+
+     
+      try {
+
+        if(item.dataType=='raster'){
+          
+         // var xr= orig_bbox[0] + x_i/width* ((orig_bbox[2]-orig_bbox[0]));
+         // var yr= orig_bbox[3] - y_j/height* ((orig_bbox[3]-orig_bbox[1]));
+    
+          //return await datasetController.rasterGetImage(req, res, item, details, bbox, zoom, ref_z, width, height, imageFormat, display);
+          var result=await postgresWorkspace.getRasterValue({
+            tableName:tableName,
+            oidField:oidField,
+            rasterField:rasterField,
+            srid:srid,
+            out_srid: 4326,
+           // out_srid:out_srid,
+            x:xm,
+            y:ym,
+            bands:details.bands
+         });
+         var html='';
+         var html='<div class="identifyTask-results" style="overflow:auto;padding-bottom: 0.5em;">';
+         html += '<table class="table table-striped table-condensed">';
+         html += '<thead>';
+        //  if(layer && layer.get('title')){
+        //      html += '<tr><th colspan="2" style=" white-space: nowrap;overflow-x: hidden; max-width: 260px;text-overflow: ellipsis;">' + layer.get('title')+'</th></tr>';      
+        //  }else{
+          html += '<tr><th>Band</th><th>Value</th></tr>';
+         //}
+
+         html += '</thead>';
+         html += '<tbody>';
+         if(result){
+         for (var key in result) {
+             
+          html += '<tr>';
+          html += '<td>';
+          html += key;
+          html += '</td>';
+          html += '<td>';
+          html += result[key];
+          html += '</td>';
+          html += '</tr>';
+         }
+        }
+         html += '</tbody>';
+         html += '</table>';
+         html+= '</div>';
+
+         return res.set('Content-Type', info_format).send(html);
+        }else if(item.dataType=='vector'){
+          var tableName = details.datasetName || item.name;
+          var oidField = details.oidField || 'gid';
+          var shapeField = details.shapeField || 'geom';
+          var datasetType = details.datasetType || 'vector';
+          var shapeType = details.shapeType || 'Point';
+          var fields = details.fields || [];
+          var out_srid = srid;
+          var srs_array = srs.split(':');
+          out_srid = srs_array[1];
+          var filter;
+          if (!filter) {
+            filter = {};
+          }
+
+         var searchR=(bbox[2]-bbox[0])/100.0;
+          var sbbox= [xm-searchR,ym-searchR,xm+searchR,ym+searchR];
+          var bboxExpr = `ST_Intersects(${shapeField},ST_Transform(ST_MakeEnvelope(${sbbox},4326),${srid}))`;
+          if (!filter.expression)
+              filter.expression = bboxExpr;
+          else
+           filter.expression = '(' + filter.expression + ') AND (' + bboxExpr + ')';
+          
+          var geojson = await postgresWorkspace.getGeoJson({
+            tableName: tableName,
+            datasetType: datasetType,
+            oidField: oidField,
+            shapeField: shapeField,
+            filter: filter,
+            onlyIds: false,
+            srid: srid,
+            //out_srid: out_srid,
+            out_srid: 4326,
+            fields: details.fields
+          });
+          fieldsDic = {};
+          if (fields) {
+            for (var i = 0; i < fields.length; i++) {
+                var fld = fields[i];
+                var fldName = fld.name;
+                var title = fld.alias || fldName;
+                fieldsDic[fldName] = title;
+                if(fld.domain && fld.domain.type=='codedValues' && fld.domain.items ){
+                    var codedValues={};
+                    for(var j=0;j<fld.domain.items.length;j++){
+                      codedValues[fld.domain.items[j].code]= fld.domain.items[j].value;
+                    }
+                    fld.codedValues=codedValues;
+                }
+            }
+        }
+          // var callback=function (err, tile) {
+          //   if (err || !tile || !isPng(tile)) {
+          //     res.status(err.code || 500).json(err || new Error("Rendering didn't produce a proper tile"))
+          //   } else {
+          //     res.status(200)
+          //       .set('Content-Length', tile.length)
+          //       .set('Content-Type', 'image/png')
+          //       .send(tile)
+          //   }
+          // };
+          var html = '<div class="identifyTask-results">';
+       
+          //html += "<img src='"+feature.get("img")+"'/>";
+          html += '<table class="table table-striped table-condensed">';
+          html += '<thead>';
+          //if (layer && layer.get('title')) {
+          //    html += '<tr><th colspan="2" style=" white-space: nowrap;overflow-x: hidden; max-width: 260px;text-overflow: ellipsis;">' + layer.get('title') + '</th></tr>';
+          //} else {
+              html += '<tr><th>Field</th><th>Value</th></tr>';
+         // }
+          html += '</thead>';
+          html += '<tbody>';
+          if(geojson && geojson.features){
+            for(var i=0;i<geojson.features.length && i<feature_count;i++){
+              var f= geojson.features[i];
+
+              for (var key in f.properties) {
+                if (key !== 'geometry') {
+                    anyData = true;
+                    html += '<tr>';
+                    html += '<td>';
+                    html += fieldsDic[key] || key;
+                    html += '</td>';
+                    html += '<td>';
+                    html += f.properties[key];
+                    html += '</td>';
+                    html += '</tr>';
+                }
+            }
+            }
+          }
+          html += '</tbody>';
+          html += '</table>';
+          html += '</div>';
+          //var result= 'x_i:'+ x_i +', y_j:'+y_j+', xm:'+xm+', ym:'+ym;
+          return res.set('Content-Type', info_format).send(html);
+
+          
+       
+
+        }
+      } catch (ex) {
+        res.set('Content-Type', 'text/plain');
+        res.status(404).end('Not found.(' + ex.message + ')');
+        return;
+        // return await makeError('Not found','InvalidParameterValue','');
+      }
     } else {
       // res.set('Content-Type', 'text/plain');
       // res.status(404).end('Not Supported');

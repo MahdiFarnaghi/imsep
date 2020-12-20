@@ -779,6 +779,12 @@ function LayerSourceTab() {
                       if(!prefix)
                         prefix='';
                       var elements;
+                      var supportsGetFeatureInfo=false;
+                      elements= $( 'Capability',data).find('GetFeatureInfo');
+                      if(elements.length>0){
+                        supportsGetFeatureInfo=true;
+                        self.layer.set('_supportsGetFeatureInfo',supportsGetFeatureInfo);
+                      }
                       //var elements= $('xsd\\:complexContent', data).find('xsd\\:element');
                       if(prefix){
                         elements= $( prefix+ '\\:Cpability', data).find(prefix+'\\:Layer');
@@ -1007,7 +1013,7 @@ function LayerSourceTab() {
                     elemnts.each(function(){
                       var fieldName = $(this).attr("name");
                       var fieldType = $(this).attr("type");
-                      if(fieldType== (prefix+':string')|| fieldType==(prefix+':date'))
+                      if( typeof fieldType =='undefined'||  fieldType== (prefix+':string')|| fieldType==(prefix+':date'))
                       {
                         fields.push({
                           name:fieldName,alias:fieldName,
@@ -1102,7 +1108,13 @@ function LayerSourceTab() {
                           if(!prefix)
                             prefix='';
                           var elements;
-                          
+                          var supportsGetFeatureInfo=false;
+                          elements= $( 'Capability',data).find('GetFeatureInfo');
+                          if(elements.length>0){
+                            supportsGetFeatureInfo=true;
+                            self.layer.set('_supportsGetFeatureInfo',supportsGetFeatureInfo);
+                          }
+
                           //elements= $( 'Capability',data).find('Layer[queryable="1"] > Name ');
                           elements= $( 'Capability',data).find('Layer > Name ');
                           //elements = elements.find('[queryable="1"]');

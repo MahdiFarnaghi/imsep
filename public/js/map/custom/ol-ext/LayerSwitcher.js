@@ -35,6 +35,7 @@ ol.control.LayerSwitcher = function (options) {
 	this._activeLayer=undefined;
 	this.dcount = 0;
 	this.show_progress = options.show_progress;
+	this.toggleVisiblityOnLabelClick= options.toggleVisiblityOnLabelClick;
 	this.oninfo = (typeof (options.oninfo) == "function" ? options.oninfo : null);
 	this.onClick = (typeof (options.onClick) == "function" ? options.onClick : null);
 	this.onDblClick = (typeof (options.onDblClick) == "function" ? options.onDblClick : null);
@@ -93,17 +94,22 @@ ol.control.LayerSwitcher = function (options) {
 	// $.event.props.push('dataTransfer');
 	this.target = options.target;
 };
-ol.inherits(ol.control.LayerSwitcher, ol.control.Control);
+ol.ext.inherits(ol.control.LayerSwitcher, ol.control.Control);
 /** List of tips for internationalization purposes
 */
 ol.control.LayerSwitcher.prototype.tip =
 	{
 		up: "up/down",
+		//up: app.i18n['up/down'],
 		down: "down",
+		//down: app.i18n['down'],
 		info: "informations...",
+		//info: app.i18n['Info'],
 		extent: "zoom to extent",
+		//extent: app.i18n['ZoomToExtent'],
 		trash: "remove layer",
-		plus: "expand/shrink"
+		//trash: app.i18n['Dataset.RemoveLayer'],
+		f: "expand/shrink"
 	};
 /** Test if a layer should be displayed in the switcher
  * @param {ol.layer} layer
@@ -266,8 +272,18 @@ ol.control.LayerSwitcher.prototype.drawPanel_ = function (e) {
  * @param {ol.layer}
  * @param {Array<ol.layer>} related layers
  */
-ol.control.LayerSwitcher.prototype.switchLayerVisibility = function (l, layers) {
-	if (!l.get('baseLayer')) l.setVisible(!l.getVisible());
+ol.control.LayerSwitcher.prototype.switchLayerVisibility = function (l, layers,visible) {
+	if (!l.get('baseLayer')) {
+		var vis=!l.getVisible();
+		if(typeof visible !=='undefined'){
+			vis= visible;
+		}
+		l.setVisible(vis);
+		var parent= l.get('_parent');
+		if(parent && vis){
+			this.switchLayerVisibility(parent,layers,vis);
+		}
+	}
 	else {
 		if (!l.getVisible()) l.setVisible(true);
 		layers.forEach(function (li) {
@@ -480,6 +496,7 @@ ol.control.LayerSwitcher.prototype.dragOpacity_ = function (e) {
  */
 ol.control.LayerSwitcher.prototype.drawList = function (ul, collection) {
 	var self = this;
+	var parentId= $(ul).attr('id') || '';
 	var layers = collection.getArray();
 	var setVisibility = function (e) {
 		e.stopPropagation();
@@ -491,7 +508,9 @@ ol.control.LayerSwitcher.prototype.drawList = function (ul, collection) {
 		e.stopPropagation();
 		e.preventDefault();
 		var l = $(this).parent().parent().data("layer");
-		self.switchLayerVisibility(l, collection);
+		if(self.toggleVisiblityOnLabelClick){
+			self.switchLayerVisibility(l, collection);
+		}
 		if(e.clientX>32){
 			self.setActiveLayer(l);
 		}
@@ -556,13 +575,34 @@ ol.control.LayerSwitcher.prototype.drawList = function (ul, collection) {
 		e.preventDefault();
 
 		var li = $(this).closest("ul").parent();
-		if (li.data("layer")) {
-			li.data("layer").getLayers().remove($(this).closest('li').data("layer"));
-			if (li.data("layer").getLayers().getLength() == 0 && !li.data("layer").get('noSwitcherDelete')) {
+		var li_layer_parent=li.data("layer");
+		if (li_layer_parent) {
+			
+			
+			var layerToRemove=$(this).closest('li').data("layer");
+			var args={
+				type:'beforeLayerRemoved',
+				layer:layerToRemove,
+				parentLayer:li_layer_parent,
+				cancel:false
+			};
+			self.dispatchEvent(args);
+			if(args.cancel)
+			{
+				return;
+			}
+			if(self._activeLayer== layerToRemove){
+				self.setActiveLayer(null);
+			}
+			self.map_.removeLayer(layerToRemove);
+			li_layer_parent.getLayers().remove(layerToRemove);
+
+			if (li_layer_parent.getLayers().getLength() == 0 && !li_layer_parent.get('noSwitcherDelete')) {
 				removeLayer.call($(".layerTrash", li), e);
 			}
 		}
 		else {
+			var nl=$(this).closest('li');
 			var layerToRemove=$(this).closest('li').data("layer");
 
 			var args={
@@ -584,35 +624,25 @@ ol.control.LayerSwitcher.prototype.drawList = function (ul, collection) {
 	// Add the layer list
 	for (var i = layers.length - 1; i >= 0; i--) {
 		var layer = layers[i];
+		var elementId=parentId+'_'+i;
+
 		if (!self.displayInLayerSwitcher(layer)) continue;
-		var li = $("<li>").addClass((layer.getVisible() ? "visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""))
+		var li = $('<li id="'+elementId+'">').addClass((layer.getVisible() ? "visible " : " ") + (layer.get('baseLayer') ? "baselayer" : ""))
 			.data("layer", layer).appendTo(ul);
-		var layer_buttons = $("<div>").addClass("ol-layerswitcher-buttons").appendTo(li);
+		
+		//var layer_buttons=li;
 		li.on('click', onClickItemContainer);
 		li.on('dblclick', onDblClickItemContainer);
 		var d = $("<div>").addClass('li-content').appendTo(li);
+		var layer_buttons = $("<div>").addClass("ol-layerswitcher-buttons").appendTo(li);
 		if (!this.testLayerVisibility(layer)) d.addClass("ol-layer-hidden");
 		var isBaseLayer = layer.get('baseLayer');
-		// Visibility
-		$("<input>")
-			.attr('type', layer.get('baseLayer') ? 'radio' : 'checkbox')
-			.attr("checked", layer.getVisible())
-			.on('click', setVisibility)
-			.appendTo(d);
-		// Label
-		layer.layerswitcher_label = $("<label>").text(layer.get("title") || layer.get("name"))
-			.attr('title', layer.get("title") || layer.get("name"))
-			.on('click', setVisibility2)
-
-			.attr('unselectable', 'on')
-			.css('user-select', 'none')
-			.on('selectstart', false)
-			.appendTo(d);
+	
 		if (layer instanceof ol.layer.Vector) {
 			this.setLoadingStatus_(layer);
 
 		}
-		if (layer instanceof ol.layer.Image) {
+		if (layer instanceof ol.layer.Image || layer instanceof ol.layer.Tile) {
 			this.setLoadingStatus_(layer);
 
 		}
@@ -637,15 +667,41 @@ ol.control.LayerSwitcher.prototype.drawList = function (ul, collection) {
 				if (self.displayInLayerSwitcher(l)) nb++;
 			});
 			if (nb) {
-				$("<div>").addClass(layer.get("openInLayerSwitcher") ? "collapse-layers" : "expend-layers")
+				//
+				//$("<span>").addClass(layer.get("openInLayerSwitcher") ? "expand-collapse glyphicon glyphicon-minus" : "expand-collapse glyphicon glyphicon-plus")
+				//$("<span>").addClass(layer.get("openInLayerSwitcher") ? "expand-collapse fa fa-folder-open-o" : "expand-collapse fa fa-folder-o")
+				//$("<span>").addClass(layer.get("openInLayerSwitcher") ? "expand-collapse fa fa-folder-open" : "expand-collapse fa fa-folder")
+				$("<span>").addClass(layer.get("openInLayerSwitcher") ? "expand-collapse glyphicon glyphicon-folder-open" : "expand-collapse glyphicon glyphicon-folder-close")
 				.click(function () {
 					var l = $(this).closest('li').data("layer");
 					l.set("openInLayerSwitcher", !l.get("openInLayerSwitcher"))
 				})
 				.attr("title", this.tip.plus)
-				.appendTo(layer_buttons);
+				//.appendTo(layer_buttons);
+				.appendTo(d);
 			}
 		}
+		// Visibility
+		if(!layer.get('switcherTable')){
+			$("<input>")
+			.attr('type', layer.get('baseLayer') ? 'radio' : 'checkbox')
+			.attr("checked", layer.getVisible())
+			.on('click', setVisibility)
+			.appendTo(d);
+		}else{
+			$("<span>")
+			.addClass('fa fa-table')
+			.appendTo(d);
+		}
+	// Label
+	layer.layerswitcher_label = $("<label>").text(layer.get("title") || layer.get("name"))
+		.attr('title', layer.get("title") || layer.get("name"))
+		.on('click', setVisibility2)
+
+		.attr('unselectable', 'on')
+		.css('user-select', 'none')
+		.on('selectstart', false)
+		.appendTo(d);
 		// $("<div>").addClass("ol-separator").appendTo(layer_buttons);
 		// Info button
 		if (this.oninfo && !layer.get("noSwitcherInfo")) {
@@ -711,7 +767,7 @@ ol.control.LayerSwitcher.prototype.drawList = function (ul, collection) {
 		if (layer.getLayers) {
 			li.addClass('ol-layer-group');
 			if (layer.get("openInLayerSwitcher") === true) {
-				this.drawList($("<ul>").appendTo(li), layer.getLayers());
+				this.drawList($('<ul class="chl" id="'+elementId+'_layers">').appendTo(li), layer.getLayers());
 			}
 		}
 		else if (layer instanceof ol.layer.Vector) li.addClass('ol-layer-vector');
@@ -720,6 +776,7 @@ ol.control.LayerSwitcher.prototype.drawList = function (ul, collection) {
 		else if (layer instanceof ol.layer.Image) li.addClass('ol-layer-image');
 		else if (layer instanceof ol.layer.Heatmap) li.addClass('ol-layer-heatmap');
 		// Dispatch a dralist event to allow customisation
+		layer.set('layerswitcher_el_id',elementId);
 		this.dispatchEvent({ type: 'drawlist', layer: layer, li: li.get(0) });
 	}
 	this.viewChange();
@@ -761,7 +818,7 @@ ol.control.LayerSwitcher.prototype.setLoadingStatus_ = function (layer) {
 	function draw() {
 		if (thisLayer.layerswitcher_label) {
 			thisLayer.layerswitcher_label.removeClass('vector-loading_status-started');
-			thisLayer.layerswitcher_label.removeClass('vector-loading_status-compelete');
+			thisLayer.layerswitcher_label.removeClass('vector-loading_status-complete');
 			thisLayer.layerswitcher_label.removeClass('vector-loading_status-failed');
 			thisLayer.layerswitcher_label.removeClass('vector-loading_status-out_of_date');
 

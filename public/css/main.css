@@ -457,8 +457,8 @@ input[type="checkbox"].input-validation-error {
   color:inherit!important;
   background-image: url(images/loading.gif)!important;
   background-repeat: no-repeat;
-  padding-left: 2.7em!important;
-  background-position-x: 1.4em;
+  padding-left: 1.2em!important;
+    /* background-position-x: 1em;
 }
 .vector-loading_status-out_of_date{
   

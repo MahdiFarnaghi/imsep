@@ -463,6 +463,7 @@ deleteItemForReal:function(itemId){
                 
             })
       ],
+      controls: ol.control.defaults({attribution: false}),
       view: new ol.View({
           center: ol.proj.fromLonLat([(app.initMap_Lon|| 0), (app.initMap_Lat ||0)])
           //center: ol.proj.fromLonLat([53,32])

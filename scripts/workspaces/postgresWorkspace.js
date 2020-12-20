@@ -1270,6 +1270,272 @@ class PostgresWorkspace {
             return null;
 
     }
+    async getVectorTile(options) {
+        var tableName = options.tableName;
+        var datasetType= options.datasetType || 'vector';
+        var oidField = options.oidField || 'gid';
+        var shapeField = options.shapeField || 'geom';
+        var filter = options.filter || {};
+        var where= filter.expression;
+        var srid= options.srid || 3857;
+        var out_srid=options.out_srid;
+        var fields=options.fields || [];
+        var x= options.x;
+        var y= options.y;
+        var z= options.z;
+        var selectFrom;
+        var limitExpr='';
+        var recordsLimit=filter.recordsLimit;
+        var all_recordsLimit=50000;
+        if(recordsLimit && recordsLimit>0){
+            all_recordsLimit=recordsLimit;
+        }
+        var whereStr = ''
+        if (where) {
+            where= where.replace('{level}',z);
+           var checkSQlExpression_res= this.checkSQlExpression(where);
+           if(!checkSQlExpression_res.valid){
+               throw new Error(checkSQlExpression_res.message);
+           }
+            whereStr = ` WHERE ${where}`;
+        }
+        selectFrom=`${tableName} as a ${whereStr}`;
+        var selectFields='*';
+        if (fields && fields.length) {
+            var fieldNames=[];
+            fieldNames.push(oidField);
+            if(shapeField && datasetType=='vector'){
+                fieldNames.push(shapeField);
+            }
+
+            for (var i = 0; i < fields.length; i++) {
+                if (fields[i].type === 'nill'){
+                    continue;
+                 }
+                if(fields[i].isExpression ){
+                    if(typeof fields[i].expression==='undefined' || (fields[i].expression +'').trim()===''){
+                        fields[i].expression='NULL';
+                    }
+                    var checkFieldSQlExpression_res= this.checkSQlExpression(fields[i].expression);
+                    if(!checkFieldSQlExpression_res.valid){
+                        throw new Error(fields[i].name + ' field\'s expression Error.'+ checkFieldSQlExpression_res.message);
+                    }
+
+                    fieldNames.push('(((' + fields[i].expression + '))) AS "'+fields[i].name.toLowerCase() + '"' );
+                }else{
+                    fieldNames.push('"' + fields[i].name.toLowerCase() + '"');
+                }
+            }
+            selectFields = fieldNames.join(',');
+        }
+       // selectFrom=`(SELECT a.* FROM ${selectFrom}) as j`;
+        if(datasetType=='vector' && filter.spatialFilter){
+            if( filter.spatialFilter.searchArea && filter.spatialFilter.searchArea.geometry && !filter.spatialFilter.byFeaturesOfLayerItem_details ){
+                var searchAreaGeometry= filter.spatialFilter.searchArea.geometry;
+                var searchAreaSrid=filter.spatialFilter.searchAreaSrid || 3857;
+                var spatialOperator=filter.spatialFilter.spatialOperator || 'ST_Intersects';
+                var bufferDistance =filter.spatialFilter.bufferDistnace;
+              
+                var searchGeom=`ST_SetSRID(ST_CollectionHomogenize(ST_GeomFromGeoJSON('${JSON.stringify(searchAreaGeometry)}')),${searchAreaSrid})`;
+                if(typeof bufferDistance !=='undefined'){
+                    searchGeom=`ST_Buffer( ST_Transform (${searchGeom}, 4326)::geography , ${bufferDistance})::geometry`;
+                }
+                var spatialWhere=`${spatialOperator}(${shapeField}, ST_Transform(${searchGeom},${srid}))`;
+                if(spatialOperator=='ST_DWithin'){
+                    var within_distance=filter.spatialFilter.within_distance;
+                     spatialWhere=`${spatialOperator}(ST_Transform (${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
+                }
+                //var spatialWhere=`${spatialOperator}(${shapeField}, ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(searchAreaGeometry)}'),${searchAreaSrid}),${srid}))`;
+                //ST_CollectionHomogenize
+                var orderByExpr='';
+                // var limitExpr='';
+                // var recordsLimit=filter.recordsLimit;
+                
+                if(spatialOperator=='ST_Nearest'){
+                    spatialOperator='ST_DWithin';
+                    var within_distance=filter.spatialFilter.nearest_searchDistance;
+                     spatialWhere=`${spatialOperator}(ST_Transform (${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
+                     //note: there is no need to convert to geography
+                     orderByExpr=` ORDER BY ST_Distance(${shapeField}, ST_Transform(${searchGeom},${srid})) `;
+                     recordsLimit= filter.spatialFilter.nearest_maxNumber;
+                     if(!recordsLimit){
+                        recordsLimit=1;
+                     }
+                }
+                if(recordsLimit && recordsLimit>0){
+                    limitExpr=` LIMIT ${recordsLimit}`;
+                }
+                if(where){
+                    var atWhere=where;
+                    where= `(${where}) AND (${spatialWhere})`; 
+                }else{
+                    where= `(${spatialWhere})`; 
+                }
+            
+                whereStr = '';
+                if (where) {
+                    whereStr = ` WHERE ${where}`;
+                }
+                //selectFrom=`${tableName}${whereStr} ${orderByExpr} ${limitExpr}`;
+                selectFrom=`(SELECT ${selectFields} FROM ${tableName} ${whereStr} ${orderByExpr} ${limitExpr}) as j`;
+                selectFields='*';
+
+            }else if (filter.spatialFilter.byFeaturesOfLayerItem_details){
+                var details_r=filter.spatialFilter.byFeaturesOfLayerItem_details;
+                var tableName_r = details_r.datasetName;
+                var oidField_r = details_r.oidField || 'gid';
+                var shapeField_r = details_r.shapeField || 'geom';
+                var srid_r=3857;
+                if(details_r.spatialReference){
+                    srid_r=  details_r.spatialReference.srid || 3857;
+                }
+                var searchAreaSrid=srid_r;
+                var spatialOperator=filter.spatialFilter.spatialOperator || 'ST_Intersects';
+                var bufferDistance =filter.spatialFilter.bufferDistnace;
+                var searchGeom=`B.${shapeField_r}`;
+                if(typeof bufferDistance !=='undefined'){
+                    searchGeom=`ST_Buffer( ST_Transform (ََ${searchGeom}, 4326)::geography , ${bufferDistance})::geometry`;
+                }
+
+                
+               // var spatialWhere=`${spatialOperator}(A.${shapeField}, ST_Transform(${searchGeom},${srid}))`;
+               
+                var baseSelect=`(SELECT ${selectFields} FROM ${tableName} ${whereStr})`;
+                selectFields='*';
+
+               // selectFrom=`(SELECT DISTINCT ON (A.${oidField}) A.* FROM  ${baseSelect} as A, ${tableName_r} as B WHERE ${spatialWhere}) as j `;
+
+                var not=' NOT ';
+                if(spatialOperator.toLowerCase().startsWith('not ')){
+                    spatialOperator =spatialOperator.substring('not '.length);
+                    not='';
+                }
+                var spatialCondition=`${spatialOperator}(A.${shapeField}, ST_Transform(${searchGeom},${srid}))`;
+                if(spatialOperator=='ST_DWithin'){
+                    var within_distance=filter.spatialFilter.within_distance;
+                    spatialCondition=`${spatialOperator}(ST_Transform (A.${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
+                }
+                var orderByExpr='';
+                // var limitExpr='';
+                // var recordsLimit=filter.recordsLimit;
+                
+                
+                if(spatialOperator=='ST_Nearest'){
+                    spatialOperator='ST_DWithin';
+                    var within_distance=filter.spatialFilter.nearest_searchDistance;
+                    spatialCondition=`${spatialOperator}(ST_Transform (A.${shapeField}, 4326)::geography,  ST_Transform (${searchGeom}, 4326)::geography,${within_distance})`;
+                     //note: there is no need to convert to geography
+                    // orderByExpr=` ORDER BY A.${oidField}, ST_Distance(A.${shapeField}, ST_Transform(${searchGeom},${srid})) `;
+                     var distanceField=`ST_Distance(A.${shapeField}, ST_Transform(${searchGeom},${srid}))`;
+                     orderByExpr=` ORDER BY AtoB_distance  `;
+                     recordsLimit= filter.spatialFilter.nearest_maxNumber;
+                     if(!recordsLimit){
+                        recordsLimit=1;
+                     }
+                     if(recordsLimit && recordsLimit>0){
+                        limitExpr=` LIMIT ${recordsLimit}`;
+                    }
+
+                    //  selectFrom=`(SELECT * from
+                    //  (SELECT DISTINCT ON (A.${oidField}) A.*, ${distanceField} as AtoB_distance 
+                    // FROM  ${baseSelect} as A
+                    // LEFT JOIN ${tableName_r} as B
+                    // ON ${spatialCondition}
+                    //  WHERE (${not}  B.${oidField_r} IS NULL)
+                    //  ) as j0
+                    //  ${orderByExpr} ${limitExpr}) as j `;
+                    selectFrom=`(SELECT * from
+                        (SELECT DISTINCT ON (${oidField}) * from
+                            (SELECT A.*, ${distanceField} as AtoB_distance 
+                                FROM  ${baseSelect} as A
+                                LEFT JOIN ${tableName_r} as B
+                                ON ${spatialCondition}
+                                    WHERE (${not}  B.${oidField_r} IS NULL)
+                                    ${orderByExpr}
+                            ) as j0
+                        ) as j00 
+                        ${orderByExpr} ${limitExpr}) as j 
+                         
+                         `;
+                }else
+                {
+                     if(recordsLimit && recordsLimit>0){
+                        limitExpr=` LIMIT ${recordsLimit}`;
+                    }
+                selectFrom=`(SELECT DISTINCT ON (A.${oidField}) A.* 
+                    FROM  ${baseSelect} as A
+                    LEFT JOIN ${tableName_r} as B
+                    ON ${spatialCondition}
+                     WHERE (${not}  B.${oidField_r} IS NULL)
+                     ${orderByExpr} ${limitExpr}
+                     ) as j `;
+                }
+            }
+        }
+     
+        var worldMercMax = 20037508.3427892;
+        var worldMercMin = -1 * worldMercMax;
+        var worldMercSize = worldMercMax - worldMercMin;
+        //# Width in tiles
+        var worldTileSize =  Math.pow(2,z);
+        //# Tile width in EPSG:3857
+        var tileMercSize = worldMercSize / worldTileSize;
+        //# Calculate geographic bounds from tile coordinates
+        //# XYZ tile coordinates are in "image space" so origin is
+        //# top-left, not bottom right
+        
+        var west = worldMercMin + tileMercSize * x;
+        var east = worldMercMin + tileMercSize * (x + 1);
+        var south = worldMercMax - tileMercSize * (y + 1);
+        var north= worldMercMax - tileMercSize * (y);
+        var DENSIFY_FACTOR = 4;
+        var segSize = (east - west)/DENSIFY_FACTOR;
+        var bbox_3857 = `ST_Segmentize(ST_MakeEnvelope(${west}, ${south}, ${east}, ${north}, 3857),${segSize})`;
+
+        var queryText=undefined;
+        
+       
+        queryText=`
+                WITH
+                    mvtgeom as (
+                    SELECT
+                        ST_AsMVTGeom (
+                        ST_Transform(${shapeField}, 3857),
+                        ${bbox_3857}::box2d
+                        ) as geom_asmvtgeom
+                        ${selectFields ? `, ${selectFields}` : ''}
+                        
+                    FROM
+                        (
+                        SELECT ${selectFields} FROM ${selectFrom} 
+                        LIMIT ${all_recordsLimit}
+                        ) t
+                       
+                    WHERE
+                        ST_Intersects(
+                            ${shapeField},
+                        ST_Transform(
+                            ${bbox_3857},
+                            ${srid}
+                        )
+                        )
+                    )
+                    --SELECT ST_AsMVT(mvtgeom.*, '${tableName}', 4096, 'geom_asmvtgeom' ,'${oidField}' ) AS mvt from mvtgeom;
+                    SELECT ST_AsMVT(mvtgeom.*, '${tableName}', 4096, 'geom_asmvtgeom' ) AS mvt from mvtgeom;
+        `;
+       
+
+        var results = await this.query({
+            text: queryText
+        },'readonly');
+        if (results) {
+           
+                return {mvt:results.rows[0].mvt};
+           
+        } else
+            return null;
+
+    }
     async getVectorExtentJson(options) {
         var tableName = options.tableName;
         var shapeField = options.shapeField || 'geom';
@@ -2981,43 +3247,51 @@ try {
 
         var where='';
         var bbox;
-        var north = 180 - (360 * y) / Math.pow(2, z);
-        var south = 180 - (360 * (y + 1)) / Math.pow(2, z);
-        var west = (360 * x) / Math.pow(2, z) - 180;
-        var east = (360 * (x + 1)) / Math.pow(2, z) - 180;
+         // var north = 180 - (360 * y) / Math.pow(2, z);
+        // var south = 180 - (360 * (y + 1)) / Math.pow(2, z);
+        // var west = (360 * x) / Math.pow(2, z) - 180;
+        // var east = (360 * (x + 1)) / Math.pow(2, z) - 180;
 
         
-        if (true)//mIsMercatorProjected)
-        {
-            var res = Math.PI * (1 - 2 * (y / Math.pow(2, z)));
-            var Phi = 2 * Math.atan(Math.exp(res)) - Math.PI / 2;
-            north = Phi * 180 / Math.PI;
-            res = Math.PI * (1 - 2 * ((y + 1) / Math.pow(2, z)));
-            Phi = 2 * Math.atan(Math.exp(res)) - Math.PI / 2;
-            south = Phi * 180 / Math.PI;
-        }
-        //var dw= (east-west)/256.0;
+        // if (true)//mIsMercatorProjected)
+        // {
+        //     var res = Math.PI * (1 - 2 * (y / Math.pow(2, z)));
+        //     var Phi = 2 * Math.atan(Math.exp(res)) - Math.PI / 2;
+        //     north = Phi * 180 / Math.PI;
+        //     res = Math.PI * (1 - 2 * ((y + 1) / Math.pow(2, z)));
+        //     Phi = 2 * Math.atan(Math.exp(res)) - Math.PI / 2;
+        //     south = Phi * 180 / Math.PI;
+        // }
         
-        var dw2= (east-west)/256.0;
+        // bbox= west+','+south+','+east+','+north+ ',4326';
+     
+
+   
+    //# Calculate envelope in "Spherical Mercator" (https://epsg.io/3857)
+    //def tileToEnvelope(self, tile):
+      //  # Width of world in EPSG:3857
+       var worldMercMax = 20037508.3427892;
+       var worldMercMin = -1 * worldMercMax;
+        var worldMercSize = worldMercMax - worldMercMin;
+        //# Width in tiles
+        var worldTileSize =  Math.pow(2,z);
+        //# Tile width in EPSG:3857
+        var tileMercSize = worldMercSize / worldTileSize;
+        //# Calculate geographic bounds from tile coordinates
+        //# XYZ tile coordinates are in "image space" so origin is
+        //# top-left, not bottom right
         
-        // var dw= (east-west)/100.0;
-        // west= west-dw;
-        // east= east+dw;
-        // north= north+dw;
-        // south= south-dw;
-        bbox= west+','+south+','+east+','+north+ ',4326';
-       //  var dw= (east-west)/256.0;
-
-
-        //  var  west2= west-dw2;
-        //  var east2= east+dw2;
-        //  var north2= north+dw2;
-        //  var south2= south-dw2;
-        //  var bbox2= west2+','+south2+','+east2+','+north2+ ',4326';
-
+        var west = worldMercMin + tileMercSize * x;
+        var east = worldMercMin + tileMercSize * (x + 1);
+        var south = worldMercMax - tileMercSize * (y + 1);
+        var north= worldMercMax - tileMercSize * (y);
+       var bbox_3857= west+','+south+','+east+','+north+ ',3857';
+         bbox= bbox_3857;
        
-        var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox}),${origRaster_srid}))`;
+        //var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox}),${origRaster_srid}))`;
+        var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox_3857}),${origRaster_srid}))`;
        //var whereStr=`ST_Intersects(${rasterField},ST_Transform(ST_MakeEnvelope(${bbox2}),${origRaster_srid}))`;
+        
         
 
 var clipTileExpr=`with inputR as (SELECT ST_Transform(
@@ -5394,10 +5668,21 @@ var createVectorResult= await this.createVectorTable(outDetails);
         var fieldNames_safe = [];
         if (fields) {
             for (var i = 0; i < fields.length; i++) {
+                if (!fields[i].type){
+                    continue;
+                }
                 if (fields[i].type === 'nill'){
                     continue;
                  }
+                
                 fields[i].name = fields[i].name.toLowerCase();
+                if (fields[i].isExpression){
+                    if(fields[i].expression){
+                        fields[i].expression = fields[i].expression.replace('ST_X(geom)','ST_X(ST_Centroid(geom))');
+                        fields[i].expression = fields[i].expression.replace('ST_Y(geom)','ST_Y(ST_Centroid(geom))');
+                    }
+                    continue;
+                }
                 fieldNames.push(fields[i].name);
                 fieldNames_safe.push('"' + fields[i].name + '"');
             }

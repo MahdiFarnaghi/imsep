@@ -210,5 +210,23 @@ var LayerHelper={
          }else{
              return null;
          }
-       }
+       },
+       isLayerVisible:function(layer,checkParents){
+        if(! layer){
+            return false;   
+        }
+        if(!layer.getVisible){
+            return true;
+        }
+        var v= layer.getVisible();
+        if(!v){
+            return false;
+        }
+        var parent= layer.get('parent') || layer.get('_parent');
+        if(checkParents && parent){
+            return this.isLayerVisible(parent,checkParents); 
+        }else{
+            return true;
+        }
+    }
 }

@@ -1,6 +1,7 @@
 /** Create a legend for styles
  * @constructor
  * @fires select
+ * @fires toggle
  * @param {*} options
  *  @param {String} options.className class of the control
  *  @param {String} options.title Legend title
@@ -13,6 +14,7 @@
  * @extends {ol.control.Control}
  */
 ol.control.Legend = function(options) {
+  var self=this;
   options = options || {};
   var element = document.createElement('div');
   if (options.target) {
@@ -26,6 +28,7 @@ ol.control.Legend = function(options) {
     button.setAttribute('type', 'button');
     button.addEventListener('click', function(e) {
       element.classList.toggle('ol-collapsed');
+      self.dispatchEvent({ type:'toggle'});
     });
     element.appendChild(button);
     // Hide on click
@@ -34,6 +37,7 @@ ol.control.Legend = function(options) {
     button.className = 'ol-closebox';
     button.addEventListener('click', function(e) {
       element.classList.toggle('ol-collapsed');
+      self.dispatchEvent({ type:'toggle'});
     });
     element.appendChild(button);
   }
@@ -42,6 +46,7 @@ ol.control.Legend = function(options) {
   this._imgElement.className = 'ol-legendImg';
   element.appendChild(this._imgElement);
   this._tableElement = document.createElement('ul');
+  this._tableElement.className = 'ol-legendTable';
   element.appendChild(this._tableElement);
 	ol.control.Control.call(this, {
     element: element,
@@ -56,7 +61,7 @@ ol.control.Legend = function(options) {
   if (options.collapsed===false) this.show();
   this.refresh();
 };
-ol.inherits(ol.control.Legend, ol.control.Control);
+ol.ext.inherits(ol.control.Legend, ol.control.Control);
 /** Set the style
  * @param { ol.style.Style | Array<ol.style.Style> | ol.StyleFunction | undefined	} style a style or a style function to use with features
  */
@@ -78,7 +83,9 @@ ol.control.Legend.prototype.setStyle = function(style) {
  */
 ol.control.Legend.prototype.addRow = function(row) {
   this._rows.push(row||{});
-  this.refresh();
+   //if(!dontRefresh){
+   // this.refresh();
+ // }
 };
 /** Add a new row to the legend
  * @param {*} options a list of parameters 
@@ -198,13 +205,24 @@ ol.control.Legend.prototype.refresh = function() {
     }
     col.style.height = height + 'px';
     col = document.createElement('div');
+    if(r.css){
+      row.className=r.css;
+    }
     if (title) {
-      row.className = 'ol-title';
+      row.className += 'ol-title';
     } else {
-      if(!imageData){
-        col.style.paddingLeft = width + 'px';
+      if(app && app.layout=='rtl'){
+        if(!imageData){
+          col.style.paddingRight = width + 'px';
+        }else{
+          col.style.paddingRight =  '8px';
+        }
       }else{
-        col.style.paddingLeft =  '8px';
+        if(!imageData){
+          col.style.paddingLeft = width + 'px';
+        }else{
+          col.style.paddingLeft =  '8px';
+        }
       }
     }
     col.innerHTML = str || '';
@@ -227,6 +245,7 @@ ol.control.Legend.prototype.refresh = function() {
   var size = this.get('size');
   var widthImg = size[0] + 2*this.get('margin');
   var heightImg = size[1] + 2*this.get('margin');
+  
   var canvasImg;
   var ratio = ol.has.DEVICE_PIXEL_RATIO;
   
@@ -261,16 +280,19 @@ ol.control.Legend.prototype.setVisible = function(value) {
  */
 ol.control.Legend.prototype.show = function() {
   this.element.classList.remove('ol-collapsed');
+  this.dispatchEvent({ type:'toggle'});
 };
 /** Hide control
  */
 ol.control.Legend.prototype.hide = function() {
   this.element.classList.add('ol-collapsed');
+  this.dispatchEvent({ type:'toggle'});
 };
 /** Toggle control
  */
 ol.control.Legend.prototype.toggle = function() {
   this.element.classList.toggle('ol-collapsed');
+  this.dispatchEvent({ type:'toggle'});
 };
 /** Get the image for a style 
  * You can provide in options:
@@ -416,6 +438,9 @@ ol.control.Legend.prototype.getStyleImageData = function(options,canvas,  row) {
   }
   var cy = height/2;
   var sx = size[0]/2;
+  if(options.leftOffset){
+    //sx = (size[0]-options.leftOffset) /2;
+  }
   var sy = size[1]/2;
   var i, s;
   // Get point offset
@@ -461,7 +486,7 @@ ol.control.Legend.prototype.getStyleImageData = function(options,canvas,  row) {
         break;
       case ol.geom.Polygon:
       case 'Polygon':
-        vectorContext.drawGeometry(new ol.geom.Polygon([[[cx-sx, cy-sy], [cx+sx, cy-sy], [cx+sx, cy+sy], [cx-sx, cy+sy], [cx-sx, cy-sy]]]));
+        vectorContext.drawGeometry(new ol.geom.Polygon([[[cx-sx-2, cy-sy], [cx+sx-2, cy-sy], [cx+sx-2, cy+sy], [cx-sx+2, cy+sy], [cx-sx+2, cy-sy]]]));
         break;
     }
   }

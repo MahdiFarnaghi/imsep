@@ -53,15 +53,17 @@ MapContainer.prototype.create = function() {
   var self = this;
   // Popup overlay
   var popup = new ol.Overlay.Popup({
-      popupClass: "default shadow", //"tooltips", "warning" "black" "default", "tips", "shadow",
-      closeBox: false,
-      //onshow: function(){ console.log("You opened the box"); },
-      //onclose: function(){ console.log("You close the box"); },
-      positioning: 'auto',
-      autoPan: true,
-      autoPanAnimation: {
-          duration: 250
-      }
+    popupClass: "default shadow", //"tooltips", "warning" "black" "default", "tips", "shadow",
+    className:'ol-overlay-container ol-selectable',
+    closeBox: false,
+    //onshow: function(){ console.log("You opened the box"); },
+    //onclose: function(){ console.log("You close the box"); },
+    positioning: 'auto',
+    autoPan: true,
+    stopEvent:true,
+    autoPanAnimation: {
+        duration: 250
+    }
   });
   
   this.popup = popup;
@@ -101,6 +103,9 @@ MapContainer.prototype.create = function() {
           //,extent: ol.proj.transform([-180,-90,180,90],'EPSG:4326', 'EPSG:3857')
       })
   });
+//   this.statusBar = new ol.control.Status();
+//   map.addControl(this.statusBar);
+//   this.statusBar.status('status bar');
 
   var interactionSelectPointerMove = new ol.interaction.Select({
     condition: ol.events.condition.pointerMove,
@@ -182,10 +187,11 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
           // displayInLayerSwitcher: function (l) { return false; },
           reordering: true,
           show_progress: true,
+          toggleVisiblityOnLabelClick:false,
           extent: true,
-          trash: true
-              //, oninfo: function (l) { alert(l.get("title")); }
-              ,
+          trash: true,
+          // oninfo: function (l) { alert(l.get("title")); },
+        
           onClick: function(l) {
               //var layerPropertiesDlg = new ObjectPropertiesDlg(self, l, {});
               //layerPropertiesDlg.show();
@@ -224,42 +230,94 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
   });
 
   switcher.on('beforeLayerRemoved', function(e) {
-    e.cancel=true;
-    var layerToRemove= e.layer;
-    var msg = 'Remove layer (' + layerToRemove.get('title') +  ')?';
+    // e.cancel=true;
+    // var layerToRemove= e.layer;
+    // var msg = 'Remove layer (' + layerToRemove.get('title') +  ')?';
     
-    confirmDialog.show(msg, function (confirm) {
+    // confirmDialog.show(msg, function (confirm) {
 
-        if (confirm) {
-            map.removeLayer(layerToRemove);
-            var layerTasks= layerToRemove.get('layerTasks');
-            if(layerTasks && layerTasks.OnDeActivated){
-                layerTasks.OnDeActivated();
+    //     if (confirm) {
+    //         map.removeLayer(layerToRemove);
+    //         var layerTasks= layerToRemove.get('layerTasks');
+    //         if(layerTasks && layerTasks.OnDeActivated){
+    //             layerTasks.OnDeActivated();
+    //         }
+    //     }
+    // },
+    //     {
+    //         dialogSize: 'sm',
+    //         alertType: 'danger'
+    //     }
+    // );
+    e.cancel = true;
+            var layerToRemove = e.layer;
+            if(!layerToRemove){
+                return;
             }
-        }
-    },
-        {
-            dialogSize: 'sm',
-            alertType: 'danger'
-        }
-    );
+            var msg = 'Remove layer (' + layerToRemove.get('title') + ')?';
+
+            confirmDialog.show(msg, function(confirm) {
+
+                if (confirm) {
+                    if(e.parentLayer && e.parentLayer.getLayers){
+                        e.parentLayer.getLayers().remove(layerToRemove);
+                    }else if(layerToRemove.get('_parent') && layerToRemove.get('_parent').getLayers){
+                        layerToRemove.get('_parent').getLayers().remove(layerToRemove);
+                    }else{
+                        map.removeLayer(layerToRemove);
+                    }
+                    var layerTasks = layerToRemove.get('layerTasks');
+                    if (layerTasks && layerTasks.OnDeActivated) {
+                        layerTasks.OnDeActivated();
+                    }
+                }
+            }, {
+                dialogSize: 'sm',
+                alertType: 'danger'
+            });
   });
 
   this.switcher = switcher;
   map.addControl(switcher);
 
-  this.mousePositionControl = new ol.control.MousePosition({
+ // this.mousePositionControl = new ol.control.MousePosition({
+//     coordinateFormat: ol.coordinate.createStringXY(4),
+//     projection: 'EPSG:4326',
+//     // comment the following two lines to have the mouse position
+//     // be placed within the map.
+//     //className: 'custom-mouse-position',
+//     className: '',
+//     target: document.getElementById('mousePosition'),
+//     //undefinedHTML: '&nbsp;'
+//     undefinedHTML: ''
+    
+//   });
+this.mousePositionControl = new ol.control.CoordinatesBar({
+            
     coordinateFormat: ol.coordinate.createStringXY(4),
     projection: 'EPSG:4326',
-    // comment the following two lines to have the mouse position
-    // be placed within the map.
-    //className: 'custom-mouse-position',
-    className: '',
-    target: document.getElementById('mousePosition'),
-    //undefinedHTML: '&nbsp;'
-    undefinedHTML: ''
-    
-  });
+   // projection: 'iran-lambert',
+    undefinedHTML: '',
+    handleClick: function() {
+        // var dlg = new DlgCoordinateSettings(self, {
+        //     projection: self.mousePositionControl.projection
+        // }, {
+            
+        //     onapply: function(dlg, data) {
+        //         var projection = '';
+        //         if (data && data.settings && data.settings.projection) {
+        //             self.mousePositionControl.setProjection(data.settings.projection);
+        //             if(data.settings.projection=='EPSG:4326'){
+        //                 self.mousePositionControl.coordinateFormat=ol.coordinate.createStringXY(4);
+        //             }else{
+        //                 self.mousePositionControl.coordinateFormat=ol.coordinate.createStringXY(1);
+        //             }
+        //         }
+        //     }
+
+        // }).show();
+    }
+});
   map.addControl(this.mousePositionControl);
 
   // Main control bars
@@ -354,23 +412,26 @@ var legend = new ol.control.Legend({
     collapsed: false
   });
   map.addControl(legend);
+  legend.on('toggle',function(){
+    self.refreshLegend();
+    });
   legend.on('select', function(e) {
     if (e.index >= 0) {
 
     }
-    if(e.row && e.row.data && e.row.data.layer){
+    if (e.row && e.row.data && e.row.data.layer) {
 
-       var custom= e.row.data.layer.get('custom');
-       var activeTab=1;
-        if(custom && custom.displayInLegend){
-            if(custom.type === 'ol.layer.Vector'){
-                activeTab=1;
-            }else if (custom.type === 'ol.layer.Image' && custom.source==='ol.source.GeoImage'){
-                activeTab=3;
+        var custom = e.row.data.layer.get('custom');
+        var activeTab = 1;
+        if (custom && custom.displayInLegend) {
+            if (custom.type === 'ol.layer.Vector') {
+                activeTab = 1;
+            } else if (custom.type === 'ol.layer.Image' && custom.source === 'ol.source.GeoImage') {
+                activeTab = 3;
             }
         }
 
-        self.showLayerProperties(e.row.data.layer,activeTab);
+        self.showLayerProperties(e.row.data.layer, activeTab);
     }
   });
 this.legend=legend;
@@ -439,8 +500,8 @@ map.addControl(printpdf);
   mapElement = typeof mapElement === "string" ? $("#" + mapElement) : $(mapElement);
   map.on('pointermove', function(e) {
       if (e.dragging) {
-          popup.hide();
-          return;
+        //  popup.hide();
+         // return;
       }
       var ct=self.getCurrentTool();
       var tCursor='';
@@ -859,7 +920,14 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                     type: 'ol.layer.Tile',
                     source: 'ol.source.WMS',
                     dataObj: dataObj,
-                    displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:false
+                    
+                    noSwitcherInfo:  (typeof layerInfo.custom.noSwitcherInfo !== 'undefined') ? layerInfo.custom.noSwitcherInfo : true,
+                    displayInLegend: (typeof layerInfo.custom.displayInLegend !== 'undefined') ? layerInfo.custom.displayInLegend : false,
+                        
+                    supportsGetFeatureInfo:layerInfo.custom.supportsGetFeatureInfo,
+                    supportsGetFeatureInfo_html:layerInfo.custom.supportsGetFeatureInfo_html,
+                    supportsGetFeatureInfo_text:layerInfo.custom.supportsGetFeatureInfo_text,
+                    supportsGetFeatureInfo_json:layerInfo.custom.supportsGetFeatureInfo_json
                 }
             });
             var layerTasks= new LayerTasks(this.app,this,newLayer,{});
@@ -1342,7 +1410,7 @@ MapContainer.prototype.exportPngBase64Str = function(callback,outWidth) {
   map.renderSync();
   // map.render();
 }
-MapContainer.prototype.exportPngBlob = function(callback,outWidth) {
+MapContainer.prototype.exportPngBlob0 = function(callback,outWidth) {
    
     var getResizedCanvas= function (canvas,newWidth,newHeight) {
         var tmpCanvas = document.createElement('canvas');
@@ -1383,6 +1451,83 @@ MapContainer.prototype.exportPngBlob = function(callback,outWidth) {
   });
   map.renderSync();
   // map.render();
+}
+MapContainer.prototype.getMapRenderedCanvas = function() {
+    
+    var map = this.map;
+    var mapCanvas = document.createElement('canvas');
+var size = map.getSize();
+mapCanvas.width = size[0];
+mapCanvas.height = size[1];
+var mapContext = mapCanvas.getContext('2d');
+
+    Array.prototype.forEach.call(
+        document.querySelectorAll('.ol-layer canvas'),
+        function (cnvs) {
+          if (cnvs.width > 0) {
+            var opacity = cnvs.parentNode.style.opacity;
+            mapContext.globalAlpha = opacity === '' ? 1 : Number(opacity);
+            var transform = cnvs.style.transform;
+            // Get the transform parameters from the style's transform matrix
+            var matrix = transform
+              .match(/^matrix\(([^\(]*)\)$/)[1]
+              .split(',')
+              .map(Number);
+            // Apply the transform to the export map context
+            CanvasRenderingContext2D.prototype.setTransform.apply(
+              mapContext,
+              matrix
+            );
+            mapContext.drawImage(cnvs, 0, 0);
+          }
+        }
+      );
+
+      return mapCanvas;
+
+}
+MapContainer.prototype.exportPngBlob = function(callback, outWidth) {
+
+    var getResizedCanvas = function(canvas, newWidth, newHeight) {
+        var tmpCanvas = document.createElement('canvas');
+        tmpCanvas.width = newWidth;
+        tmpCanvas.height = newHeight;
+
+        var ctx = tmpCanvas.getContext('2d');
+        ctx.drawImage(canvas, 0, 0, canvas.width, canvas.height, 0, 0, newWidth, newHeight);
+
+        return tmpCanvas;
+    }
+
+    var map = this.map;
+    var self= this;
+    map.once('rendercomplete', function(event) {
+    //map.once('postcompose', function(event) {
+        var mapCanvas = self.getMapRenderedCanvas();
+
+        
+        if (typeof outWidth !== 'undefined') {
+            var outHeight = (outWidth / mapCanvas.width) * mapCanvas.height;
+            try {
+                mapCanvas = getResizedCanvas(mapCanvas, outWidth, outHeight);
+            } catch (ex) {}
+        }
+        if (navigator.msSaveBlob) {
+            //navigator.msSaveBlob(canvas.msToBlob(), 'map.png');
+            var blob = mapCanvas.msToBlob();
+            if (callback) {
+                callback(blob)
+            }
+        } else {
+            mapCanvas.toBlob(function(blob) {
+                if (callback) {
+                    callback(blob);
+                }
+            });
+        }
+    });
+    map.renderSync();
+    // map.render();
 }
 MapContainer.prototype.addTestWms=function(){
 var layerInfo={
@@ -2290,34 +2435,39 @@ MapContainer.prototype.refreshLegend=function(delay){
     }, delay);   
     
 }
-MapContainer.prototype.refreshLegend_immediate=function(){
+MapContainer.prototype.refreshLegend_immediate = function() {
 
-    var legend=this.legend;
-    legend._rows=[];
+    var legend = this.legend;
+    legend._rows = [];
     legend.refresh();
-    var layers= this.getAllLayersList();
+    if(!legend.getVisible()){
+        return;
+    }
+    var layers = this.getAllLayersList();
 
-    
-    for(var i= layers.length-1 ;i>=0;i--){
-        var layer= layers[i];
-        if(!layer.getVisible()){
+
+    for (var i = layers.length - 1; i >= 0; i--) {
+        var layer = layers[i];
+        //if (!layer.getVisible()) {
+        if(! LayerHelper.isLayerVisible(layer,true)){    
             continue;
         }
-        var custom= layer.get('custom');
-        if(!custom){
+        var custom = layer.get('custom');
+        if (!custom) {
             continue;
         }
-        if(custom.displayInLegend){
-            if(custom.type === 'ol.layer.Vector'){
+        if (custom.displayInLegend) {
+            if (custom.type === 'ol.layer.Vector') {
                 this.refreshLegend_addVectorLayer(layer);
-            }else if (custom.type === 'ol.layer.Image' && custom.source==='ol.source.GeoImage'){
-                this.refreshLegend_addRasterLayer(layer);  
+            } else if (custom.type === 'ol.layer.Image' && custom.source === 'ol.source.GeoImage') {
+                this.refreshLegend_addRasterLayer(layer);
             }
         }
     }
-  
+    legend.refresh();
+
 }
-MapContainer.prototype.refreshLegend_addVectorLayer=function(layer){
+MapContainer.prototype.refreshLegend_addVectorLayer_=function(layer){
     var legend=this.legend;
     var shapeType= LayerHelper.getShapeType( layer);
     var renderer= LayerHelper.getRenderer( layer);
@@ -2415,7 +2565,7 @@ if(i==items.length-1 && !toValue){
     }
 
 }
-MapContainer.prototype.refreshLegend_addRasterLayer=function(layer){
+MapContainer.prototype.refreshLegend_addRasterLayer_=function(layer){
     var legend=this.legend;
     var id= LayerHelper.getDatasetId(layer);
     if(!id){
@@ -2536,6 +2686,233 @@ MapContainer.prototype.refreshLegend_addRasterLayer=function(layer){
 //     }
 
 }
+MapContainer.prototype.refreshLegend_addVectorLayer = function(layer) {
+    var legend = this.legend;
+    var shapeType = LayerHelper.getShapeType(layer);
+    var renderer = LayerHelper.getRenderer(layer);
+    if (!renderer) {
+        return;
+    }
+
+    var defaultStyle = renderer.getDefaultStyle();
+    if (shapeType == 'MultiPolygon') {
+        shapeType = 'Polygon';
+    }
+    if (shapeType == 'MultiLineString') {
+        shapeType = 'LineString';
+    }
+    var style = StyleFactory.cloneStyle(defaultStyle);
+    legend.addRow({
+        title: layer.get('title'),
+        typeGeom: shapeType,
+        style: style,
+        data: {
+            layer: layer,
+            style: style
+        }
+    });
+    if (renderer.name == 'uniqueValueRenderer') {
+        var items = renderer.getUniqueValueInfos();
+        var i = 0;
+        legend.addRow({
+            title: renderer.field,
+            style: undefined,
+            leftOffset: 10,
+            data: {
+                layer: layer
+            }
+        });
+
+        for (var key in items) {
+            if(i>100){
+                break;
+            }
+            var item = items[key];
+            var style = StyleFactory.cloneStyle(item['style']);
+            legend.addRow({
+                title: item['label'] || item['value'],
+                typeGeom: shapeType,
+                style: style,
+                leftOffset: 10,
+                data: {
+                    layer: layer,
+                    style: item['style']
+                }
+            });
+
+            i++;
+        }
+
+    } else if (renderer.name == 'rangeValueRenderer') {
+        var items = renderer.getRangeValueInfos();
+
+        legend.addRow({
+            title: renderer.field,
+            style: undefined,
+            leftOffset: 10,
+            data: {
+                layer: layer
+            }
+        });
+        for (var i = 0; i < items.length; i++) {
+            var item = items[i];
+            var fromValue = item['minValue'] || '';
+            var toValue = item['maxValue'] || '';
+            var caption = fromValue + ' - ' + toValue
+            if (i == 0 && !fromValue) {
+                caption = '< ' + toValue;
+            }
+            if (i == items.length - 1 && !toValue) {
+                caption = '>= ' + fromValue;
+            }
+            var style = StyleFactory.cloneStyle(item['style']);
+
+            legend.addRow({
+                title: caption,
+                typeGeom: shapeType,
+                style: style,
+                leftOffset: 10,
+                data: {
+                    layer: layer,
+                    style: item['style']
+                }
+            });
+
+
+        }
+
+    }
+
+}
+MapContainer.prototype.refreshLegend_addRasterLayer = function(layer) {
+    var legend = this.legend;
+    var id = LayerHelper.getDatasetId(layer);
+    if (!id) {
+        return;
+    }
+    var details = LayerHelper.getDetails(layer);
+    var display = details.display;
+    var showColorMap = false;
+    var customColorMap = undefined;
+    if (display && display.displayType == 'colorMap' && display.colorMap == 'custom' && display.customColorMap && display.customColorMap.length) {
+        showColorMap = true;
+        customColorMap = display.customColorMap;
+    }
+
+    legend.addRow({
+        title: layer.get('title'),
+        imgSrc: '/datalayer/' + id + '/thumbnail',
+        data: {
+            layer: layer,
+            imgSrc: '/datalayer/' + id + '/thumbnail'
+        }
+    });
+
+    if (!showColorMap) {
+        return;
+    }
+
+    if (customColorMap) {
+        for (var i = 0; i < customColorMap.length && i<50; i++) {
+            var item = customColorMap[i];
+            var caption = item.caption;
+            if (typeof caption === 'undefined' || caption === '') {
+                caption = item.value;
+            }
+            var color = 'rgba(' + item.r + ',' + item.g + ',' + item.b + ',' + (item.a / 255).toFixed(2) + ')';
+            var fill = new ol.style.Fill({
+                color: color
+            });
+            var stroke = new ol.style.Stroke({
+                color: color,
+                width: 1
+            });
+            var style = new ol.style.Style({
+                fill: fill,
+                stroke: stroke
+            });
+            legend.addRow({
+                title: caption,
+                typeGeom: 'Polygon',
+                style: style,
+                leftOffset: 10,
+                data: {
+                    layer: layer,
+                    style: style
+                }
+            });
+        }
+    }
+
+    //     if(renderer.name=='uniqueValueRenderer'){
+    //         var items=renderer.getUniqueValueInfos();
+    //         var i=0;
+    //         legend.addRow({ 
+    //             title: renderer.field, 
+    //             style: undefined,
+    //             leftOffset:10,
+    //             data:{
+    //                 layer:layer
+    //             }
+    //             });
+    //         for(var key in items){
+    //           var item= items[key];
+    //           var style= StyleFactory.cloneStyle(item['style']);
+    //           legend.addRow({ 
+    //             title: item['value'], 
+    //             typeGeom: shapeType,
+    //             style: style,
+    //             leftOffset:10,
+    //             data:{
+    //                 layer:layer,
+    //                 style:item['style']
+    //             }
+    //             });
+
+    //           i++;
+    //         }
+
+    //     }else if(renderer.name=='rangeValueRenderer'){
+    //         var items=renderer.getRangeValueInfos();
+
+    //         legend.addRow({ 
+    //             title: renderer.field, 
+    //             style: undefined,
+    //             leftOffset:10,
+    //             data:{
+    //                 layer:layer
+    //             }
+    //             });
+    //         for(var i=0;i<items.length;i++){
+    //           var item= items[i];
+    //           var fromValue= item['minValue'] || '';
+    //           var toValue= item['maxValue'] || '';
+    //           var caption=fromValue +' - '+toValue
+    // if(i==0 && !fromValue){
+    //     caption= '< '+toValue;
+    // }
+    // if(i==items.length-1 && !toValue){
+    //     caption='>= ' +fromValue;
+    // }
+    //         var style= StyleFactory.cloneStyle(item['style']);
+
+    //           legend.addRow({ 
+    //             title: caption, 
+    //             typeGeom: shapeType,
+    //             style:style ,
+    //             leftOffset:10,
+    //             data:{
+    //                 layer:layer,
+    //                 style:item['style']
+    //             }
+    //             });
+
+
+    //         }
+
+    //     }
+
+}
 MapContainer.prototype.duplicateLayer=function(layer,options){
     if(!layer){
         return;
@@ -2549,6 +2926,24 @@ MapContainer.prototype.duplicateLayer=function(layer,options){
     var source_srid;
     if(details.spatialReference && details.spatialReference.srid){
         source_srid=details.spatialReference.srid;
+    }
+    var spatialReferenceCode;
+    var srid;
+    if (details['spatialReference'] && (details['spatialReference'].name || details['spatialReference'].srid)) {
+        source_srid=details['spatialReference'].srid;
+        if(details['spatialReference'].name){
+            spatialReferenceCode = details['spatialReference'].name;
+            if(!source_srid && spatialReferenceCode && spatialReferenceCode.indexOf(':')){
+                source_srid= spatialReferenceCode.split(':')[1];
+            }
+        }else{
+            spatialReferenceCode='EPSG:'+source_srid;
+        }
+        
+        if (details['spatialReference'].proj4 && !proj4.defs[spatialReferenceCode]) {
+            proj4.defs(spatialReferenceCode, details['spatialReference'].proj4);
+            ol.proj.proj4.register(proj4);
+        }
     }
     var out_srid= options.srid || source_srid || 3857;
     var source= layer.getSource();
@@ -2568,20 +2963,29 @@ MapContainer.prototype.duplicateLayer=function(layer,options){
     
       var fileName=  layer.get('title')|| details.shapefileName || details.tableName ;
       //var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:4326'});
-      var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:' + out_srid});
+      //var format = new ol.format.GeoJSON({ featureProjection:mapProjectionCode,  dataProjection: 'EPSG:' + out_srid});
+      var format = new ol.format.GeoJSON({
+        featureProjection: mapProjectionCode,
+        dataProjection: spatialReferenceCode || ('EPSG:' + out_srid)
+    });
       var json = format.writeFeatures(features);
       var blob = new Blob([json], {type: "text/json;charset=utf-8"});
     
       var layerInfo= JSON.parse(JSON.stringify(details));
+      layerInfo.workspace='postgres';
       delete layerInfo.filter;
       delete layerInfo.datasetName;
       delete layerInfo.params;
       delete layerInfo.url;
       layerInfo.fileName=options.newName || (fileName +'-Copy');
       layerInfo.spatialReference = {
-        name: 'EPSG:' + out_srid,
-        srid: out_srid
-      };
+        name:spatialReferenceCode?spatialReferenceCode:( 'EPSG:' + out_srid),
+        srid: spatialReferenceCode?source_srid:out_srid,
+        proj4:spatialReferenceCode?details['spatialReference'].proj4:null
+    };
+    if(!layerInfo.spatialReference.srid){
+        layerInfo.spatialReference.srid=0;
+    }
 
       var formdata = new FormData();
       formdata.append("file", blob,'geojson.json');

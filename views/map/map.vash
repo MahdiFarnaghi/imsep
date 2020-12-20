@@ -1,11 +1,14 @@
 @html.extend('layout', function(model) {
    @html.block('styles', function(model) {
-        <link rel='stylesheet' href='/css/ol/Control-Bar.css' /> 
+         <link rel='stylesheet' href='/css/ol/Control-Bar.css' /> 
         <link rel='stylesheet' href='/css/ol/ol.css' /> 
         <link rel='stylesheet' href='/css/ol/LayerSwitcher.css' /> 
         <link rel='stylesheet' href='/css/ol/Popup.css' /> 
         <link rel='stylesheet' href='/css/ol/Search.css' /> 
         <link rel='stylesheet' href='/css/ol/Legend.css' /> 
+        <link rel='stylesheet' href='/css/ol/CoordinatesBar.css' /> 
+        <link rel='stylesheet' href='/css/ol/Status.css' /> 
+        <link rel='stylesheet' href='/css/ol/getMapCanvas.css' /> 
 
         <link rel='stylesheet' href='/css/map-page.css' /> 
         <link rel='stylesheet' href='/css/ol/customStyles/css/fontmaki.css' /> 
@@ -409,10 +412,10 @@
       <div class="col-sm-12 col-xs-12  fill" style="padding:0;">
 <button type="button" id="sidebarCollapse" class="btn btn-info_ navbar-btn">
                                 <i class="glyphicon glyphicon-menu-hamburger"></i></button>
-         <div id="map" class="map"  tabindex="0" style="width: 100%;height:700px;/*height:calc(100% - 60px);*/  " >
+         <div id="map" class="map"  tabindex_="0" style="width: 100%;height:700px;/*height:calc(100% - 60px);*/  " >
         
       </div>
-      <div id="mousePosition" class="custom-mouse-position"> </div>
+    <!--   <div id="mousePosition" class="custom-mouse-position"> </div>-->
     </div>
    
 

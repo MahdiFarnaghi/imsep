@@ -46,6 +46,9 @@ module.exports = {
     },
     map:{
         src:[
+            'public/js/map/custom/ol-ext/Common.js',
+            'public/js/map/custom/ol-ext/CanvasBase.js',
+            
             'public/js/map/custom/ol-ext/Transform.js',
             'public/js/map/custom/ol-ext/LayerSwitcher.js',
             'public/js/map/custom/ol-ext/Popup.js',
@@ -58,6 +61,8 @@ module.exports = {
             'public/js/map/custom/ol-ext/GeoImage.js',
             'public/js/map/custom/ol-ext/Legend.js',
             'public/js/map/custom/ol-ext/CanvasScaleLine.js',
+            'public/js/map/custom/ol-ext/CoordinatesBar.js',
+            'public/js/map/custom/ol-ext/Status.js',
              
             
             
@@ -99,7 +104,7 @@ module.exports = {
             'public/js/map/tasks/identifyTask.js',
             
         
-        
+            'public/js/map/tasks/wmsLayerTask.js',
             
         
             'public/js/map/tasks/rasterLayerValueTask.js',

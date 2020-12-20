@@ -84,6 +84,11 @@ LayerTasks.prototype._createTasks = function () {
         }
 
     }
+    if ( custom.source === 'ol.source.WMS') {
+        
+        this._tasks.push( new wmsLayerTask(this.app,this.mapContainer,layer,{}));
+
+    }
     
 }
 LayerTasks.prototype.getTasks = function () {

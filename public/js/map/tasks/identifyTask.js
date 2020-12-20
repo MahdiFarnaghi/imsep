@@ -60,6 +60,7 @@ IdentifyTask.prototype.init = function (dataObj) {
         onToggle: function (toggle) {
             self.featureLayers={}
             self.selectInteraction.setActive(false);
+            self.selectInteraction.getFeatures().clear();
             if (!toggle) {
                 self.mapContainer.setCurrentTool(null);
                 self.mapContainer.popup.hide();
@@ -81,7 +82,7 @@ IdentifyTask.prototype.init = function (dataObj) {
                     mainCtrl.setActive(true);  
                 },
                 onDeactivate: function (event) {
-                    
+                    self.selectInteraction.getFeatures().clear();
                     self.selectInteraction.setActive(false);
 
                     mainCtrl.setActive(false);  
@@ -123,6 +124,7 @@ IdentifyTask.prototype.OnDeActivated = function (dataObj) {
     this.mapContainer.setCurrentEditAction(undefined);
     if (this.selectInteraction) {
         //map.removeInteraction(this.selectInteraction);
+        this.selectInteraction.getFeatures().clear();
         this.selectInteraction.setActive(false);
     }
     if(this.mainCtrl)
@@ -175,16 +177,24 @@ IdentifyTask.prototype._getHtml=function(feature){
 
         var feature = featureAt.feature;
         var layer = featureAt.layer;
-        var html = '<div class="identifyTask-results">';
+        var html = '<div class="panel panel-info">';
         var contentEl=null;
         //html += "<img src='"+feature.get("img")+"'/>";
-        html += '<table class="table table-striped table-condensed">';
-        html += '<thead>';
+        html +='<div class="panel-heading">';
         if (layer && layer.get('title')) {
-            html += '<tr><th colspan="2" style=" white-space: nowrap;overflow-x: hidden; max-width: 260px;text-overflow: ellipsis;">' + layer.get('title') + '</th></tr>';
-        } else {
-            html += '<tr><th>Field</th><th>Value</th></tr>';
-        }
+            html += layer.get('title') ;
+        } 
+        html +='</div>';
+        
+        html +='<div class="panel-body">';
+
+        html += '<table class="table table-striped table-condensed">';
+        // html += '<thead>';
+        // if (layer && layer.get('title')) {
+        //     html += '<tr><th colspan="2" style=" white-space: nowrap;overflow-x: hidden; max-width: 260px;text-overflow: ellipsis;">' + layer.get('title') + '</th></tr>';
+        // } else {
+        //     html += '<tr><th>Field</th><th>Value</th></tr>';
+        // }
         html += '</thead>';
         html += '<tbody>';
         var properties = feature.getProperties();
@@ -273,7 +283,7 @@ IdentifyTask.prototype._getHtml=function(feature){
                                      htm+='<br/><img style="display: block;max-width: 100%;" src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id,true)+'" />';
                                    }
                                    htm+='</a>';
-                                   if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4'|| fileInfo.mimeType=='audio/mpeg'){
+                                   if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4' ||fileInfo.mimeType=='audio/m4a' || fileInfo.mimeType=='audio/x-m4a'|| fileInfo.mimeType=='audio/mpeg'){
                                      htm+=' <audio controls style="display:block;width:200px" >';
                                      htm+='    <source src="'+app.get_attachment_url(fileInfo.dataset, fileInfo.id)+'" type="'+fileInfo.mimeType+'">';
                                      htm+='           Player not supported.';
@@ -300,7 +310,7 @@ IdentifyTask.prototype._getHtml=function(feature){
                                  }
                                }
                                if(fileInfo.dataUrl){  
-                                if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4'|| fileInfo.mimeType=='audio/mpeg'){
+                                if(fileInfo.mimeType=='audio/mp3' || fileInfo.mimeType=='audio/mp4' ||fileInfo.mimeType=='audio/m4a' || fileInfo.mimeType=='audio/x-m4a'|| fileInfo.mimeType=='audio/mpeg'){
                                    htm+=' <audio controls style="display:block;width:200px" >';
                                    //htm+='    <source src="horse.ogg" type="audio/ogg">';
                                    htm+='    <source src="'+fileInfo.dataUrl +'" type="'+fileInfo.mimeType+'">';
@@ -344,76 +354,96 @@ IdentifyTask.prototype._getHtml=function(feature){
        
         html += '</tbody>';
         html += '</table>';
-        html += '</div>';
+        
+        html +='</div>';
+        html +='<div class="panel-footer"><nav class="navbar"> </nav></div>';
+        html +='</div>';
 
         
-        html= DOMPurify.sanitize(html, {SAFE_FOR_JQUERY: true});
+
        
-        
-        //popup.show(labelPoint, content); 
-        if (anyData) {
-             contentEl=$(html);
-             this.updateDocumenListContent(contentEl)  ;
-             //counter
-             if (this._features.length > 1) {
-                var countHtml=$('<div class="ol-count"></div>');
-                
-                $('<div class="ol-prev"></div>')
-                .on("touchstart click", function(e)
-                {	
-                    this._count--;
-                    if (this._count<1) this._count = this._features.length;
-                    html = this._getHtml(this._features[this._count-1]);
-                    setTimeout(function() { 
-                        popup.show(this._position, html); 
-                    }.bind(this), 350 );
-                }.bind(this))
-                .appendTo(countHtml);
+        html= DOMPurify.sanitize(html, {SAFE_FOR_JQUERY: true});
+         //popup.show(labelPoint, content); 
+         if (anyData) {
+            contentEl=$(html);
+             footer=contentEl.find('.panel-footer .navbar');
+            this.updateDocumenListContent(contentEl)  ;
+            //counter
+            if (this._features.length > 1) {
+               var countHtml=$('<div class="ol-count"></div>');
+               
+               $('<div class="ol-prev"></div>')
+               .on("touchstart click", function(e)
+               {	
+                   this._count--;
+                   if (this._count<1) this._count = this._features.length;
+                   html = this._getHtml(this._features[this._count-1]);
+                   setTimeout(function() { 
+                       popup.show(this._position, html); 
+                   }.bind(this), 350 );
+               }.bind(this))
+               .appendTo(countHtml);
 
-                countHtml.append(''+this._count+'/'+this._features.length);
-    
-                $('<div class="ol-next"></div>')
-                .on("touchstart click", function(e)
-                {	
-                    this._count++;
-                    if (this._count>this._features.length) this._count = 1;
-                    html = this._getHtml(this._features[this._count-1]);
-                    setTimeout(function() { 
-                        popup.show(this._position, html); 
-                    }.bind(this), 350 );
-                }.bind(this))
-                .appendTo(countHtml);
-    
-              
-                countHtml.appendTo(contentEl);
-                
-            }
-            // Zoom button
-            var zoomHtml=$('<div class="ol-zoom"></div>');
-                    
-            $('<button type="button" class="ol-zoombt"><i class="fa fa-search-plus"></i></button>')
-            .on("touchstart click", function(e)
-            {	
-                if (feature.getGeometry().getType()==='Point') {
-                    map.getView().animate({
-                    center: feature.getGeometry().getFirstCoordinate(),
-                    zoom:  Math.max(map.getView().getZoom(), 18)
-                    });
-                } else  {
-                    var ext = feature.getGeometry().getExtent();
-                    map.getView().fit(ext, { duration:1000 });
-                }
-            }.bind(this))
-            .appendTo(zoomHtml);
-            zoomHtml.appendTo(contentEl);
+               countHtml.append(''+this._count+'/'+this._features.length);
+   
+               $('<div class="ol-next"></div>')
+               .on("touchstart click", function(e)
+               {	
+                   this._count++;
+                   if (this._count>this._features.length) this._count = 1;
+                   html = this._getHtml(this._features[this._count-1]);
+                   setTimeout(function() { 
+                       popup.show(this._position, html); 
+                   }.bind(this), 350 );
+               }.bind(this))
+               .appendTo(countHtml);
+   
+             
+              // countHtml.appendTo(contentEl);
+              countHtml.appendTo(footer);
+               
+           }
+           // Zoom button
+          // var zoomHtml=$('<div class="ol-zoom pull-left"></div>');
+                   
+           $('<button type="button" class="ol-zoombt"><i class="fa fa-search-plus"></i></button>')
+           .on("touchstart click", function(e)
+           {	
+               if (feature.getGeometry().getType()==='Point') {
+                   map.getView().animate({
+                   center: feature.getGeometry().getFirstCoordinate(),
+                   zoom:  Math.max(map.getView().getZoom(), 18)
+                   });
+               } else  {
+                   var ext = feature.getGeometry().getExtent();
+                   map.getView().fit(ext, { duration:1000 });
+               }
+           }.bind(this))
+           .appendTo(footer);
+          // .appendTo(zoomHtml);
+         //  zoomHtml.appendTo(contentEl);
+         //  zoomHtml.appendTo(footer);
+        
+       }else{
          
-        }else{
-          
-        }
+       }
     }else{
        
     }
-    // Use select interaction
+    // Close button
+    
+                    
+//     $('<button type="button" style="" class="ol-closebt"><i class="fa fa-times" style="/*color:rgba(0,60,136,1);*/"></i></button>')
+//     .on("touchstart click", function(e)
+//     {	
+        
+//           popup.hide();       
+       
+//     }.bind(this))
+//    // .appendTo(closeHtml);
+//    .appendTo(footer);
+
+// Use select interaction
   if (this.selectInteraction) {
     this._noselect = true;
     try{

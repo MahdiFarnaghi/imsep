@@ -1,4 +1,4 @@
-var StyleFactory={
+  var StyleFactory={
     randomColor:function (ranges,opacity) {
         if (!ranges) {
             ranges = [
@@ -22,17 +22,17 @@ var StyleFactory={
         var c= "rgba(" + g() + "," + g() + "," + g() +"," + opacity+")";
         return c;
         
-         var g1 = g(true);
-         if (g1.length < 2) g1 = '0' + g1;
-         var g2 = g(true);
-         if (g2.length < 2) g2 = '0' + g2;
-         var g3 = g(true);
-         if (g3.length < 2) g3 = '0' + g3;
+        var g1 = g(true);
+        if (g1.length < 2) g1 = '0' + g1;
+        var g2 = g(true);
+        if (g2.length < 2) g2 = '0' + g2;
+        var g3 = g(true);
+        if (g3.length < 2) g3 = '0' + g3;
 
         var c = "#" + g1 + g2 + g3;
         if(opacity>=0 && opacity<=1){
             var o=Math.floor(opacity* 255);
-             o=o.toString(16);
+            o=o.toString(16);
             if(o.length<2) o='0'+o;
             c=c+o;
         }
@@ -170,7 +170,7 @@ var StyleFactory={
             return canvas;
     },
     
-     fill: function(obj) {
+    fill: function(obj) {
         if (typeof obj == 'string' || Array.isArray(obj)) {
           obj = { color: obj };
         }
@@ -227,7 +227,7 @@ var StyleFactory={
             return null;
         return {
             radius: style.getRadius(),
-            snapToPixel:style.getSnapToPixel(),
+            //snapToPixel:style.getSnapToPixel(),
             fill:StyleFactory.getFill(style.getFill()),
             stroke:StyleFactory.getStroke (style.getStroke()),
             
@@ -278,22 +278,22 @@ var StyleFactory={
         if(! style)
             return null;
         return {
-            anchor: style.getAnchor(),
-            anchorOrigin:style.getAnchorOrigin(),
-            anchorXUnits:style.getAnchorXUnits(),
-            anchorYUnits:style.getAnchorYUnits(),
-            crossOrigin:style.getCrossOrigin(),
-            offset:style.getOffset(),
-            offsetOrigin:style.getOffsetOrigin(),
+          anchor: style.getAnchor(),
+  //        anchorOrigin:style.getAnchorOrigin(),
+          anchorXUnits:'pixels',//style.getAnchorXUnits(),
+          anchorYUnits:'pixels',//style.getAnchorYUnits(),
+        //   crossOrigin:style.getCrossOrigin(),
+        //  offset:style.getOffset(),
+        //  offsetOrigin:style.getOffsetOrigin(),
 
-            size:style.getSize(),
-            src:styke.getSrc(),
-            
-            snapToPixel:style.getSnapToPixel(),
-            opacity:style.getOpacity(),
-            rotation: style.getRotation(),
-            rotateWithView: style.getRotateWithView(),
-            scale:style.getScale()
+          size:style.getSize(),
+          src:style.getSrc(),
+          
+          snapToPixel:style.getSnapToPixel(),
+          opacity:style.getOpacity(),
+          rotation: style.getRotation(),
+          rotateWithView: style.getRotateWithView(),
+          scale:style.getScale()
             };
         },
       image: function(obj) {
@@ -319,6 +319,14 @@ var StyleFactory={
           if (self[key]) {
               if(key=='circle' || key=='icon' || key=='fontSymbol'){
                   try{
+                    if(val && val.src ){
+                      
+                      if(app.API_BASE_URL && val.src.startsWith('/images/')){
+                        val.src= val.src.replace('/images/','images/');
+                      }else if(!app.API_BASE_URL && val.src.startsWith('images/')){
+                        val.src= '/'+ val.src;
+                      }
+                    }
                     obj['image'] = new self[key](val);
                   }catch(ex){
                     var dd=11;
@@ -365,4 +373,4 @@ var StyleFactory={
         var json= this.styleToJson(style);
         return this.jsonToStyle(json);
       }
-}
+  }

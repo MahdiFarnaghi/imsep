@@ -115,7 +115,7 @@ ol.source.GeoImage = function(opt_options)
 
 	this.setCrop (this.crop);
 };
-ol.inherits (ol.source.GeoImage, ol.source.ImageCanvas);
+ol.ext.inherits (ol.source.GeoImage, ol.source.ImageCanvas);
 /**
  * Get coordinate of the image center.
  * @return {ol.Coordinate} coordinate of the image center.

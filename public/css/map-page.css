@@ -144,67 +144,132 @@
   border-top-color: #ffcc33;
 } 
 
+ /* popup style */
+ .ol-popup
+ {	max-width:300px;
+   min-width:100px;
+   min-height:1em;
+ }
+ /* Image on popup */
+ .ol-popup img 
+ {	float: left;
+   margin: 0 0.5em 0 0;
+   max-width: 100px;
+   max-height: 100px;
+ }
+ /* no image content tooltips */
+ .ol-popup.tooltips img
+ {	display:none;
+ }
 
-    /* popup style */
-		.ol-popup
-		{	max-width:300px;
-			min-width:100px;
-			min-height:1em;
-		}
-		/* Image on popup */
-		.ol-popup img 
-		{	float: left;
-			margin: 0 0.5em 0 0;
-			max-width: 100px;
-			max-height: 100px;
-		}
-		/* no image content tooltips */
-		.ol-popup.tooltips img
-		{	display:none;
-		}
+ /* Custom orange style (tips) */
+ .ol-popup.tips.orange
+ {	border-color:#da7;
+   background-color:#eca;
+ }
+ .ol-popup.tips.orange .anchor::before
+ {	border-color: #da7 transparent;
+ }
+ .ol-popup-middle.tips.orange .anchor::before
+ {	border-color: transparent #da7;
+ }
 
-		/* Custom orange style (tips) */
-		.ol-popup.tips.orange
-		{	border-color:#da7;
-			background-color:#eca;
-		}
-		.ol-popup.tips.orange .anchor::before
-		{	border-color: #da7 transparent;
-		}
-		.ol-popup-middle.tips.orange .anchor::before
-		{	border-color: transparent #da7;
-		}
+ /* orange style (default) */
+ .ol-popup.default.orange
+ {	border:4px solid #f96;
+ }
+ .ol-popup.default.orange .anchor {
+   margin: -15px 18px;
+ }
+ .ol-popup.default.orange .anchor::after
+ {	margin: 6px /*border:4 +2 px */ -9px; 
+ }
+ .ol-popup-middle.default.orange .anchor::after
+ {	margin: -9px 6px /*border:4 +2 px */; 
+ }
+ .ol-popup.default.orange .anchor::before
+ {	border-color: #f96 transparent;
+ }
+ .ol-popup-middle.default.orange .anchor::before
+ {	border-color: transparent #da7;
+ }
+ .ol-popup.default.orange .closeBox
+ {	background-color: rgba(255, 153, 102, 0.7);
+ }
+ .ol-popup.default.orange .closeBox:hover
+ {	background-color: rgba(255, 153, 102, 1);
+ }
+ .ol-popup .content {
+   /* overflow:auto;
+   max-height: 300px; */
+   padding: 0;
+ }
+ .ol-popup .panel  {
+   margin:0;
+ }
+ .ol-popup .panel .panel-body {
+   max-height: 300px;
+   overflow: auto;
+}
+.ol-popup .panel-footer{
+ padding: 2px 5px;
+}
+.ol-popup .panel .navbar{
+ margin-bottom: 0;
+ min-height: 20px;
 
-		/* orange style (default) */
-		.ol-popup.default.orange
-		{	border:4px solid #f96;
-		}
-		.ol-popup.default.orange .anchor {
-			margin: -15px 18px;
-		}
-		.ol-popup.default.orange .anchor::after
-		{	margin: 6px /*border:4 +2 px */ -9px; 
-		}
-		.ol-popup-middle.default.orange .anchor::after
-		{	margin: -9px 6px /*border:4 +2 px */; 
-		}
-		.ol-popup.default.orange .anchor::before
-		{	border-color: #f96 transparent;
-		}
-		.ol-popup-middle.default.orange .anchor::before
-		{	border-color: transparent #da7;
-		}
-		.ol-popup.default.orange .closeBox
-		{	background-color: rgba(255, 153, 102, 0.7);
-		}
-		.ol-popup.default.orange .closeBox:hover
-		{	background-color: rgba(255, 153, 102, 1);
-    }
-    .ol-popup .content {
-      overflow:auto;
-      max-height: 300px;
-    }
+}
 
+
+
+.ol-popup .ol-count {
+ float: left;
+ margin: .25em 0;
+ direction: ltr;
+}
+.ol-popup  .ol-prev, .ol-popup .ol-next {
+ border-style: solid;
+ border-color: transparent rgba(0,60,136,.5);
+ border-width: .5em 0 .5em .5em;
+ display: inline-block;
+ vertical-align: bottom;
+ margin: 0 .5em;
+ cursor: pointer;
+}
+.ol-popup .ol-prev {
+ border-width: .5em .5em .5em 0;
+}
+
+.ol-popup .ol-zoombt {
+ border: 0;
+ width: 2em;
+ height: 2em;
+ display: inline-block;
+ color: rgba(0,60,136,.5);
+ position: relative;
+ background: transparent;
+ outline: none;
+
+ font-size: 1.4em;
+ float:left;
+}
+.ol-popup .ol-closebt {
+ float: right;
+ border: 0;
+ width: 2em;
+ height: 2em;
+ display: inline-block;
+ color: rgba(0,60,136,.5);
+ position: relative;
+ background: transparent;
+ outline: none;
+
+ font-size: 1.4em;
+}
+.ol-popup .panel-heading{
+  background-color: #7b98bc;
+    color: white;
+}
 
 
 
@@ -605,4 +670,12 @@ hr.field-sep{
 
 .myOlTextButton_Space {
   border: none!important;
+}
+
+.ol-viewport .ol-coordinates-bar button {
+  display: none;
+  background-color: rgb(92 121 152);
+}
+.ol-attribution {
+  font-size: 10px;
 }
