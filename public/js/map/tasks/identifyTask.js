@@ -33,7 +33,7 @@ IdentifyTask.prototype.init = function (dataObj) {
                 if(!fid && feature.get('_cacheInfo')){
                   fid=feature.get('_cacheInfo').uid;
                 }
-                self.featureLayers[fid]= layer;
+                self.featureLayers[fid +'-'+ feature.ol_uid]= layer;
                 return true;
             }
         }
@@ -149,7 +149,7 @@ IdentifyTask.prototype._getHtml=function(feature){
         if(!fid && featureAt.feature.get('_cacheInfo')){
           fid=featureAt.feature.get('_cacheInfo').uid;
         }
-        featureAt.layer=self.featureLayers[fid];
+        featureAt.layer=self.featureLayers[fid+'-'+ feature.ol_uid];
         var fieldsDic = {};
         var fields = null;
         var anyData = false;
