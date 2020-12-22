@@ -148,7 +148,7 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
             if (!oid){
                 oid = -1;
             }
-            source.refresh();
+           // source.refresh();
            // source.clear();
            
             var url = source.getUrl() + '/' + oid;
@@ -221,8 +221,8 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                     });
                 }
             }).done(function () {
-               // source.refresh();
-                source.clear();
+                source.refresh();
+               // source.clear();
             
             });
         }else if(sourceFormat instanceof ol.format.WFS){
@@ -307,12 +307,12 @@ VectorLayerEditTask.prototype.init = function (dataObj) {
                             exit: 'animated fadeOutUp'
                         }
                     });
-                    source.clear();
-                  // source.refresh();
+                   // source.clear();
+                   source.refresh();
                 }
             }).done(function() {
-                source.clear();
-               // source.refresh();
+                //source.clear();
+                source.refresh();
             });
 
         }
@@ -1842,7 +1842,8 @@ VectorLayerEditTask.prototype.syncCache = function (options) {
                new ConfirmDialog().show('There is no edit to upload!<br/>Do you want to reload data?', function (confirm) {
 
                 if (confirm) {
-                    source.clear();
+                    //source.clear();
+                    source.refresh();
                 }
         
                 }, { title:'Reload?',dialogSize: 'sm', alertType: 'info' }
@@ -1897,7 +1898,8 @@ VectorLayerEditTask.prototype.syncCache = function (options) {
                                             exit: 'animated fadeOutUp'
                                         }
                                     });
-                                     source.clear();
+                                     //source.clear();
+                                     source.refresh();
                                 });
 
                                 return;
