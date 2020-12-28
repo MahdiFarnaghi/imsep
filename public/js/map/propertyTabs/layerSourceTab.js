@@ -913,6 +913,7 @@ function LayerSourceTab() {
 
             self.layer.set('source',vectorSource );
             vectorSource.clear();
+            vectorSource.refresh();
             //var url= '/proxy/?url='+ encodeURIComponent( LayerHelper.getDetails(self.layer).url +'?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0');
             var url=  LayerHelper.getDetails(self.layer).url +'?SERVICE=WFS&REQUEST=GetCapabilities&VERSION=1.1.0';
             if(app.url_needs_proxy(url)){

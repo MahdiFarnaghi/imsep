@@ -130,7 +130,7 @@ DlgVectorSearch.prototype.createUI=function(){
   this.cancelHandlers.push(function(evt){
   
     details.filter= origFilter;
-    layer.getSource().clear();
+    layer.getSource().refresh();
     
   });
 
@@ -748,7 +748,7 @@ DlgVectorSearch.prototype.createSpatialPanelUI_actions=function(content){
 
   content.find('#clearShapes').click(function(){
     if(self.drawlayer){
-      self.drawlayer.getSource().clear();
+      self.drawlayer.getSource().refresh();
   
     }
     self.tabSpatialContent.find('#applySpatialFilter').prop('checked',false);
