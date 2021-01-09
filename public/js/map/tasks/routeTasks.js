@@ -480,8 +480,11 @@ RouteTasks.prototype.createRouteTooltip = function (feature) {
     routeTooltip.getElement().parentNode.style.zIndex = this.map.getOverlays().getLength();
      var htm='';
      var summary= feature.get('summary');
-     if(summary && summary.length){
-        var result= summary[summary.length-1];
+     if(summary ){
+        var result= summary;
+        if(summary.length){
+            result= summary[summary.length-1];
+        }
         var distanceStr=this.formatDistance(result.distance);
         htm+=' <i style="margin-right:0.2em;" class="'+self.getProfileIcon(self.routeProfile)+'"></i>';
         //htm+='Disatace:'+ distanceStr;
@@ -982,8 +985,11 @@ RouteTasks.prototype.getProfileIcon = function(code) {
         var way_points= feature.get('way_points');
      var segments= feature.get('segments')   ;
 
-     if(summary && summary.length){
-        var result= summary[summary.length-1];
+     if(summary ){
+        var result= summary;
+        if(summary.length){
+            result= summary[summary.length-1];
+        }
         distanceStr= self.formatDistance(result.distance);
         durationStr= self.formatDuration(result.duration);
      }
