@@ -1167,6 +1167,11 @@ var PrintUtil={
           //var canvas = event.context.canvas;
           var canvas= mapContainer.getMapRenderedCanvas();
           var mapImageData = canvas.toDataURL('image/png');
+          var overlayImageData;
+          if(ol.ext && ol.ext.getMapCanvas){
+               var  overlayCanvas=ol.ext.getMapCanvas(map);
+               overlayImageData=overlayCanvas.toDataURL('image/png');
+          }
           var pdf = new jsPDF(template.orientation, undefined, pageSize);
          
           pdf.setFont(template.defaults.font);
@@ -1189,6 +1194,11 @@ var PrintUtil={
           pdf.addImage(mapImageData, 'PNG', 
                mapFrame.left, mapFrame.top, 
                mapFrame.width, mapFrame.height);
+          if(overlayImageData){
+               pdf.addImage(overlayImageData, 'PNG', 
+               mapFrame.left, mapFrame.top, 
+               mapFrame.width, mapFrame.height);
+          }     
           pdf.setLineWidth(mapFrame.borderWidth);
           //pdf.setDrawColor(0,0,0);
           pdf.rect(
