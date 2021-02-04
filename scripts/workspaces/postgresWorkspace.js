@@ -587,7 +587,7 @@ class PostgresWorkspace {
                 if(layerInfo.datasetType === 'vector'){
                     var geometry;
                     if (f.value.geometry) {
-                        geometry = `ST_Force_2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
+                        geometry = `ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
                     }
                     row[geom] = geometry;
                 }
@@ -817,7 +817,7 @@ class PostgresWorkspace {
                 var geometry;
                 if(layerInfo.datasetType === 'vector'){
                     if (f.value.geometry) {
-                        geometry = `ST_Force_2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
+                        geometry = `ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
                     }
                 }
                 var row = {};
@@ -2122,7 +2122,7 @@ class PostgresWorkspace {
                     if (f.value) {
                         var geometry;
                         if (f.value.geometry) {
-                            geometry = `ST_Force_2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
+                            geometry = `ST_Force2D(ST_SetSRID(ST_GeomFromGeoJSON('${JSON.stringify(f.value.geometry)}'), ${srid}))`;
                         }
                         var row = {}
                         row[geom] = geometry;
