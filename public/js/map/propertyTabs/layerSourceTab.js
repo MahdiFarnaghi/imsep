@@ -12,7 +12,7 @@ function LayerSourceTab() {
     $('.nav-tabs a[href="#' + this.tabId + '"]').tab('show');
   }
   LayerSourceTab.prototype.applied=function(obj){
-    if(obj && obj.get('custom') && obj.get('custom').type=='ol.layer.Vector')
+    if(obj && obj.get('custom') && obj.get('custom').type=='ol.layer.Vector' && obj.get('custom').format!=='GTM')
       return true;
     else if(obj && obj.get('custom') && obj.get('custom').source=='ol.source.GeoImage')
       return true;        

@@ -196,8 +196,25 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
               //var layerPropertiesDlg = new ObjectPropertiesDlg(self, l, {});
               //layerPropertiesDlg.show();
               // alert(l.get("title"));
+              //console.log('onClick');
+              if(l && l.get('custom') && l.get('custom').format=='GTM'){
+                  l._onSwitcherClickHandler= setTimeout(function(){
+                    $('#mapTools').slideToggle( "", function() {
+                        self.showGtmSettingBar(l);
+                        delete l._onSwitcherClickHandler;
+                    })
+                  },300);
+                   
+                }else{
+                    $('#mapTools').slideUp();
+                }
           },
           onDblClick: function(l) {
+           // console.log('onDblClick');
+              if(l && l._onSwitcherClickHandler){
+                  clearTimeout(l._onSwitcherClickHandler);
+                  delete l._onSwitcherClickHandler;
+              }
             var layerCustom= l.get('custom');
             if(layerCustom && layerCustom.format==='ol.format.OSMXML' ){
               //  l.getSource().clear();
@@ -565,6 +582,7 @@ MapContainer.prototype.showLayerProperties=function(layer,activeTabIndex){
             new LayerLabelTab(),
             new RasterDisplayTab(),
             new LayerSourceTab(),
+            new GtmSourceTab()
           ],
           activeTabIndex:activeTabIndex,
           helpLink:'/help#layerProperties'
@@ -677,6 +695,8 @@ MapContainer.prototype.zoomToLayer = function(layer) {
         (layerCustom.format == 'ol.format.WFS' )
         ||
         (layerCustom.format == 'ol.format.WMS' )
+        ||
+        (layerCustom.format == 'GTM' )
         )
         ) {
         var source= layer.getSource();
@@ -1127,6 +1147,54 @@ MapContainer.prototype.createLayer = function(layerInfo) {
                         type: 'ol.layer.Vector',
                         source: 'ol.source.Vector',
                         format: 'ol.format.OSMXML',
+                        shapeType:dataObj.details.shapeType,
+                        dataObj: dataObj,
+                        displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:true
+                    }
+                });
+                newLayer.setStyle(renderer.findStyleFunction(newLayer));
+
+                var layerTasks= new LayerTasks(this.app,this,newLayer,{});
+                newLayer.set('layerTasks', layerTasks);   
+
+
+            }
+        }else if (layerInfo.custom.format === 'GTM') {
+            var dataObj = layerInfo.custom.dataObj;
+            try {
+                if (typeof dataObj.details === 'string' || dataObj.details instanceof String){
+                    dataObj.details = JSON.parse(dataObj.details);
+                }
+            } catch (ex) {}
+          
+              var renderer=undefined;
+              if(dataObj.details && dataObj.details.renderer){
+                  renderer= RendererFactory.createFromJson(dataObj.details.renderer);
+              }
+              if(!renderer){
+                  renderer= RendererFactory.createSimpleRenderer();
+              }
+              if(dataObj.details){
+                dataObj.details.renderer=renderer.toJson();
+              }
+              var featureLabeler=undefined;
+              if(dataObj.details && dataObj.details.featureLabeler){
+                 featureLabeler= new FeatureLabeler(dataObj.details.featureLabeler);
+              }
+            var vectorSource = this.sourceFactory.createGtmSource(dataObj ,this);
+            if (vectorSource) {
+
+                newLayer = new ol.layer.Vector({
+                    title: layerInfo.title,
+                    source: vectorSource,
+                    //style:renderer.findStyleFunction(newLayer),
+                    featureLabeler:featureLabeler,
+                    renderer:renderer,  
+                    opacity: layerInfo.opacity,
+                    custom: {
+                        type: 'ol.layer.Vector',
+                        source: 'ol.source.Vector',
+                        format: 'GTM',
                         shapeType:dataObj.details.shapeType,
                         dataObj: dataObj,
                         displayInLegend:(typeof layerInfo.custom.displayInLegend!=='undefined')?layerInfo.custom.displayInLegend:true
@@ -3119,3 +3187,282 @@ MapContainer.prototype.hideTopStatus=function() {
     }
     this.topStatus.hide();
 };
+MapContainer.prototype.addTestGtm=function(){
+    
+    
+    var layerInfo={
+        title:'test GTM',
+        custom:{
+            type : 'ol.layer.Vector',
+            source:'ol.source.Vector',
+            format:'GTM',
+            dataObj:{
+                details:{
+                    task_id:3
+                }
+            }
+        }
+    };
+
+    
+
+    this.addLayer(layerInfo);
+};
+MapContainer.prototype.addNewGtm = function(options) {
+    options=options||{};
+    var self = this;
+    var layerInfo = {
+        title: options.title || options.name || '',
+        custom: {
+            type : 'ol.layer.Vector',
+            source:'ol.source.Vector',
+            format:'GTM',
+            shapeType: options.shapetype || options.shapeType || '',
+            dataObj: {
+                details: {
+                    shapeType: options.shapetype || options.shapeType || '',
+                    
+                }
+            }
+        }
+    };
+
+    var newLayer = this.createLayer(layerInfo);
+    if(options.bbox){
+        try{
+            LayerHelper.getDetails(newLayer).ext_north=options.bbox[3];
+            LayerHelper.getDetails(newLayer).ext_south=options.bbox[1];
+            LayerHelper.getDetails(newLayer).ext_east=options.bbox[2];
+            LayerHelper.getDetails(newLayer).ext_west=options.bbox[0];
+        }catch(ex){}
+    }
+
+
+    var layerPropertiesDlg = new ObjectPropertiesDlg(self, newLayer, {
+        isNew: true,
+        title: 'Add new Twitter event layer',
+        tabs: [
+            new LayerGeneralTab(),
+            new LayerStyleTab(),
+            new LayerLabelTab(),
+            new GtmSourceTab()
+
+        ],
+        activeTabIndex: 3,
+        onapply: function(dlg) {
+            self.map.addLayer(newLayer);
+        },
+        helpLink: '/help#newGtmLayer'
+
+    }).show();
+
+
+}
+MapContainer.prototype.showGtmSettingBar= function(layer){
+    var self= this;
+    var layerCustom= layer.get('custom');
+    var details= LayerHelper.getDetails(layer);
+    
+    var task_id= details.task_id || -1;
+    var filter=details.filter ||{};
+    var topicWords= filter.topicWords ||[];
+    var date_time_min= filter.date_time_min || '';
+    var date_time_max= filter.date_time_max || '';
+    if(date_time_min){
+     date_time_min= new Date(date_time_min);
+     date_time_min= date_time_min.toLocaleString();
+    }
+    if(date_time_max){
+     date_time_max= new Date(date_time_max);
+     date_time_max= date_time_max.toLocaleString();
+    }
+    var htm='';
+    htm+='<div class=" form-horizontal">';  
+    htm+='<div class="form-group">';
+    htm+='  <label style="    text-align: right;" class="col-sm-1" for="date_time_min">From:</label>'; 
+    htm+='  <div class="col-sm-3">'; 
+    htm+='  <div class="input-group date" id="date_time_min_picker">';
+    htm+='           <input id="date_time_min" type="text" class="form-control" value="'+date_time_min+'" />';
+    htm+='           <span class="input-group-addon">';
+    htm+='              <span class="glyphicon glyphicon-calendar"></span>';
+    htm+='            </span>';
+    htm+='  </div>';
+    htm+='  </div>';
+    //htm+='</div>';
+    //htm+='<div class="form-group">';
+    htm+='  <label style="    text-align: right;" class="col-sm-1" for="date_time_max">To:</label>'; 
+    htm+='  <div class="col-sm-3">';
+    htm+='  <div class="input-group date" id="date_time_max_picker">';
+    htm+='           <input id="date_time_max" type="text" class="form-control" value="'+date_time_max+'" />';
+    htm+='           <span class="input-group-addon">';
+    htm+='              <span class="glyphicon glyphicon-calendar"></span>';
+    htm+='            </span>';
+    htm+='  </div>';
+    htm+='  </div>';
+    htm+='</div>';
+
+    
+    htm+='<div class="form-group " style="margin-left: 12px;    margin-right: 40px">';
+    //htm+='  <label class="col-sm-3" for="">Trackbar:</label>'; 
+    //htm+='<div id="slider-date" class="noUi-target noUi-ltr noUi-horizontal noUi-txt-dir-ltr"></div>';
+      htm+='<div id="slider-date" class="col-sm-7 col-sm-offset-1" ></div>';
+    htm+='</div>';
+
+    htm+='</div>';// horizontal
+
+  
+    var content= $('#mapTools').html(htm);
+
+    content.find('#date_time_min_picker').datetimepicker({
+        maxDate:date_time_max?new Date(date_time_max):undefined
+    });
+    content.find('#date_time_max_picker').datetimepicker({
+              useCurrent: false //Important! See issue #1075
+              ,minDate:date_time_min?new Date(date_time_min):undefined
+    });
+    content.find("#date_time_min_picker").on("dp.change", function (e) {
+    //  content.find('#date_time_max_picker').data("DateTimePicker").minDate(e.date);
+      try{
+        if(e.date){
+            details.filter.date_time_min= e.date.toDate().toISOString();
+          }else{
+            details.filter.date_time_min=null;
+          }
+        self.showGtmSettingBar(layer);
+        layer.getSource().refresh();
+      }catch(ex){}
+    });
+    content.find("#date_time_max_picker").on("dp.change", function (e) {
+     // content.find('#date_time_min_picker').data("DateTimePicker").maxDate(e.date);
+      try{
+          if(e.date){
+            details.filter.date_time_max= e.date.toDate().toISOString();
+          }else{
+            details.filter.date_time_max=null;
+          }
+        self.showGtmSettingBar(layer);
+        layer.getSource().refresh();
+      }catch(ex){}
+    });
+
+    function timestamp(str) {
+        if(!str){
+            return null;
+        }
+        return new Date(str).getTime();
+    }
+
+    var min= timestamp(date_time_min);
+    var max =timestamp(date_time_max);
+    var min_bar,max_bar;
+    var startValues=[];
+    if(!min){
+        min_bar= timestamp( (new Date()).toString()) - 1 * 24 * 60 * 60 * 1000;
+        startValues.push(min_bar);
+    }else{
+        min_bar= min- 7 * 24 * 60 * 60 * 1000;
+        startValues.push(min);
+    }
+    if(!max){
+        max_bar= timestamp( (new Date()).toString()) + 1 * 24 * 60 * 60 * 1000;
+    }else
+    {
+        max_bar= max+ 7 * 24 * 60 * 60 * 1000;
+        startValues.push(max); 
+    }
+    var connect=true;
+    var tooltips;
+
+    if(startValues.length==1){
+        connect='upper';
+        tooltips= [
+            {to:function(v1){
+               //return (new Date(v1)).toISOString();
+               var date = new Date(v1);
+                var dateStr =
+                date.getFullYear() + "-" +
+                ("00" + (date.getMonth() + 1)).slice(-2) + "-" +
+                ("00" + date.getDate()).slice(-2) + " " +
+                
+                ("00" + date.getHours()).slice(-2) + ":" +
+                ("00" + date.getMinutes()).slice(-2) + ":" +
+                ("00" + date.getSeconds()).slice(-2);
+                return dateStr;
+            }}];
+    }else{
+        tooltips= [
+            {to:function(v1){
+               //return (new Date(v1)).toISOString();
+               var date = new Date(v1);
+                var dateStr =
+                date.getFullYear() + "-" +
+                ("00" + (date.getMonth() + 1)).slice(-2) + "-" +
+                ("00" + date.getDate()).slice(-2) + " " +
+                
+                ("00" + date.getHours()).slice(-2) + ":" +
+                ("00" + date.getMinutes()).slice(-2) + ":" +
+                ("00" + date.getSeconds()).slice(-2);
+                return dateStr;
+            }}, {to:function(v1){
+                //return (new Date(v1)).toISOString();
+                var date = new Date(v1);
+                var dateStr =
+                date.getFullYear() + "-" +
+                ("00" + (date.getMonth() + 1)).slice(-2) + "-" +
+                ("00" + date.getDate()).slice(-2) + " " +
+                
+                ("00" + date.getHours()).slice(-2) + ":" +
+                ("00" + date.getMinutes()).slice(-2) + ":" +
+                ("00" + date.getSeconds()).slice(-2);
+                return dateStr;
+            }}];
+    }
+    var dateSlider = document.getElementById('slider-date');
+
+    noUiSlider.create(dateSlider, {
+        connect:connect,
+        tooltips: tooltips,
+    // Create two timestamps to define a range.
+        range: {
+            min:min_bar,
+            max: max_bar
+        },
+
+    // Steps of one week
+       // step: 7 * 24 * 60 * 60 * 1000,
+
+    // Two more timestamps indicate the handle starting positions.
+        start:startValues,// [min, max],
+
+    // No decimals
+        // format: wNumb({
+        //     decimals: 0
+        // })
+    });
+    var layerRefreshHandlers={};
+    dateSlider.noUiSlider.on('update', function (values, handle) {
+       // dateValues[handle].innerHTML = formatDate(new Date(+values[handle]));
+     //  console.log(values);
+       if(handle==0 && values[handle] && !isNaN(values[handle])){
+            var v= new Date(+values[handle]);
+            details.filter.date_time_min= v.toISOString();
+            v= v.toLocaleString();
+            content.find("#date_time_min").val(v);
+            
+       }
+       if(handle==1 && values[handle] && !isNaN(values[handle])){
+            var v= new Date(+values[handle]);
+            details.filter.date_time_max= v.toISOString();
+            v= v.toLocaleString();
+            content.find("#date_time_max").val(v);
+            
+        }
+        if(layerRefreshHandlers.lastRefreshHandler){
+            clearTimeout(layerRefreshHandlers.lastRefreshHandler);
+            delete layerRefreshHandlers.lastRefreshHandler;
+        }
+        layerRefreshHandlers.lastRefreshHandler= setTimeout(function(){
+            layer.getSource().refresh();
+        },100);
+    });
+};    

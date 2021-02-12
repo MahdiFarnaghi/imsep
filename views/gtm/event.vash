@@ -1,0 +1,218 @@
+@html.extend('layout', function(model) {
+     @html.block('styles', function(model) {
+        <link rel='stylesheet' href='/css/ol/ol.css' /> 
+        <style>
+           .dual-list .list-group {
+            margin-top: 8px;
+        }
+
+        .list-left li, .list-right li {
+            cursor: pointer;
+        }
+
+        .list-arrows {
+            padding-top: 100px;
+        }
+
+            .list-arrows button {
+                margin-bottom: 20px;
+            }
+
+#extMap {
+       clear:both;
+    border: solid 1px rgba(160, 160, 160, 0.3);
+    box-shadow: 5px 5px 4px 0 rgba(150, 148, 148, 0.65);
+}
+        </style>
+        
+    })
+  @html.block('content', function(model) {
+<div class="container">
+    <div class="panel">
+        <div class="panel-body">
+             <form method="POST"  class="form-horizontal" action="/gtm/event/@(model.item.id)">
+                <legend>@(model.title)
+                
+                <a title="Help" class="close help-link" style=" " target="_blank" href="/help#event">?</a>
+                </legend>
+               <div class="form-group">
+                    <label class="col-sm-3" for="">UserName</label>
+                    <div class="col-sm-7">@model.item.userName</div>
+                </div>    
+                <div class="form-group">
+                    <label class="col-sm-3" for="name">Name</label>
+                    @if(model.item.id && !html.equals(model.item.id, -1) && model.item.updatedAt){
+                        <input type="hidden" name="updatedAt" id="updatedAt" value="@model.item.updatedAt.getTime()" readonly class="form-control">
+                    }
+                    <div class="col-sm-7">
+                        <input type="text" name="name" id="name" value="@model.item.name" autofocus placeholder="Name" class="form-control"
+                         data-val="true" data-val-required="Name is required" 
+                         data-val-length="Input length exceeds maximum length of 100 characters" data-val-length-max="100" 
+                            />
+                        <span class="field-validation-valid" data-valmsg-for="name" data-valmsg-replace="true"></span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-7 checkbox">
+                        @if(model.item.active){
+                            <input type="checkbox" name="active" checked value="" />
+                        }else{
+                            <input type="checkbox" name="active"  value="" />
+                        }
+                        Is Active
+                    </label>
+                </div>
+                <div class="form-group">
+                            <label class="col-sm-3" for="topicwords">Topic words </label>
+                            <div class="col-sm-7">
+                                <textarea type="text" name="topicwords" rows="2" id="topicwords"  placeholder="Topic words" class="form-control"
+                                 data-val="true" data-val-length="Input length exceeds maximum length of 500 characters" data-val-length-max="500" 
+                                 data-val-required="No topic word is defined" 
+                                >@html.raw(model.item.topicwords)</textarea>
+                             <span class="field-validation-valid" data-valmsg-for="topicwords" data-valmsg-replace="true"></span>
+                            </div>
+                </div>
+                
+              
+                <div class="form-group">
+                                <label class=" col-sm-3" for="longitude_min">Min x</label>
+                                <div class="col-sm-2">
+                                    <input type="number" name="longitude_min" id="longitude_min" data-field="longitude_min" value="@model.item.longitude_min"  placeholder="Min x" class="form-control" 
+                                        data-val="true" data-val-required="Min x is required"  
+                                        min="-180"
+                                        max="180"
+                                        data-val-range-min="-180"
+                                        data-val-range-max="180"
+                                        data-val-range="Value must be >= -180 and <= 180"
+                                          />
+                                     <span class="field-validation-valid" data-valmsg-for="longitude_min" data-valmsg-replace="true"></span>
+                                </div>
+                </div>
+                <div class="form-group">
+                                <label class=" col-sm-3" for="latitude_min">Min y</label>
+                                <div class="col-sm-2">
+                                    <input type="number" name="latitude_min" id="latitude_min" data-field="latitude_min" value="@model.item.latitude_min"  placeholder="Min y" class="form-control" 
+                                        data-val="true" data-val-required="Min y is required"
+                                         min="-90"
+                                        max="90"
+                                        data-val-range-min="-90"
+                                        data-val-range-max="90"
+                                        data-val-range="Value must be >= -90 and <= 90"
+                                            />
+                                     <span class="field-validation-valid" data-valmsg-for="latitude_min" data-valmsg-replace="true"></span>
+                                </div>
+                </div>
+                <div class="form-group">
+                                <label class=" col-sm-3" for="longitude_max">Max x</label>
+                                <div class="col-sm-2">
+                                    <input type="number" name="longitude_max" id="longitude_max" data-field="longitude_max" value="@model.item.longitude_max"  placeholder="Min y" class="form-control" 
+                                        data-val="true" data-val-required="Max x is required"
+                                         min="-180"
+                                        max="180"
+                                        data-val-range-min="-180"
+                                        data-val-range-max="180"
+                                        data-val-range="Value must be >= -180 and <= 180"
+                                            />
+                                     <span class="field-validation-valid" data-valmsg-for="longitude_max" data-valmsg-replace="true"></span>
+                                </div>
+                </div>
+                 <div class="form-group">
+                                <label class=" col-sm-3" for="latitude_max">Max y</label>
+                                <div class="col-sm-2">
+                                    <input type="number" name="latitude_max" id="latitude_max" data-field="latitude_max" value="@model.item.latitude_max"  placeholder="Min y" class="form-control" 
+                                        data-val="true" data-val-required="Max y is required" 
+                                        min="-90"
+                                        max="90"
+                                        data-val-range-min="-90"
+                                        data-val-range-max="90"
+                                        data-val-range="Value must be >= -90 and <= 90"
+                                           />
+                                     <span class="field-validation-valid" data-valmsg-for="latitude_max" data-valmsg-replace="true"></span>
+                                </div>
+                </div>
+                
+               
+                 <div class="form-group" style="">
+
+                    <div class="col-sm-6">    
+                            <div class="panel">
+                                <div class="panel-body" style="    padding: 4px;">
+                                    <div class="form-horizontal" style="padding:0.5em;">
+                                        <legend style="margin-bottom: 0px;" ><i class="fas fa-map-marked-alt"></i> Extent</legend>
+                                        <div class="form-group" style="margin: 0; padding: 0;">
+                                            <div id="extMap" class="map col-sm-12"  tabindex="0" style="margin:0;    padding: 0;width:100% ;height:250px;" ></div>
+                                        </div>
+                                    </div>
+
+                                    
+                                </div>    
+                        </div> 
+                    </div>
+                    
+                 </div>
+
+            
+            
+                              
+                
+               
+             
+                    @if(!model.readOnly){
+                    <div class="form-group">
+                        <div class="col-sm-offset-3 col-sm-4"><button type="submit" class="btn btn-primary btn-success">Save</button></div>
+                    </div>
+                    }
+
+</form>
+
+        </div>
+    </div>
+    @if(!model.readOnly &&  model.item.id && !html.equals(model.item.id, -1)){
+    
+    
+
+    
+    <div class="panel">
+        <div class="panel-body">
+            <form method="POST" action="/gtm/event/@model.item.id/delete?_method=DELETE" class="form-horizontal">
+                <legend>Delete</legend>
+                <div class="form-group">
+                    <p class="col-sm-offset-3 col-sm-9">You can delete this event, but keep in mind this action is irreversible.</p>
+                    <div class="col-sm-offset-3 col-sm-9">
+                        <button type="submit" class="btn btn-primary btn-danger glyphicon glyphicon-trash"
+                                onclick="return confirm('Confirm deletion?');">
+                            Delete this event
+                        </button>
+                        
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    }
+
+</div>
+
+  })
+
+ @html.block('scripts', function(model) {
+    <script src="/js/lib/proj4.js"></script>
+  <script src="/js/lib/ol.js"></script>
+
+   @if(process.env.NODE_ENV=='development'){
+       @model.uglify.event_page.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        })
+   }else{
+       <script src="/dist/js/event_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+  
+   
+    
+   })
+
+})
+
+

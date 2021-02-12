@@ -139,6 +139,9 @@ module.exports = {
             'public/js/map/propertyTabs/styleFillTab.js',
             'public/js/map/propertyTabs/styleStrokeTab.js',
             'public/js/map/propertyTabs/rasterDisplayTab.js',
+
+            'public/js/map/propertyTabs/gtmSourceTab.js',
+
             'public/js/map/objectPropertiesDlg.js'
         ],
         dest: 'public/dist/js/map-<%= pkg.version %>-min.js'
@@ -146,5 +149,14 @@ module.exports = {
     ,catalog_page:{
         src:['public/js/pages/ows/catalog_page.js'],
         dest: 'public/dist/js/catalog_page-<%= pkg.version %>-min.js'
+    },
+    task_page:{
+        src:['public/js/pages/gtm/task_page.js'],
+        dest: 'public/dist/js/task_page-<%= pkg.version %>-min.js'
+    },
+    event_page:{
+        src:['public/js/pages/gtm/event_page.js'],
+        dest: 'public/dist/js/event_page-<%= pkg.version %>-min.js'
     }
+
   }

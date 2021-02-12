@@ -1,0 +1,104 @@
+@html.extend('layout', function(model) {
+  @html.block('content', function(model) {
+<style>
+    img.avatar {
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        margin: 0 4px 0 0;
+    }
+   
+</style>
+<div class="container">
+    <div class="panel">
+           
+        <div class="panel-body">
+          <legend>Registered Tasks
+                        <a title="Help" class="close" style=" float: right; margin-right: .5em;" target="_blank" href="/help#tasks">?</a>
+                        </legend>
+            <div class="row row-grid" >
+            <div class=" col-sm-2  ">
+            <a href="/gtm/task/-1" class="btn btn-primary"><span class="glyphicon glyphicon-plus"></span> New Task</a>
+            </div>
+            @if(model.items.length >5){
+            <div class=" col-sm-10">
+                <input class="animated-search-box" id="tblItems_search" type="search" placeholder="Search..">
+               
+            </div>
+            }
+            </div>
+            <div class="row" >&nbsp;</div>
+             <div class="row row-grid" >
+            <div class="table-responsive col-sm-12">
+                <table class="table table-condensed">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Interval (min)</th>
+                            <th  class="hidden-xs hidden-sm">Min x</th> <th  class="hidden-xs hidden-sm">Min y</th> 
+                            <th  class="hidden-xs hidden-sm">Max x</th> <th  class="hidden-xs hidden-sm">Max y</th>
+                             <th class="hidden-xs hidden-sm" >Lookback (hours)</th>
+                            <th>Language</th>
+                            <th>Active</th>
+
+                        </tr>
+                    </thead>
+                    <tbody id="tblItems">
+                        
+                        @model.items.forEach(function(item) {
+                        <tr>
+                             <td>@item.task_id</td>
+                            <td>
+                                <a href="/gtm/task/@item.task_id">
+                                    @item.task_name
+                                </a>
+                            </td>
+                            <td>@item.desc</td>
+                            <td>@item.interval_min</td>
+                                                       
+                            <td class="hidden-xs hidden-sm">@html.raw(item.min_x)</td>
+                            <td class="hidden-xs hidden-sm">@html.raw(item.min_y)</td>
+                            <td class="hidden-xs hidden-sm">@html.raw(item.max_x)</td>
+                            <td class="hidden-xs hidden-sm">@html.raw(item.max_y)</td>
+                            <td class="hidden-xs hidden-sm">@html.raw(item.look_back_hrs)</td>
+                            <td>@item.lang_code</td>
+
+                            <td>
+                                @if(item.active){
+                                <span class="label label-success">@item.active</span>
+                                }else {
+                                 <span class="label label-info">@item.active</span>
+                                }
+                            </td>
+                        </tr>
+                         
+                        })
+
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+  })
+ @html.block('scripts', function(model) {
+    <script>
+        $(document).ready(function () {
+            $("#tblItems_search").on("keyup change", function () {
+                var value = $(this).val().toLowerCase();
+                $("#tblItems tr").filter(function () {
+                    $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+              //  app.test('11');
+            });
+        });
+    </script>
+    })
+})
+
+

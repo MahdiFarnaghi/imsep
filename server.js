@@ -1,6 +1,6 @@
 ﻿'use strict';
 //var forceRebuildDatabaseSchema = false; // replaced with process.env.DB_REBUILD
-const adb_version = 2;
+const adb_version = 3;
 const https = require('https');
 
 const format = require('string-format');
@@ -104,6 +104,19 @@ var postgresWorkspace= require('./scripts/workspaces/postgresWorkspace')({
 }
 );
 
+var gtmController = require('./controllers/gtmController')({
+    "host": process.env.GTM_HOSTNAME?process.env.GTM_HOSTNAME:"127.0.0.1",
+     "port":process.env.GTM_PORT?process.env.GTM_PORT:"5432",
+     "database": process.env.GTM_DATABASE?process.env.GTM_DATABASE:"tweets_db",
+     "user": process.env.GTM_USERNAME?process.env.GTM_USERNAME:"postgres",
+     "password": process.env.GTM_PASSWORD?process.env.GTM_PASSWORD:"postgres"
+},{
+    "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+     "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+     "database": process.env.DB_DATABASE?process.env.DB_DATABASE:"iMSEP",
+     "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+     "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD:"postgres"
+});
 
 const handleErrors=require('./controllers/util').handleErrors;
 var captchaController = require('./controllers/captchaController');
@@ -665,6 +678,82 @@ app.get('/validate/user/:id/email', validateController.noCache, handleErrors(val
 app.get('/validate/group/groupname', validateController.noCache, handleErrors(validateController.validateUserGroupnameGet));
 
 
+
+app.get('/gtm/tasks',  [Authenticated, authorize({
+    users: 'superadmin,admin', //or 👇
+    role: 'administrators', //or 👇
+    permissionName: 'Edit', contentType: 'GTM_Tasks'
+})],
+handleErrors(gtmController.tasksGet));
+
+
+app.get('/gtm/taskslist',  [Authenticated],
+handleErrors(gtmController.taskslistGet));
+
+
+
+
+app.delete('/gtm/task/:id/delete',  [Authenticated, authorize({
+    users: 'superadmin,admin', //or 👇
+    role: 'administrators', //or 👇
+    permissionName: 'Edit', contentType: 'GTM_Tasks'
+})],
+handleErrors(gtmController.deleteTaskDelete));
+
+app.get('/gtm/task/:id',   [Authenticated, authorize({
+    users: 'superadmin,admin', //or 👇
+    role: 'administrators', //or 👇
+    permissionName: 'Edit', contentType: 'GTM_Tasks'
+})],
+handleErrors(gtmController.taskGet));
+app.post('/gtm/task/:id',  [Authenticated, authorize({
+    users: 'superadmin,admin', //or 👇
+    role: 'administrators', //or 👇
+    permissionName: 'Edit', contentType: 'GTM_Tasks'
+})],
+handleErrors(gtmController.taskPost));
+
+app.get('/gtm/geojson',  [Authenticated],  
+handleErrors(gtmController.geojsonGet));
+
+app.get('/gtm/topicwords',  [Authenticated],
+handleErrors(gtmController.topicwordsGet));
+
+
+
+app.get('/gtm/events',  [Authenticated, authorize({
+    users: 'superadmin,admin', //or 👇
+    role: 'administrators', //or 👇
+    permissionName: 'Edit', contentType: 'GTM_Events'
+})],
+handleErrors(gtmController.eventsGet));
+
+
+//app.get('/gtm/eventslist',  [Authenticated],
+//handleErrors(gtmController.eventslistGet));
+
+
+
+
+app.delete('/gtm/event/:id/delete',  [Authenticated, authorize({
+    users: 'superadmin,admin', //or 👇
+    role: 'administrators', //or 👇
+    permissionName: 'Edit', contentType: 'GTM_Events'
+})],
+handleErrors(gtmController.deleteEventDelete));
+
+app.get('/gtm/event/:id',   [Authenticated, authorize({
+    users: 'superadmin,admin', //or 👇
+    role: 'administrators', //or 👇
+    permissionName: 'Edit', contentType: 'GTM_Events'
+})],
+handleErrors(gtmController.eventGet));
+app.post('/gtm/event/:id',  [Authenticated, authorize({
+    users: 'superadmin,admin', //or 👇
+    role: 'administrators', //or 👇
+    permissionName: 'Edit', contentType: 'GTM_Events'
+})],
+handleErrors(gtmController.eventPost));
 //#endregion Routes 
 
 //#region Error Handlers 
@@ -1028,7 +1117,13 @@ async function upgrade_ADB(adb_version,old_adb_version){
             console.log('Failed to upgrade ADB to version 2');
         }
     }
-
+    if (old_adb_version < 3) {
+        try {
+            await upgrade_ADB_to_3();
+        } catch (ex) {
+            console.log('Failed to upgrade ADB to version 3');
+        }
+    }
 }
 async function upgrade_ADB_to_1(){
     const { Client } = require('pg')
@@ -1208,6 +1303,84 @@ ALTER TABLE ONLY public."Metadata"
       const client30 = new Client(params)
       await client30.connect()
       const q_v = `UPDATE public.adb_properties SET value= '2' WHERE key='version' `;
+      const res30 = await client30.query(q_v)
+      await client30.end()
+      
+      
+          
+      }catch(ex){
+          console.log(ex);
+          return false;
+      }
+          return true;
+
+}
+async function upgrade_ADB_to_3(){
+    const { Client } = require('pg')
+    const dbName=process.env.DB_DATABASE?process.env.DB_DATABASE:"imsep";
+    var params={
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        "database":dbName,
+        "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD: "postgres"
+      };
+    
+      const client2 = new Client(params)
+      try{
+          await client2.connect()
+          const q2 = `
+          CREATE SEQUENCE public."GtmEvents_id_seq"
+          INCREMENT 1
+          START 1
+          MINVALUE 1
+          MAXVALUE 2147483647
+          CACHE 1;
+      
+      ALTER SEQUENCE public."GtmEvents_id_seq"  OWNER TO postgres;
+
+      CREATE TABLE public."GtmEvents"
+            (
+                id integer NOT NULL DEFAULT nextval('"GtmEvents_id_seq"'::regclass),
+                active boolean DEFAULT true,
+                name character varying(255) COLLATE pg_catalog."default",
+                topicwords character varying(500) COLLATE pg_catalog."default",
+                latitude_min double precision,
+                latitude_max double precision,
+                longitude_min double precision,
+                longitude_max double precision,
+                date_time_min timestamp with time zone,
+                date_time_max timestamp with time zone,
+                "mapId" integer,
+                details text COLLATE pg_catalog."default",
+                "createdAt" timestamp with time zone NOT NULL,
+                "updatedAt" timestamp with time zone NOT NULL,
+                "ownerUser" integer,
+                CONSTRAINT "GtmEvents_pkey" PRIMARY KEY (id),
+                CONSTRAINT "GtmEvents_ownerUser_fkey" FOREIGN KEY ("ownerUser")
+                    REFERENCES public."Users" (id) MATCH SIMPLE
+                    ON UPDATE CASCADE
+                    ON DELETE CASCADE
+            )
+            WITH (
+                OIDS = FALSE
+            )
+            TABLESPACE pg_default;
+
+            ALTER TABLE public."GtmEvents"
+                OWNER to postgres;
+          `;
+          const res2 = await client2.query(q2)
+          await client2.end()
+      
+
+
+                
+
+
+      const client30 = new Client(params)
+      await client30.connect()
+      const q_v = `UPDATE public.adb_properties SET value= '3' WHERE key='version' `;
       const res30 = await client30.query(q_v)
       await client30.end()
       

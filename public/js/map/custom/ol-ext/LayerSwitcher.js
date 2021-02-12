@@ -545,6 +545,11 @@ ol.control.LayerSwitcher.prototype.drawList = function (ul, collection) {
 	};
 
 	function onClickItemContainer(e) {
+		if(e.originalEvent.detail > 1){
+			e.stopPropagation();
+	    	e.preventDefault();
+			return;
+		}
 		e.stopPropagation();
 		e.preventDefault();
 		var l = $(this).data("layer");

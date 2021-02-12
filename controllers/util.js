@@ -99,3 +99,43 @@ exports.escape= function(str) {
             // so we can allow for a little better readability over the wire: |`^
             replace(/%(?:7C|60|5E)/g, unescape);
 };
+exports.saveSession = function (req) {
+    return new Promise((resolve, reject) => {
+        req.session.save(function(err) {
+            if(err){
+                reject(err)
+            }else{
+                resolve(true);
+            }
+        });
+    });
+};
+exports.deleteSession = function (req) {
+    return new Promise((resolve, reject) => {
+        req.session.destroy(function(err) {
+            if(err){
+                reject(err)
+            }else{
+                resolve(true);
+            }
+        });
+    });
+};
+exports.regenerateSession = function (req) {
+    return new Promise((resolve, reject) => {
+        req.session.regenerate(function(err) {
+            if(err){
+                reject(err)
+            }else{
+                resolve(true);
+            }
+        });
+    });
+};
+
+
+exports.setImmediatePromise = function () {
+    return new Promise((resolve) => {
+        setImmediate(() => resolve());
+      });
+};

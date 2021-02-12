@@ -844,3 +844,206 @@ SourceFactory.prototype.createGeoImageSource_old = function(dataObj,mapContainer
 
     return geoImageSource;
   }
+
+SourceFactory.prototype.createGtmSource = function(dataObj,mapContainer) {
+  
+    if (!dataObj)
+    return null;
+var view = mapContainer.map.getView();
+var mapProjection = view.getProjection();
+
+var details = dataObj.details;
+try {
+  if (typeof details === 'string' || details instanceof String){
+      details = JSON.parse(details);
+  }
+} catch (ex) {}
+details.shapeType='MultiPolygon';
+details.srid=4326;
+var spatialReferenceCode='EPSG:4326';
+if(!details.fields){
+    details.fields=[];
+    details.fields.push({
+        name:'task_id',alias:'Task_id',
+        type:'bigint',
+        hidden:true
+    });
+    details.fields.push({
+        name:'task_name',alias:'Task name',
+        type:'varchar'
+    });
+    details.fields.push({
+        name:'topic',alias:'Topic',
+        type:'varchar'
+    });
+    details.fields.push({
+        name:'topic_words',alias:'Topic words',
+        type:'varchar'
+    });
+    details.fields.push({
+        name:'date_time_min',alias:'date_time_min',
+        type:'timestamp with time zone'
+    }); 
+    details.fields.push({
+        name:'date_time_max',alias:'date_time_max',
+        type:'timestamp with time zone'
+    });
+}
+
+var format = new ol.format.GeoJSON({
+    dataProjection: spatialReferenceCode 
+});
+var url = '/gtm/geojson';
+
+var vectorSource = new ol.source.Vector({
+   
+    format: format,
+    url: url,
+    loader: function (extent,resolution,projection) {
+        var bbox;//[minX, minY, maxX, maxY]
+        var filter= details.filter;
+        var version= details.version || '1.0'
+        var task_id= details.task_id || -1;
+       // var settings=encodeURIComponent(JSON.stringify({filter:filter}));
+       var settings=encodeURIComponent(JSON.stringify({
+           filter:filter,
+           version: version
+       }));
+        var loadUrl=url +'?task_id='+task_id+'&version='+version+'&settings='+settings;
+        if(extent && extent.length>=4 && extent[2]!=Infinity){
+            // when using strategy
+            extent = ol.extent.applyTransform(extent, ol.proj.getTransform(projection,format.dataProjection));
+            bbox=extent.join(',');
+            loadUrl= urloadUrl+'&bbox='+bbox
+        }
+        vectorSource.set('loading_status', 'started');
+        vectorSource.dispatchEvent({
+            type: "loading_started"
+        });
+        try{
+            if (vectorSource._lastXhr && vectorSource._lastXhr.readyState != 4) {
+                vectorSource._lastXhr.abort();
+            }
+        }catch(ex){}
+        vectorSource._lastXhr=$.ajax(loadUrl, {
+            type: 'GET',
+            dataType: 'json',
+            xhr: function()
+            {
+              var xhr = new window.XMLHttpRequest();
+              //Upload progress
+              xhr.upload.addEventListener("progress", function(evt){
+                if (evt.lengthComputable) {
+                  var percentComplete = evt.loaded / evt.total;
+                  //Do something with upload progress
+                  //    console.log(percentComplete);
+                }
+              }, false);
+              //Download progress
+              xhr.addEventListener("progress", function(evt){
+                
+                if (evt.lengthComputable) {
+                    var percentage = Math.round((evt.loaded / evt.total) * 100);
+                    //console.log("percent " + percentage + '%');
+                    vectorSource.set('loading_percent', percentage);
+                    vectorSource.dispatchEvent({
+                        type: "loading_progress",
+                        percentage: percentage
+                    });
+                }
+              }, false);
+              return xhr;
+            },
+            success: function (data) {
+                if (data) {
+                    if(data.features){
+                        var features= format.readFeatures(data, {
+                                featureProjection: projection
+                            });
+                            var dataProjection= format.readProjection(data);
+                            vectorSource.addFeatures(features);
+                    }
+                    vectorSource.set('loading_details', '');
+                    vectorSource.set('loading_status', 'complete');
+                    
+                    vectorSource.dispatchEvent({
+                        type: "loading_complete"
+                    });
+                }
+            },
+            error: function (xhr, textStatus, errorThrown) {
+                if(textStatus !=='abort'){
+                    vectorSource.set('loading_details', errorThrown|| textStatus);
+                    vectorSource.set('loading_status', 'failed');
+                    
+                    vectorSource.dispatchEvent({
+                        type: "loading_failed",
+                        xhr: xhr,
+                        statusText: textStatus
+                    });
+                }else{
+                    vectorSource.set('loading_details', errorThrown|| textStatus);
+                    vectorSource.set('loading_status', 'aborted');
+                    
+                    vectorSource.dispatchEvent({
+                        type: "loading_aborted",
+                        xhr: xhr,
+                        statusText: textStatus
+                    });
+                }
+            }
+        }).done(function (response) {
+           
+        });
+    }
+    //, strategy: ol.loadingstrategy.bbox
+});
+vectorSource.set('details', details);
+vectorSource.set('shapeType', details.shapeType);
+vectorSource.set('loading_status', '');
+
+vectorSource.on('change:loading_status', function(evt, v) {
+    
+    // alert(this.get('loading_status'));
+})
+
+vectorSource.on('loading_failed', function(evt) {
+
+    var a = 1;
+    // alert(this.get('loading_status'));
+})
+
+// vectorSource.requestExtent=function(onReceive,onError){
+    
+//     var url2= '/datalayer/' + dataObj.id + '/vectorextent';
+//     $.ajax(url2, {
+//         type: 'GET',
+//         dataType: 'json',
+//         success: function (data) {
+//             if (data) {
+//                 try{
+//                     var features= format.readFeatures(data, {
+//                             featureProjection: mapProjection
+//                         });
+//                         var geom= features[0].get('geometry');
+//                         var extent= geom.getExtent();
+//                         if(onReceive){
+//                             onReceive(extent);
+//                         }
+//                     }catch(ex){
+
+//                     }
+//             }
+//         },
+//         error: function (xhr, textStatus, errorThrown) {
+//            if(onError){
+//                onError(xhr, textStatus, errorThrown);
+//            }
+//         }
+//     }).done(function (response) {
+       
+//     });
+// };
+
+return vectorSource;
+}

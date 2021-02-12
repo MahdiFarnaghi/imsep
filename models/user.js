@@ -87,6 +87,8 @@ module.exports = (sequelize, DataTypes) => {
                 grantToType: 'user'
             }
         });
+
+        User.hasMany(models.GtmEvent, { foreignKey: 'ownerUser', sourceKey: 'id', as: 'HasGtmEvents', onDelete: 'CASCADE' });
     };
     User.prototype.checkAccessAsync = async function (models,options) {
         var me = this;

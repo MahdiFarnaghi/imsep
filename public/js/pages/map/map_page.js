@@ -197,6 +197,10 @@ var pageTask={
             app.mapContainer.downloadDataFromWCS();
             
          });
+         $('#cmdAddGtmLayer').click(function(){
+            app.mapContainer.addNewGtm();
+            
+         });
          
         this.create_Layer_AutoSearch();
         this.create_BaseLayer_AutoSearch();
