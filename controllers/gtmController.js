@@ -690,6 +690,21 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 await util.saveSession(req);
                 return res.redirect(parentPagePath);
             }
+        }else{
+
+           item={
+                id: -1,
+                userName:req.user.userName,
+                name:req.query.name || '',
+                latitude_min:req.query.latitude_min || undefined,
+                latitude_max:req.query.latitude_max || undefined,
+                longitude_min:req.query.longitude_min || undefined,
+                longitude_max:req.query.longitude_max || undefined,
+                topicwords:req.query.topicwords ||'',
+
+
+                active:true
+            } 
         }
        
         res.render(viewPath+ (readOnly?'_ro':'') , {

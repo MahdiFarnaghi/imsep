@@ -3305,14 +3305,37 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
     htm+='<div class="form-group " style="margin-left: 12px;    margin-right: 40px">';
     //htm+='  <label class="col-sm-3" for="">Trackbar:</label>'; 
     //htm+='<div id="slider-date" class="noUi-target noUi-ltr noUi-horizontal noUi-txt-dir-ltr"></div>';
-      htm+='<div id="slider-date" class="col-sm-7 col-sm-offset-1" ></div>';
+    htm+='<div id="slider-date" class="col-sm-7 col-sm-offset-1" ></div>';
+    if(app.identity.isAdministrator || (app.identity.roles && app.identity.roles.indexOf('gtmEventListeners')>-1))
+    {
+        htm+='<div class="col-sm-2"><a id="cmdRegisterNewGtmEvent" target="_blank" href="/gtm/event/-1" class="btn btn-xs btn-primary"><span class="	glyphicon glyphicon-bell"></span></a>';
+    }
     htm+='</div>';
 
     htm+='</div>';// horizontal
 
   
     var content= $('#mapTools').html(htm);
+    function update_cmdRegisterNewGtmEvent_href(){
+        var href='/gtm/event/-1';
+        var args='name='+ layer.get('title');
+        var map = self.map;
+        var view = map.getView();
+        var mapProjectionCode = view.getProjection().getCode();
+        var extent = map.getView().calculateExtent(map.getSize());
+        extent = ol.extent.applyTransform(extent, ol.proj.getTransform(mapProjectionCode, "EPSG:4326"));
+        var longitude_min= extent[0];
+        var longitude_max= extent[2];
+        var latitude_min= extent[1];
+        var latitude_max= extent[3];
+        args+= '&longitude_min='+longitude_min;args+= '&longitude_max='+longitude_max;
+        args+= '&latitude_min='+latitude_min;args+= '&latitude_max='+latitude_max;
+        var topicwords= topicWords.join(',');
+        args+='&topicwords='+topicwords;
 
+        content.find("#cmdRegisterNewGtmEvent").attr("href", href + '?'+ (args));
+    }
+    update_cmdRegisterNewGtmEvent_href();
     content.find('#date_time_min_picker').datetimepicker({
         maxDate:date_time_max?new Date(date_time_max):undefined
     });
@@ -3344,6 +3367,7 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
         layer.getSource().refresh();
       }catch(ex){}
     });
+
 
     function timestamp(str) {
         if(!str){

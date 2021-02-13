@@ -723,7 +723,7 @@ handleErrors(gtmController.topicwordsGet));
 
 app.get('/gtm/events',  [Authenticated, authorize({
     users: 'superadmin,admin', //or 👇
-    role: 'administrators', //or 👇
+    anyOfRoles: 'administrators,gtmEventListeners', //or 👇
     permissionName: 'Edit', contentType: 'GTM_Events'
 })],
 handleErrors(gtmController.eventsGet));
@@ -737,20 +737,20 @@ handleErrors(gtmController.eventsGet));
 
 app.delete('/gtm/event/:id/delete',  [Authenticated, authorize({
     users: 'superadmin,admin', //or 👇
-    role: 'administrators', //or 👇
+    anyOfRoles: 'administrators,gtmEventListeners', //or 👇
     permissionName: 'Edit', contentType: 'GTM_Events'
 })],
 handleErrors(gtmController.deleteEventDelete));
 
 app.get('/gtm/event/:id',   [Authenticated, authorize({
     users: 'superadmin,admin', //or 👇
-    role: 'administrators', //or 👇
+    anyOfRoles: 'administrators,gtmEventListeners', //or 👇
     permissionName: 'Edit', contentType: 'GTM_Events'
 })],
 handleErrors(gtmController.eventGet));
 app.post('/gtm/event/:id',  [Authenticated, authorize({
     users: 'superadmin,admin', //or 👇
-    role: 'administrators', //or 👇
+    anyOfRoles: 'administrators,gtmEventListeners', //or 👇
     permissionName: 'Edit', contentType: 'GTM_Events'
 })],
 handleErrors(gtmController.eventPost));
