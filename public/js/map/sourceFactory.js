@@ -1044,6 +1044,111 @@ vectorSource.on('loading_failed', function(evt) {
        
 //     });
 // };
+vectorSource._onFeatureSelected=function(map,layer,feature){
+    var allFeatures= vectorSource.getFeatures();
+    if(vectorSource._clusterPoints && vectorSource._clusterPoints.length){
+        for(var i=0;i<vectorSource._clusterPoints.length;i++){
+            var tofind=vectorSource._clusterPoints[i];
+            var index=allFeatures.findIndex(function(f){
+                return f==tofind;
+            });
+            if(index>-1){
+             //   allFeatures.splice(index, 1);
+            }
+            try{
+                vectorSource.removeFeature(allFeatures[index]);
+            }catch(ex){}
+            
+        }
+    }
+    var format = new ol.format.GeoJSON({
+        dataProjection: spatialReferenceCode 
+    });
+    if(!layer){
+        return;
+    }
+    if(!feature){
+        return;
+    }
+    var cluster_id= feature.id_;
+    var url = '/gtm/clusterPoints/'+cluster_id;
+    try{
+        if (vectorSource._lastXhr && vectorSource._lastXhr.readyState != 4) {
+            vectorSource._lastXhr.abort();
+        }
+    }catch(ex){}
+    vectorSource._lastXhr=$.ajax(url, {
+        type: 'GET',
+        dataType: 'json',
+        xhr: function()
+        {
+          var xhr = new window.XMLHttpRequest();
+          //Upload progress
+          xhr.upload.addEventListener("progress", function(evt){
+            if (evt.lengthComputable) {
+              var percentComplete = evt.loaded / evt.total;
+              //Do something with upload progress
+              //    console.log(percentComplete);
+            }
+          }, false);
+          //Download progress
+          xhr.addEventListener("progress", function(evt){
+            
+            if (evt.lengthComputable) {
+                var percentage = Math.round((evt.loaded / evt.total) * 100);
+                
+                // vectorSource.set('loading_percent', percentage);
+                // vectorSource.dispatchEvent({
+                //     type: "loading_progress",
+                //     percentage: percentage
+                // });
+            }
+          }, false);
+          return xhr;
+        },
+        success: function (data) {
+            if (data) {
+                if(data.features){
+                    var features= format.readFeatures(data, {
+                            featureProjection: 'EPSG:3857'
+                        });
+                        var dataProjection= format.readProjection(data);
+                        vectorSource._clusterPoints=features;
+                        vectorSource.addFeatures(features);
+                }
+                // vectorSource.set('loading_details', '');
+                // vectorSource.set('loading_status', 'complete');
+                
+                // vectorSource.dispatchEvent({
+                //     type: "loading_complete"
+                // });
+            }
+        },
+        error: function (xhr, textStatus, errorThrown) {
+            // if(textStatus !=='abort'){
+            //     vectorSource.set('loading_details', errorThrown|| textStatus);
+            //     vectorSource.set('loading_status', 'failed');
+                
+            //     vectorSource.dispatchEvent({
+            //         type: "loading_failed",
+            //         xhr: xhr,
+            //         statusText: textStatus
+            //     });
+            // }else{
+            //     vectorSource.set('loading_details', errorThrown|| textStatus);
+            //     vectorSource.set('loading_status', 'aborted');
+                
+            //     vectorSource.dispatchEvent({
+            //         type: "loading_aborted",
+            //         xhr: xhr,
+            //         statusText: textStatus
+            //     });
+            // }
+        }
+    }).done(function (response) {
+       
+    });
+}
 
 return vectorSource;
 }

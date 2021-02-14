@@ -716,6 +716,10 @@ handleErrors(gtmController.taskPost));
 app.get('/gtm/geojson',  [Authenticated],  
 handleErrors(gtmController.geojsonGet));
 
+app.get('/gtm/clusterPoints/:cluster_id',  [Authenticated],  
+handleErrors(gtmController.clusterPointsGet));
+
+
 app.get('/gtm/topicwords',  [Authenticated],
 handleErrors(gtmController.topicwordsGet));
 

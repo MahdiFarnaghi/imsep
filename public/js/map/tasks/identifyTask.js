@@ -136,6 +136,21 @@ IdentifyTask.prototype.OnDeActivated = function (dataObj) {
     this._activated = false;
     this.featureLayers={}
 }
+IdentifyTask.prototype._onFeatureSelected=function(layer,feature){
+    if(!layer){
+        return;
+    }
+    if(!feature){
+        return;
+    }
+    var source;
+    if(layer.getSource){
+        source= layer.getSource();
+    }
+    if(source && source._onFeatureSelected){
+        source._onFeatureSelected(this.mapContainer.map,layer,feature);
+    }
+}
 IdentifyTask.prototype._getHtml=function(feature){
     var self=this;
     var map = this.mapContainer.map;
@@ -359,7 +374,7 @@ IdentifyTask.prototype._getHtml=function(feature){
         html +='<div class="panel-footer"><nav class="navbar"> </nav></div>';
         html +='</div>';
 
-        
+        self._onFeatureSelected(layer,feature);
 
        
         html= DOMPurify.sanitize(html, {SAFE_FOR_JQUERY: true});

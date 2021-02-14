@@ -276,10 +276,10 @@
           },
       getIcon:function (style){
         if(! style)
-            return null;
+        return null;
         return {
           anchor: style.getAnchor(),
-  //        anchorOrigin:style.getAnchorOrigin(),
+    //        anchorOrigin:style.getAnchorOrigin(),
           anchorXUnits:'pixels',//style.getAnchorXUnits(),
           anchorYUnits:'pixels',//style.getAnchorYUnits(),
         //   crossOrigin:style.getCrossOrigin(),
@@ -289,7 +289,7 @@
           size:style.getSize(),
           src:style.getSrc(),
           
-          snapToPixel:style.getSnapToPixel(),
+        //  snapToPixel:style.getSnapToPixel(),
           opacity:style.getOpacity(),
           rotation: style.getRotation(),
           rotateWithView: style.getRotateWithView(),

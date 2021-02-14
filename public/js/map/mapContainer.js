@@ -266,6 +266,9 @@ var dragAndDropInteraction = new ol.interaction.DragAndDrop({
     //         alertType: 'danger'
     //     }
     // );
+    $('#mapTools').slideUp();
+    self.clearGtmSettingBar();
+
     e.cancel = true;
             var layerToRemove = e.layer;
             if(!layerToRemove){
@@ -3221,7 +3224,7 @@ MapContainer.prototype.addNewGtm = function(options) {
             dataObj: {
                 details: {
                     shapeType: options.shapetype || options.shapeType || '',
-                    
+                    renderer:{"name":"simpleRenderer","style":{"fill":{"color":"rgba(240,13,13,0.56)"},"stroke":{"color":"#3399CC","lineDash":[2,2],"width":1.25},"icon":{"anchor":["15","40"],"anchorXUnits":"pixels","anchorYUnits":"pixels","size":[32,41],"src":"/images/markers/tweet.png","opacity":1,"rotation":0,"rotateWithView":false,"scale":1}}}
                 }
             }
         }
@@ -3257,6 +3260,9 @@ MapContainer.prototype.addNewGtm = function(options) {
     }).show();
 
 
+}
+MapContainer.prototype.clearGtmSettingBar=function(){
+    $('#mapTools').html('');  
 }
 MapContainer.prototype.showGtmSettingBar= function(layer){
     var self= this;
@@ -3299,6 +3305,10 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
     htm+='            </span>';
     htm+='  </div>';
     htm+='  </div>';
+    if(app.identity.isAdministrator || (app.identity.roles && app.identity.roles.indexOf('gtmEventListeners')>-1))
+    {
+        htm+='<div class="col-sm-1"><a id="cmdRegisterNewGtmEvent" target="_blank" title="Register event notification" href="/gtm/event/-1" class="btn btn-xs btn-primary"><span class="	glyphicon glyphicon-bell"></span></a></div>';
+    }
     htm+='</div>';
 
     
@@ -3306,16 +3316,14 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
     //htm+='  <label class="col-sm-3" for="">Trackbar:</label>'; 
     //htm+='<div id="slider-date" class="noUi-target noUi-ltr noUi-horizontal noUi-txt-dir-ltr"></div>';
     htm+='<div id="slider-date" class="col-sm-7 col-sm-offset-1" ></div>';
-    if(app.identity.isAdministrator || (app.identity.roles && app.identity.roles.indexOf('gtmEventListeners')>-1))
-    {
-        htm+='<div class="col-sm-2"><a id="cmdRegisterNewGtmEvent" target="_blank" href="/gtm/event/-1" class="btn btn-xs btn-primary"><span class="	glyphicon glyphicon-bell"></span></a>';
-    }
+    
     htm+='</div>';
 
     htm+='</div>';// horizontal
 
   
-    var content= $('#mapTools').html(htm);
+    $('#mapTools').html(htm);
+    var content= $('#mapTools');
     function update_cmdRegisterNewGtmEvent_href(){
         var href='/gtm/event/-1';
         var args='name='+ layer.get('title');
@@ -3334,7 +3342,13 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
         args+='&topicwords='+topicwords;
 
         content.find("#cmdRegisterNewGtmEvent").attr("href", href + '?'+ (args));
+       // console.log(layer.get('title') + '-'+content.find("#cmdRegisterNewGtmEvent").attr("href"));
     }
+    this.map.on('moveend', function() {
+       //console.log('moveend');
+     
+        update_cmdRegisterNewGtmEvent_href();
+    });
     update_cmdRegisterNewGtmEvent_href();
     content.find('#date_time_min_picker').datetimepicker({
         maxDate:date_time_max?new Date(date_time_max):undefined
@@ -3485,6 +3499,7 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
             clearTimeout(layerRefreshHandlers.lastRefreshHandler);
             delete layerRefreshHandlers.lastRefreshHandler;
         }
+        update_cmdRegisterNewGtmEvent_href();
         layerRefreshHandlers.lastRefreshHandler= setTimeout(function(){
             layer.getSource().refresh();
         },100);

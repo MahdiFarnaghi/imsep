@@ -108,10 +108,18 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
         var parentPagePath='/gtm/tasks/' ;
         var readOnly= req.path.toLowerCase().endsWith('/view');
         var item,err;
-        if (req.params.id && req.params.id != '-1') {
+        var task_id=req.params.id;
+        try{
+            task_id = parseInt(task_id);
+        }catch(ex){}
+        if (task_id && !isNaN(task_id) && task_id>-1 ) {
           
             try {
-                var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id = ${req.params.id} ; `);
+                //var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id =${task_id} ; `);
+                var qResult = await module.query({
+                    text:` SELECT *  FROM   event_detection_task WHERE task_id =$1 ; `,
+                    values:[task_id]
+                });
                 item = qResult.rows[0];
             } catch (ex) {
                 //throw ex;
@@ -213,7 +221,11 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 }
                 var isDuplicated;
                 try {
-                    var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_name = '${model.task_name}' ; `);
+                    //var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_name = '${model.task_name}' ; `);
+                    var qResult = await module.query({
+                        text:` SELECT *  FROM   event_detection_task WHERE task_name = $1 ; `,
+                        values:[model.task_name]
+                        });
                     isDuplicated = qResult.rows.length;
                     if(isDuplicated){
                         req.flash('error', {
@@ -292,7 +304,11 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 var item;
                 //item = await models.Bird.findOne({where: {id: itemId}});
                 try {
-                    var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id = ${itemId} ; `);
+                    //var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id = ${itemId} ; `);
+                    var qResult = await module.query({
+                        text:` SELECT *  FROM   event_detection_task WHERE task_id = $1 ; `,
+                        values:[itemId]
+                    });
                     item = qResult.rows[0];
                 } catch (ex) {
                     //throw ex;
@@ -310,7 +326,10 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                
                 var isDuplicated;
                 try {
-                    var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id <> ${itemId} ANd task_name = '${model.task_name}' ; `);
+                    //var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id <> ${itemId} ANd task_name = '${model.task_name}' ; `);
+                    var qResult = await module.query({
+                        text:` SELECT *  FROM   event_detection_task WHERE task_id <> $1 ANd task_name = $2 ; `,
+                        values:[itemId,model.task_name]});
                     isDuplicated = qResult.rows.length;
                     if(isDuplicated){
                         req.flash('error', {
@@ -417,7 +436,10 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
         if (req.params.id && req.params.id != '-1') {
             itemId= req.params.id;
             try {
-                var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id = ${itemId} ; `);
+                //var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id = ${itemId} ; `);
+                var qResult = await module.query({
+                    text:` SELECT *  FROM   event_detection_task WHERE task_id = $1 ; `,
+                    values:[itemId]});
                 item = qResult.rows[0];
             } catch (ex) {
                 //throw ex;
@@ -495,20 +517,28 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
              //var whereExpressions=`WHERE task_id = ${task_id}`;
              var whereExpressions='';
              var Expressions=[]
+             var values=[]
              if(filter.topicWords && filter.topicWords.length){
                  var exprs=[];
                  for(var i=0;i< filter.topicWords.length;i++){
-                    exprs.push(`topic_words LIKE '%${filter.topicWords[i]}%'`);
-
+                    //exprs.push(`topic_words LIKE '%${filter.topicWords[i]}%'`);
+                    
+                    values.push(`%${filter.topicWords[i]}%`);
+                    exprs.push(`topic_words LIKE $`+ (values.length));
                  }
                  var exprs_= exprs.join(' AND ');
                  Expressions.push('(' + exprs_+')');
              }
             if(filter.date_time_min){
-                Expressions.push(`(date_time_max >= '${filter.date_time_min}' OR (date_time_max IS NULL ))`);// include event that began before before filter but not ended yet
+                values.push(filter.date_time_min);
+                //Expressions.push(`(date_time_max >= '${filter.date_time_min}' OR (date_time_max IS NULL ))`);// include event that began before before filter but not ended yet
+                Expressions.push(`(date_time_max >= $${values.length} OR (date_time_max IS NULL ))`);// include event that began before before filter but not ended yet
+
             }
             if(filter.date_time_max){
-                Expressions.push(`(date_time_min <= '${filter.date_time_max}')`);
+                values.push(filter.date_time_max);
+                //Expressions.push(`(date_time_min <= '${filter.date_time_max}')`);
+                Expressions.push(`(date_time_min <= $${values.length})`);
             }
              if(bbox){
                
@@ -519,7 +549,8 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                     whereExpressions= ' WHERE '+ Expressions.join(' AND ');
                  }
                 try {
-                    var qResult = await module.query(` SELECT *  FROM   cluster  ${whereExpressions} ; `);
+                    //var qResult = await module.query(` SELECT *  FROM   cluster  ${whereExpressions} ; `);
+                    var qResult = await module.query({text:` SELECT *  FROM   cluster   ${whereExpressions} ; `,values:values});
                     rows = qResult.rows;
                 } catch (ex) {
                     //throw ex;
@@ -550,6 +581,91 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                         },geometry: {
                             'type': 'Polygon',
                             'coordinates': [[[xmin,ymin],[xmax,ymin],[xmax,ymax],[xmin,ymax],[xmin,ymin]]]
+                        },};
+                        result.features.push(feature);
+                    }
+
+                    //return res.json(result);
+                    res.header("Content-Type",'application/json');
+                    res.send(JSON.stringify(result, null, 4));
+                }
+                   
+                
+            }catch(ex){
+                
+                    res.set('Content-Type', 'text/plain');
+                    res.status(404).end('Not found.('+ ex.message +')' );
+                    return;
+                
+            }
+            
+            
+        }else{
+            res.set('Content-Type', 'text/plain');
+            res.status(404).end('Not found');
+            return;
+        }
+    };
+     /**
+     * GET /gtm/clusterPoints/:cluster_id
+     */
+    module.clusterPointsGet = async function (req, res, next) {
+       
+        var item,err;
+       
+        var cluster_id=req.params.cluster_id;
+       
+        try{
+            cluster_id= parseInt(cluster_id);
+        }catch(ex){}
+
+        
+        
+        var format='geojson';
+        if(req.query && 'format' in req.query){
+            format=req.query.format;
+        }
+        
+        if (cluster_id &&  cluster_id>0 && !isNaN(cluster_id) ) {
+             var srid=4326;
+            
+             
+             try{
+                 var rows;
+               
+                try {
+                    var qResult = await module.query({text:`SELECT id, cluster_id, longitude, latitude, text, date_time
+                    --, user_id, tweet_id
+                    FROM public.cluster_point
+                    where cluster_id=$1; `,
+                    values:[cluster_id]});
+                    rows = qResult.rows;
+                } catch (ex) {
+                    //throw ex;
+                   // err= ex;
+                }
+                    
+                if (format=='xlsx' || format=='csv'){
+                    
+
+                }else{
+                    var result={type:'FeatureCollection',features:[]}; 
+                    for(var n=0,r=0;rows && r <rows.length;r++,n++)
+                    {
+                        var row= rows[r];
+                        if(n>100){
+                            n=0;
+                            await util.setImmediatePromise();
+                        }
+                        var x=row['longitude'],y=row['latitude'];
+                        x=parseFloat(x);y=parseFloat(y);
+                        var feature={type:'Feature',id:row['id'],properties:{
+                            'cluster_id': row['cluster_id'],
+                            'text':row['text'],
+                            'date_time':row['date_time']
+                        },geometry: {
+                            'type': 'Point',
+                            'coordinates': [x,y]
                         },};
                         result.features.push(feature);
                     }
@@ -640,12 +756,12 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
             FROM "GtmEvents"  
             INNER JOIN "Users"   
                 ON ("GtmEvents"."ownerUser"  = "Users".id)
-             WHERE "GtmEvents"."ownerUser" =${userId}
+             WHERE "GtmEvents"."ownerUser" =$1
             ; `;
         }
         
         try {
-            var qResult = await module.query(queryTemplate,'adb');
+            var qResult = await module.query({text:queryTemplate,values:[userId]},'adb');
             items = qResult.rows;
         } catch (ex) {
             //throw ex;
@@ -670,11 +786,12 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
         if (req.params.id && req.params.id != '-1') {
           
             try {
-                var qResult = await module.query(` SELECT "GtmEvents".*, "Users"."userName","Users"."email","Users"."firstName","Users"."lastName"
+                var qResult = await module.query({text:` SELECT "GtmEvents".*, "Users"."userName","Users"."email","Users"."firstName","Users"."lastName"
                 FROM "GtmEvents"  
                 INNER JOIN "Users"   
                     ON ("GtmEvents"."ownerUser"  = "Users".id)
-                 WHERE "GtmEvents"."id" = ${req.params.id} ; `
+                 WHERE "GtmEvents"."id" = $1 ; `,
+                 values:[req.params.id]}
                  ,'adb');
                 item = qResult.rows[0];
             } catch (ex) {
@@ -792,7 +909,9 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 }
                 var isDuplicated;
                 try {
-                    var qResult = await module.query(` SELECT *  FROM   "GtmEvents" WHERE name = '${model.name}' AND "ownerUser" = ${model.ownerUser} ; `,'adb');
+                    var qResult = await module.query({
+                        text:` SELECT *  FROM   "GtmEvents" WHERE name = $1 AND "ownerUser" = $2 ; `,
+                        values:[model.name,model.ownerUser]},'adb');
                     isDuplicated = qResult.rows.length;
                     if(isDuplicated){
                         req.flash('error', {
@@ -873,9 +992,9 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 try {
                     var qResult;
                     if(isAdmin){
-                         qResult = await module.query(` SELECT *  FROM   "GtmEvents" WHERE id = ${itemId} ; `,'adb');
+                         qResult = await module.query({text:` SELECT *  FROM   "GtmEvents" WHERE id = $1 ; `,values:[itemId]},'adb');
                     }else{
-                         qResult = await module.query(` SELECT *  FROM   "GtmEvents" WHERE id = ${itemId} AND ownerUser = ${userId} ; `,'adb');
+                         qResult = await module.query({text:` SELECT *  FROM   "GtmEvents" WHERE id = $1 AND ownerUser = $2 ; `,values:[itemId,userId]},'adb');
                     }
                     if(qResult && qResult.rows && qResult.rows.length){
                         item = qResult.rows[0];
@@ -896,7 +1015,9 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                
                 var isDuplicated;
                 try {
-                    var qResult = await module.query(` SELECT *  FROM   "GtmEvents" WHERE id <> ${itemId} ANd name = '${model.name}' AND "ownerUser" = ${req.user.id} ; `,'adb');
+                    var qResult = await module.query({
+                        text:` SELECT *  FROM   "GtmEvents" WHERE id <> $1 ANd name = $2 AND "ownerUser" = $3 ; `,
+                        values:[itemId,model.name,req.user.id]},'adb');
                     isDuplicated = qResult.rows.length;
                     if(isDuplicated){
                         req.flash('error', {
@@ -1004,9 +1125,9 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
             try {
                 var qResult;
                 if(isAdmin){
-                     qResult = await module.query(` SELECT *  FROM   "GtmEvents" WHERE id = ${itemId} ; `,'adb');
+                     qResult = await module.query({text:` SELECT *  FROM   "GtmEvents" WHERE id = $1 ; `,values:[itemId]},'adb');
                 }else{
-                     qResult = await module.query(` SELECT *  FROM   "GtmEvents" WHERE id = ${itemId} AND ownerUser = ${userId} ; `,'adb');
+                     qResult = await module.query({text:` SELECT *  FROM   "GtmEvents" WHERE id = $1 AND ownerUser = $2 ; `,values:[itemId,userId]},'adb');
                 }
                 if(qResult && qResult.rows && qResult.rows.length){
                     item = qResult.rows[0];
