@@ -1,6 +1,7 @@
 ﻿'use strict';
 //var forceRebuildDatabaseSchema = false; // replaced with process.env.DB_REBUILD
 const adb_version = 3;
+const cron = require('node-cron');
 const https = require('https');
 
 const format = require('string-format');
@@ -103,20 +104,21 @@ var postgresWorkspace= require('./scripts/workspaces/postgresWorkspace')({
      "password": process.env.GDB_READONLY_USERNAME_PASSWORD?process.env.GDB_READONLY_USERNAME_PASSWORD:"imsep_gdb_reader_pass"
 }
 );
-
-var gtmController = require('./controllers/gtmController')({
-    "host": process.env.GTM_HOSTNAME?process.env.GTM_HOSTNAME:"127.0.0.1",
-     "port":process.env.GTM_PORT?process.env.GTM_PORT:"5432",
-     "database": process.env.GTM_DATABASE?process.env.GTM_DATABASE:"tweets_db",
-     "user": process.env.GTM_USERNAME?process.env.GTM_USERNAME:"postgres",
-     "password": process.env.GTM_PASSWORD?process.env.GTM_PASSWORD:"postgres"
-},{
-    "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
-     "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
-     "database": process.env.DB_DATABASE?process.env.DB_DATABASE:"iMSEP",
-     "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
-     "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD:"postgres"
-});
+if(process.env.GTM=='true'){
+    var gtmController = require('./controllers/gtmController')({
+        "host": process.env.GTM_HOSTNAME?process.env.GTM_HOSTNAME:"127.0.0.1",
+        "port":process.env.GTM_PORT?process.env.GTM_PORT:"5432",
+        "database": process.env.GTM_DATABASE?process.env.GTM_DATABASE:"tweets_db",
+        "user": process.env.GTM_USERNAME?process.env.GTM_USERNAME:"postgres",
+        "password": process.env.GTM_PASSWORD?process.env.GTM_PASSWORD:"postgres"
+    },{
+        "host": process.env.DB_HOSTNAME?process.env.DB_HOSTNAME:"127.0.0.1",
+        "port":process.env.DB_PORT?process.env.DB_PORT:"5432",
+        "database": process.env.DB_DATABASE?process.env.DB_DATABASE:"iMSEP",
+        "user": process.env.DB_USERNAME?process.env.DB_USERNAME:"postgres",
+        "password": process.env.DB_PASSWORD?process.env.DB_PASSWORD:"postgres"
+    });
+}
 
 const handleErrors=require('./controllers/util').handleErrors;
 var captchaController = require('./controllers/captchaController');
@@ -677,87 +679,88 @@ app.get('/validate/user/:id/email', validateController.noCache, handleErrors(val
 
 app.get('/validate/group/groupname', validateController.noCache, handleErrors(validateController.validateUserGroupnameGet));
 
+if(process.env.GTM=='true'){
+
+    app.get('/gtm/tasks',  [Authenticated, authorize({
+        users: 'superadmin,admin', //or 👇
+        role: 'administrators', //or 👇
+        permissionName: 'Edit', contentType: 'GTM_Tasks'
+    })],
+    handleErrors(gtmController.tasksGet));
 
 
-app.get('/gtm/tasks',  [Authenticated, authorize({
-    users: 'superadmin,admin', //or 👇
-    role: 'administrators', //or 👇
-    permissionName: 'Edit', contentType: 'GTM_Tasks'
-})],
-handleErrors(gtmController.tasksGet));
-
-
-app.get('/gtm/taskslist',  [Authenticated],
-handleErrors(gtmController.taskslistGet));
-
-
-
-
-app.delete('/gtm/task/:id/delete',  [Authenticated, authorize({
-    users: 'superadmin,admin', //or 👇
-    role: 'administrators', //or 👇
-    permissionName: 'Edit', contentType: 'GTM_Tasks'
-})],
-handleErrors(gtmController.deleteTaskDelete));
-
-app.get('/gtm/task/:id',   [Authenticated, authorize({
-    users: 'superadmin,admin', //or 👇
-    role: 'administrators', //or 👇
-    permissionName: 'Edit', contentType: 'GTM_Tasks'
-})],
-handleErrors(gtmController.taskGet));
-app.post('/gtm/task/:id',  [Authenticated, authorize({
-    users: 'superadmin,admin', //or 👇
-    role: 'administrators', //or 👇
-    permissionName: 'Edit', contentType: 'GTM_Tasks'
-})],
-handleErrors(gtmController.taskPost));
-
-app.get('/gtm/geojson',  [Authenticated],  
-handleErrors(gtmController.geojsonGet));
-
-app.get('/gtm/clusterPoints/:cluster_id',  [Authenticated],  
-handleErrors(gtmController.clusterPointsGet));
-
-
-app.get('/gtm/topicwords',  [Authenticated],
-handleErrors(gtmController.topicwordsGet));
-
-
-
-app.get('/gtm/events',  [Authenticated, authorize({
-    users: 'superadmin,admin', //or 👇
-    anyOfRoles: 'administrators,gtmEventListeners', //or 👇
-    permissionName: 'Edit', contentType: 'GTM_Events'
-})],
-handleErrors(gtmController.eventsGet));
-
-
-//app.get('/gtm/eventslist',  [Authenticated],
-//handleErrors(gtmController.eventslistGet));
+    app.get('/gtm/taskslist',  [Authenticated],
+    handleErrors(gtmController.taskslistGet));
 
 
 
 
-app.delete('/gtm/event/:id/delete',  [Authenticated, authorize({
-    users: 'superadmin,admin', //or 👇
-    anyOfRoles: 'administrators,gtmEventListeners', //or 👇
-    permissionName: 'Edit', contentType: 'GTM_Events'
-})],
-handleErrors(gtmController.deleteEventDelete));
+    app.delete('/gtm/task/:id/delete',  [Authenticated, authorize({
+        users: 'superadmin,admin', //or 👇
+        role: 'administrators', //or 👇
+        permissionName: 'Edit', contentType: 'GTM_Tasks'
+    })],
+    handleErrors(gtmController.deleteTaskDelete));
 
-app.get('/gtm/event/:id',   [Authenticated, authorize({
-    users: 'superadmin,admin', //or 👇
-    anyOfRoles: 'administrators,gtmEventListeners', //or 👇
-    permissionName: 'Edit', contentType: 'GTM_Events'
-})],
-handleErrors(gtmController.eventGet));
-app.post('/gtm/event/:id',  [Authenticated, authorize({
-    users: 'superadmin,admin', //or 👇
-    anyOfRoles: 'administrators,gtmEventListeners', //or 👇
-    permissionName: 'Edit', contentType: 'GTM_Events'
-})],
-handleErrors(gtmController.eventPost));
+    app.get('/gtm/task/:id',   [Authenticated, authorize({
+        users: 'superadmin,admin', //or 👇
+        role: 'administrators', //or 👇
+        permissionName: 'Edit', contentType: 'GTM_Tasks'
+    })],
+    handleErrors(gtmController.taskGet));
+    app.post('/gtm/task/:id',  [Authenticated, authorize({
+        users: 'superadmin,admin', //or 👇
+        role: 'administrators', //or 👇
+        permissionName: 'Edit', contentType: 'GTM_Tasks'
+    })],
+    handleErrors(gtmController.taskPost));
+
+    app.get('/gtm/geojson',  [Authenticated],  
+    handleErrors(gtmController.geojsonGet));
+
+    app.get('/gtm/clusterPoints/:cluster_id',  [Authenticated],  
+    handleErrors(gtmController.clusterPointsGet));
+
+
+    app.get('/gtm/topicwords',  [Authenticated],
+    handleErrors(gtmController.topicwordsGet));
+
+
+
+    app.get('/gtm/events',  [Authenticated, authorize({
+        users: 'superadmin,admin', //or 👇
+        anyOfRoles: 'administrators,gtmEventListeners', //or 👇
+        permissionName: 'Edit', contentType: 'GTM_Events'
+    })],
+    handleErrors(gtmController.eventsGet));
+
+
+    //app.get('/gtm/eventslist',  [Authenticated],
+    //handleErrors(gtmController.eventslistGet));
+
+
+
+
+    app.delete('/gtm/event/:id/delete',  [Authenticated, authorize({
+        users: 'superadmin,admin', //or 👇
+        anyOfRoles: 'administrators,gtmEventListeners', //or 👇
+        permissionName: 'Edit', contentType: 'GTM_Events'
+    })],
+    handleErrors(gtmController.deleteEventDelete));
+
+    app.get('/gtm/event/:id',   [Authenticated, authorize({
+        users: 'superadmin,admin', //or 👇
+        anyOfRoles: 'administrators,gtmEventListeners', //or 👇
+        permissionName: 'Edit', contentType: 'GTM_Events'
+    })],
+    handleErrors(gtmController.eventGet));
+    app.post('/gtm/event/:id',  [Authenticated, authorize({
+        users: 'superadmin,admin', //or 👇
+        anyOfRoles: 'administrators,gtmEventListeners', //or 👇
+        permissionName: 'Edit', contentType: 'GTM_Events'
+    })],
+    handleErrors(gtmController.eventPost));
+}
 //#endregion Routes 
 
 //#region Error Handlers 
@@ -928,11 +931,12 @@ app.set('port', process.env.PORT || 3000);
             //console.log('\x1b[42m\x1b[42m%s\x1b[32m', '*** iMSEP is running on local port:' + server.address().port+'(https)');  
             //console.log('\x1b[0m','sss');
             console.log('* iMSEP is running on local port:' + server.address().port+'(https)');  
+            schedule_cron_tasks();
         });
     }else{
       server = app.listen(app.get('port'), function () {
       console.log( '* iMSEP is running on local port:' + server.address().port);  
-      
+      schedule_cron_tasks();
     });
     }
 
@@ -941,6 +945,20 @@ app.set('port', process.env.PORT || 3000);
     //server.timeout = 60000*60;// 60 minutes
 
 })();
+
+
+function schedule_cron_tasks(){
+    cron.schedule('*/15 * * * *', async function() {
+        if(process.env.GTM=='true'){
+            console.log('Running cron task at '+ (new Date()).toString());
+            try{
+                await gtmController.checkAndProcessEvents();
+            }catch(ex){
+                console.log(ex);
+            }
+        }
+    });
+}
 
 function get_Admin_Config(){
     const fs = require('fs');

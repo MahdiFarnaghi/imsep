@@ -870,23 +870,33 @@ if(!details.fields){
     });
     details.fields.push({
         name:'task_name',alias:'Task name',
-        type:'varchar'
-    });
-    details.fields.push({
-        name:'topic',alias:'Topic',
-        type:'varchar'
+        type:'varchar',
+        hidden:true
     });
     details.fields.push({
         name:'topic_words',alias:'Topic words',
         type:'varchar'
     });
     details.fields.push({
-        name:'date_time_min',alias:'date_time_min',
-        type:'timestamp with time zone'
+        name:'topic',alias:'Topic',
+        type:'varchar'
+    });
+   function formatDate(value){
+        if(!value){
+            return '';
+        }
+        var date= new Date(value);
+        return date.toLocaleString();
+   }
+    details.fields.push({
+        name:'date_time_min',alias:'From',
+        type:'timestamp with time zone',
+        formatter:formatDate.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]
     }); 
     details.fields.push({
-        name:'date_time_max',alias:'date_time_max',
-        type:'timestamp with time zone'
+        name:'date_time_max',alias:'To',
+        type:'timestamp with time zone',
+        formatter:formatDate.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]
     });
 }
 
@@ -1046,6 +1056,13 @@ vectorSource.on('loading_failed', function(evt) {
 // };
 vectorSource._onFeatureSelected=function(map,layer,feature){
     var allFeatures= vectorSource.getFeatures();
+    if(!feature){
+       return; 
+    }
+    var isClusterPoint= feature.get('_sys_isClusterPoint');
+    if(isClusterPoint){
+        return;
+    }
     if(vectorSource._clusterPoints && vectorSource._clusterPoints.length){
         for(var i=0;i<vectorSource._clusterPoints.length;i++){
             var tofind=vectorSource._clusterPoints[i];
@@ -1070,7 +1087,31 @@ vectorSource._onFeatureSelected=function(map,layer,feature){
     if(!feature){
         return;
     }
-    var cluster_id= feature.id_;
+    function formatDate(value){
+        if(!value){
+            return '';
+        }
+        var date= new Date(value);
+        return date.toLocaleString();
+   }
+    var fields=[
+        {
+            name:'text',alias:'Text'
+        },
+        {
+            name:'date_time',alias:'Date',
+            formatter:formatDate.toString().match(/function[^{]+\{([\s\S]*)\}$/)[1]
+        },
+        {
+            name:'_sys_isClusterPoint',
+            visible:false,hidden:true
+        },
+        {
+            name:'_sys_fields',
+            visible:false,hidden:true
+        }
+    ]
+    var cluster_id= feature.getId() || feature.id_;
     var url = '/gtm/clusterPoints/'+cluster_id;
     try{
         if (vectorSource._lastXhr && vectorSource._lastXhr.readyState != 4) {
@@ -1113,6 +1154,12 @@ vectorSource._onFeatureSelected=function(map,layer,feature){
                             featureProjection: 'EPSG:3857'
                         });
                         var dataProjection= format.readProjection(data);
+                        if(features){
+                            for(var j=0;j<features.length;j++){
+                                features[j].set('_sys_isClusterPoint',true);
+                                features[j].set('_sys_fields',fields)
+                            }
+                        }
                         vectorSource._clusterPoints=features;
                         vectorSource.addFeatures(features);
                 }

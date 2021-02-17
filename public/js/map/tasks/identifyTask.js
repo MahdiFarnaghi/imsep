@@ -169,11 +169,19 @@ IdentifyTask.prototype._getHtml=function(feature){
         var fields = null;
         var anyData = false;
         if (featureAt.layer) {
-            fields = LayerHelper.getFields(featureAt.layer);
+            
+            fields = feature.get('_sys_fields') || LayerHelper.getFields(featureAt.layer);
             if (fields) {
                 fieldsDic = {};
                 for (var i = 0; i < fields.length; i++) {
                     var fld = fields[i];
+                    if(fld.formatter && typeof fld.formatter =='string' && ! fld.formatterFunction){
+                        try{
+                            fld.formatterFunction= new Function('value', fld.formatter);
+                        }catch(ex){
+                            
+                        }
+                    }
                     var fldName = fld.name;
                     var title = fld.alias || fldName;
                     fieldsDic[fldName] = title;
@@ -233,6 +241,11 @@ IdentifyTask.prototype._getHtml=function(feature){
                     visible=false;
                 }
                 var fldValue=properties[fldName];
+                if(fld.formatterFunction){
+                    try{
+                        fldValue=fld.formatterFunction(fldValue);
+                    }catch(ex){}
+                }
                 if(fld.codedValues){
                     
                     if(typeof fld.codedValues[fldValue]!=='undefined'){
@@ -509,7 +522,27 @@ IdentifyTask.prototype.show = function (coordinate,features) {
     this._count = 1;
     if (!(features instanceof Array)) features = [features];
     this._features = features.slice();
+    var shapeTypes={
+        'Point':0,'MultiPoint':0,
+        'LineString':1,'MultiLineString':1,
+        'LinearRing':2,'Polygon':2,'MultiPolygon':2,'Circle':2,
+        'GeometryCollection':3
+    }
     if(features && features.length){
+        features.sort(function(a, b){
+            var aT,bT;
+            if(a && a.getGeometry && a.getGeometry() ){
+                aT= a.getGeometry().getType();
+            }
+            if(b && b.getGeometry && b.getGeometry() ){
+                bT= b.getGeometry().getType();
+            }
+            if(aT && bT){
+                return shapeTypes[aT]-shapeTypes[bT];
+            }else{
+                return 0;
+            }
+        });
         var html = this._getHtml(features[0]);
         if(html){
             if (!coordinate || features[0].getGeometry().getType()==='Point') {

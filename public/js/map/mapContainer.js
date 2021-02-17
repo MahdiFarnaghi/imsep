@@ -850,7 +850,7 @@ MapContainer.prototype.load = function(mapSettings) {
       }
       this.legend.setVisible(false);
       if(mapSettings.options){
-        var extent =mapSettings.options.bbox;
+        var extent =mapSettings.options.mapbbox || mapSettings.options.bbox;
 
         if(extent){
             extent = ol.extent.applyTransform(extent, ol.proj.getTransform("EPSG:4326", mapProjectionCode));
@@ -862,6 +862,8 @@ MapContainer.prototype.load = function(mapSettings) {
             self.addNewWMS(mapSettings.options);
         }else if(mapSettings.options.layerType=='WFS'){
             self.addNewWFS(mapSettings.options);
+        }else if(mapSettings.options.layerType=='GTM'){
+            self.addNewGtm(mapSettings.options);
         }
     }
   }
@@ -3223,6 +3225,7 @@ MapContainer.prototype.addNewGtm = function(options) {
             shapeType: options.shapetype || options.shapeType || '',
             dataObj: {
                 details: {
+                    filter:options.filter ||{},
                     shapeType: options.shapetype || options.shapeType || '',
                     renderer:{"name":"simpleRenderer","style":{"fill":{"color":"rgba(240,13,13,0.56)"},"stroke":{"color":"#3399CC","lineDash":[2,2],"width":1.25},"icon":{"anchor":["15","40"],"anchorXUnits":"pixels","anchorYUnits":"pixels","size":[32,41],"src":"/images/markers/tweet.png","opacity":1,"rotation":0,"rotateWithView":false,"scale":1}}}
                 }

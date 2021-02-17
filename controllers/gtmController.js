@@ -6,6 +6,7 @@ const pg = require('pg');
 const {
     Pool
 } = require('pg');
+const { filter } = require('compression');
 module.exports = function (connectionSettings,adb_connectionSettings) {
     var module = {};
     var _pools;
@@ -745,6 +746,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
         var userId=req.user.id;
         //var items = await models.User.findAll({ where: { parent: req.user.id } });
         var queryTemplate;
+        var values=[];
         if(isAdmin){
             queryTemplate = `SELECT "GtmEvents".*, "Users"."userName","Users"."email","Users"."firstName","Users"."lastName"
             FROM "GtmEvents"  
@@ -752,19 +754,22 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 ON ("GtmEvents"."ownerUser"  = "Users".id)
             ; `;
         }else{
+            values.push(userId);
             queryTemplate = ` SELECT "GtmEvents".*, "Users"."userName","Users"."email","Users"."firstName","Users"."lastName"
             FROM "GtmEvents"  
             INNER JOIN "Users"   
                 ON ("GtmEvents"."ownerUser"  = "Users".id)
              WHERE "GtmEvents"."ownerUser" =$1
             ; `;
+            
         }
         
         try {
-            var qResult = await module.query({text:queryTemplate,values:[userId]},'adb');
+            var qResult = await module.query({text:queryTemplate,values:values},'adb');
             items = qResult.rows;
         } catch (ex) {
             //throw ex;
+            console.log(ex);
 
         }
 
@@ -1176,5 +1181,130 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
         
 
     };
+    module.checkAndProcessEvents= async function(){
+        
+        
+        var currentTime= new Date();
+        var lastCheck= this._checkAndProcessEvents_lastCheck;
+        if(!lastCheck){
+            lastCheck= new Date(currentTime);
+           // lastCheck.setHours(lastCheck.getHours()-4*24);// search last hour events
+           lastCheck.setHours(lastCheck.getHours()-1);// search last hour events
+        }
+        //this._checkAndProcessEvents_lastCheck= currentTime;
+        lastCheck= lastCheck.toISOString();
+        var items;   
+        try {
+            var qResult = await module.query({text: ` SELECT "GtmEvents".*, "Users"."userName","Users"."email","Users"."firstName","Users"."lastName"
+            FROM "GtmEvents"  
+            INNER JOIN "Users"   
+                ON ("GtmEvents"."ownerUser"  = "Users".id)
+            WHERE "GtmEvents"."active" = true AND NOT "email" IS NULL
+            ; `,values:[]},'adb');
+            items = qResult.rows;
+        } catch (ex) {
+            //throw ex;
+        }
+        if(!(items && items.length)){
+            return;
+        }
+        for(var i=0;i< items.length;i++){
+            var item= items[i];
+            var eventId=item['id'];
+            var mapId= item['mapId'];
+            var email=item['email'];
+            var event_name=item['name'];
+            var userName=item['userName'];
+            var firstName= item['firstName'];
+            var lastName=item['lastName'];
+
+
+
+            var minx= item['longitude_min'];
+            var maxx= item['longitude_max']
+            var miny= item['latitude_min'];
+            var maxy= item['latitude_max']
+            var topicwords_=item['topicwords']||'';
+            var topicwords=topicwords_.split(/[ ,.،]+/);
+             if(topicwords.length <3){
+                 continue;
+             }
+            var values=[maxx,minx,maxy,miny,lastCheck];
+            var topicwords_exprs=[];
+            for(var t=0;t< topicwords.length;t++){
+               values.push(`%${topicwords[t]}%`);
+               topicwords_exprs.push(`topic_words LIKE $`+ (values.length));
+            }
+            var topicwords_expr= topicwords_exprs.join(' AND ');
+         
+
+            var whereExpressions=` NOT ( longitude_min > $1
+                OR longitude_max < $2
+                OR latitude_min > $3
+                OR latitude_max < $4
+                ) 
+                AND date_time_max > $5
+                AND (${topicwords_expr})
+                `;
+
+               var rows=undefined;
+               try {
+                   //var qResult = await module.query(` SELECT *  FROM   cluster  ${whereExpressions} ; `);
+                   var qResult = await module.query({text:` SELECT *  FROM   cluster  WHERE  ${whereExpressions} ; `,values:values});
+                   rows = qResult.rows;
+               } catch (ex) {
+                   //throw ex;
+                  // err= ex;
+               }
+               if(!(rows && rows.length)){
+                continue;
+               }
+               var transporter = nodemailer.createTransport({
+                    service: process.env.EMAIL_SENDER_SERVICE,
+                    secure: false,
+                    auth: {
+                        user: process.env.EMAIL_SENDER_USERNAME,
+                        pass: process.env.EMAIL_SENDER_PASSWORD
+                    },
+                    tls: {
+                        rejectUnauthorized: false//https://github.com/nodemailer/nodemailer/issues/406
+                    }
+                 });
+                var message=`${rows.length} new clustered area${rows.length>1?'s':''} ${rows.length>1?'are':'is'} detected since ${lastCheck}.`;
+                if(mapId) {
+                    message+= '\n\n View map at '+process.env.APP_HOST + '/map/' + mapId + '\n\n';    
+                }else{
+                   
+                    var options={
+                        mapbbox:[minx,miny,maxx,maxy],
+                        layerType:'GTM',
+                        
+
+                        name:event_name,
+                        filter:{
+                            topicWords:topicwords,
+                            date_time_min:lastCheck
+                        }
+                    }
+                    message+= '\n\n View map at '+process.env.APP_HOST + '/map/preview?options=' + encodeURIComponent(JSON.stringify(options)) + '\n\n';    
+                }
+                message+= '\n\n To view/edit notification details visit '+process.env.APP_HOST + '/gtm/event/' + eventId + '\n\n';
+                var mailOptions = {
+                    to: email,
+                    //from: process.env.SUPPORT_EMAIL,
+                    from:process.env.EMAIL_SENDER_USERNAME,
+                    subject: '⚠ New area detected - ' + process.env.SITE_NAME,
+                    text:message
+                };
+           
+                try {
+                    await transporter.sendMail(mailOptions);
+                    
+                } catch (ex) {
+                    console.log(ex);
+                }
+        }
+
+    }
     return module;
 }

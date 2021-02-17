@@ -388,7 +388,7 @@
                                          <button id="cmdAddNewOSMXML" title="Add new OSM Vector layer" class="btn-primary form-control ">Add OSM Vector layer</button>
                                         @* <button id="cmdWCS" title="Download from Web Coverage Service" class="btn-primary form-control ">Download from WCS</button>*@
                                      
-                                         @if(model.identity.isAdministrator || (model.identity.roles && model.identity.roles.indexOf('gtmEventListeners')>-1))
+                                         @if( process.env.GTM=='true' && ( model.identity.isAdministrator || (model.identity.roles && model.identity.roles.indexOf('gtmEventListeners')>-1)))
                                          {
                                           <button id="cmdAddGtmLayer" title="Add Twitter event layer" class="btn-primary form-control ">Add Twitter event layer</button>
                                          }

@@ -115,6 +115,7 @@
     
     <script>
         app.setIdentity(atob('@html.getBase64(model.identity)'));
+        app.GTM=@((process.env.GTM=='true')?'true':'false');
         app.SITE_NAME='@process.env.SITE_NAME';
         app.BING_MAPS_KEY='@process.env.BING_MAPS_KEY';
         app.COPY_RIGHTS='@process.env.COPY_RIGHTS';

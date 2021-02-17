@@ -75,6 +75,13 @@
                     </a>
                     <ul class="dropdown-menu">
                         <li class="@(html.equals('My Account',model.title)?'active':'')"><a href="/account"><span class="glyphicon glyphicon-user"></span> My Account</a></li>
+                        @if( process.env.GTM=='true' &&  model.identity.isAdministrator){
+                            <li class="@(html.equals('Tasks',model.title)?'active':'')"><a href="/gtm/tasks"><span class="	glyphicon glyphicon-tasks"></span> GTM Tasks</a></li>
+                        }
+                         @if( process.env.GTM=='true' && ( model.identity.isAdministrator || (model.identity.roles && model.identity.roles.indexOf('gtmEventListeners')>-1)))
+                        {
+                             <li class="@(html.equals('Events',model.title)?'active':'')"><a href="/gtm/events"><span class="	glyphicon glyphicon-bell"></span> GTM Registered Notifications</a></li>
+                        }
                         <li class="divider"></li>
                         <li><a href="/logout"><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
                     </ul>
