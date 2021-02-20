@@ -124,6 +124,15 @@ function GtmSourceTab() {
       htm+='<div class="form-group">';
       htm += '<button type="button" class="btn btn-primary btn-xs_" id="createLayerFromGeoJSON" ><i class="fa fa-copoy"></i> Copy features to a new data layer</button>';
       htm+='</div>';
+      // htm+='<br />';
+      // htm+='<br />';
+      // htm+='<br />';
+      // htm+='<br />';
+      // htm+='<br />';
+      // htm+='<br />';
+      // htm+='<br />';
+      // htm+='<br />';
+
       }
     }
     
@@ -132,9 +141,12 @@ function GtmSourceTab() {
     var content=$(htm).appendTo( this.tab); 
     content.find('#name').val(this.layer.get('title'));
    
-    content.find('#date_time_min_picker').datetimepicker();
+    content.find('#date_time_min_picker').datetimepicker({
+      widgetPositioning:{vertical:'bottom'}
+    });
     content.find('#date_time_max_picker').datetimepicker({
               useCurrent: false //Important! See issue #1075
+            ,widgetPositioning:{vertical:'bottom'}
     });
     content.find("#date_time_min_picker").on("dp.change", function (e) {
       content.find('#date_time_max_picker').data("DateTimePicker").minDate(e.date);

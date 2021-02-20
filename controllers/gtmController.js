@@ -26,7 +26,36 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
         }
         return pool;
     }
-    
+    module.getPgClient =async function( connection) {
+        if (!connection)
+            connection = 'default';
+        var _pool = getPool(connection);
+
+        if (_pool) {
+            //  try {
+            var client = await _pool.connect();
+            return client;
+            //  } catch (e) {
+            //      var er = e;
+            //  }
+        }
+
+        return undefined;
+    }
+    module.queryPgClient =async function(client,options) {
+     
+
+        if (client) {
+            //  try {
+            var result = await client.query(options);
+            return result;
+            //  } catch (e) {
+            //      var er = e;
+            //  }
+        }
+
+        return undefined;
+    }
     module.query =async function(options, connection) {
         if (!connection)
             connection = 'default';
@@ -58,12 +87,14 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
             items = qResult.rows;
         } catch (ex) {
             //throw ex;
-
+            req.flash('error', {
+                msg: ex.message
+            });
         }
 
         res.render('gtm/tasks', {
             title: 'Tasks',
-            items: items
+            items: items||[]
         });
     };
     /**
@@ -153,6 +184,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
      * POST /gtm/task/:id
      */
     module.taskPost = async function (req, res) {
+        const maxTasks=3;
         var pageTitle='Task';
         var viewPath='gtm/task' ;
         var pagePath='/gtm/task/' ;
@@ -207,7 +239,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
             });
             return;
         }
-        
+      
        
         if (itemId == -1) {
             try {
@@ -222,7 +254,8 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 }
                 var isDuplicated;
                 try {
-                    //var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_name = '${model.task_name}' ; `);
+                   
+
                     var qResult = await module.query({
                         text:` SELECT *  FROM   event_detection_task WHERE task_name = $1 ; `,
                         values:[model.task_name]
@@ -241,6 +274,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                         return;
                     }
                     
+
                 } catch (ex) {
                     
                 }
@@ -253,16 +287,33 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                     values: values,
                 }
                 var newItem,createdId;
+                var client= await module.getPgClient();
                 try {
-                    var result = await module.query(insertQuery);
+                    await client.query('BEGIN');
+                    var result = await module.queryPgClient(client,insertQuery);
                     if (result) {
                         
                     }
                     if(result.rows && result.rows.length){
                         createdId= result.rows[0]['task_id'];
                     }
+
+                    var qResult = await module.queryPgClient(client,{
+                        text:` SELECT count(*) n  FROM   event_detection_task WHERE active = true ; `,
+                        values:[]
+                        });
+                    if(qResult.rows && qResult.rows[0]['n']> maxTasks){
+                        throw new Error('Maximum active task count reached');
+
+                    }else{
+                        await client.query('COMMIT');
+                    }
+
                 } catch (ex) {
-                   throw ex;
+                    await client.query('ROLLBACK')
+                    throw ex;
+                }finally {
+                    client.release()
                 }
 
                 req.flash('notify', {
@@ -289,7 +340,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                     });
                 } else
                     req.flash('error', {
-                        msg: 'Error!'+ ex.message
+                        msg: 'Error: '+ ex.message
                        
                     });
                     
@@ -326,8 +377,10 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 }
                
                 var isDuplicated;
+                var client= await module.getPgClient();
                 try {
-                    //var qResult = await module.query(` SELECT *  FROM   event_detection_task WHERE task_id <> ${itemId} ANd task_name = '${model.task_name}' ; `);
+                    
+              
                     var qResult = await module.query({
                         text:` SELECT *  FROM   event_detection_task WHERE task_id <> $1 ANd task_name = $2 ; `,
                         values:[itemId,model.task_name]});
@@ -380,15 +433,29 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                 }
 
                 try {
-                    var result = await module.query(updateQuery);
+                    await client.query('BEGIN');
+                    var result = await module.queryPgClient(client ,updateQuery);
                     if (result) {
                        // n += result.rowCount;
                     }
+                    var qResult = await module.queryPgClient(client,{
+                        text:` SELECT count(*) n  FROM   event_detection_task WHERE active = true ; `,
+                        values:[]
+                        });
+                    if(qResult.rows && qResult.rows[0]['n']> maxTasks){
+                        throw new Error('Maximum active task count reached');
+
+                    }else{
+                        await client.query('COMMIT');
+                    }
+
                 } catch (ex) {
-                    var s = 1;
-                   // errors += '<br/>' + ex.message;
-                   throw ex;
+                    await client.query('ROLLBACK')
+                    throw ex;
+                }finally {
+                    client.release()
                 }
+
     
 
                
@@ -775,7 +842,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
 
         res.render('gtm/events', {
             title: 'Events',
-            items: items
+            items: items ||[]
         });
     };
      /**
@@ -845,6 +912,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
      * POST /gtm/event/:id
      */
     module.eventPost = async function (req, res) {
+        const maxEvents=3;
         var pageTitle='Event';
         var viewPath='gtm/event' ;
         var pagePath='/gtm/event/' ;
@@ -943,16 +1011,31 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                     values: values,
                 }
                 var newItem,createdId;
+                var client= await module.getPgClient('adb');
                 try {
-                    var result = await module.query(insertQuery,'adb');
+                    await client.query('BEGIN');
+                    var result = await module.queryPgClient(client,insertQuery);
                     if (result) {
                         
                     }
                     if(result.rows && result.rows.length){
                         createdId= result.rows[0]['id'];
                     }
+                    var qResult = await module.queryPgClient(client,{
+                        text:` SELECT count(*) n  FROM   public."GtmEvents" WHERE active = true AND "ownerUser" = $1 ; `,
+                        values:[model.ownerUser]
+                        });
+                    if(qResult.rows && qResult.rows[0]['n']> maxEvents){
+                        throw new Error('Maximum active event count reached');
+
+                    }else{
+                        await client.query('COMMIT');
+                    }
                 } catch (ex) {
-                   throw ex;
+                    await client.query('ROLLBACK')
+                    throw ex;
+                }finally {
+                    client.release()
                 }
 
                 req.flash('notify', {
@@ -979,7 +1062,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                     });
                 } else
                     req.flash('error', {
-                        msg: 'Error!'+ ex.message
+                        msg: 'Error: '+ ex.message
                        
                     });
                     
@@ -1070,17 +1153,29 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                             WHERE  id= ${itemId} ;`,
                     values: values,
                 }
-
+                var client= await module.getPgClient('adb');
                 try {
-                    var result = await module.query(updateQuery,'adb');
+                    var result = await module.queryPgClient(client,updateQuery);
                     if (result) {
                        // n += result.rowCount;
                     }
+                    var qResult = await module.queryPgClient(client,{
+                        text:` SELECT count(*) n  FROM   public."GtmEvents" WHERE active = true AND "ownerUser" = $1 ; `,
+                        values:[req.user.id]
+                        });
+                    if(qResult.rows && qResult.rows[0]['n']> maxEvents){
+                        throw new Error('Maximum active event count reached');
+
+                    }else{
+                        await client.query('COMMIT');
+                    }
                 } catch (ex) {
-                    var s = 1;
-                   // errors += '<br/>' + ex.message;
-                   throw ex;
+                    await client.query('ROLLBACK')
+                    throw ex;
+                }finally {
+                    client.release()
                 }
+
     
 
                
