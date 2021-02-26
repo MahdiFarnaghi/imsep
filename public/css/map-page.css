@@ -679,3 +679,20 @@ hr.field-sep{
 .ol-attribution {
   font-size: 10px;
 }
+
+.gtm-setting-datetime{
+  margin-bottom: 5px;
+}
+.gtm-setting-datetime .gtm-datetime-picker input {
+  height: 2em;
+    font-size: 12px;
+    padding: 5px;
+}
+.gtm-setting-datetime .gtm-from-label,.gtm-setting-datetime .gtm-to-label {
+  padding-right: 0;
+}
+.gtm-datetime-track{
+  margin-left: 12px!important; 
+     margin-right: 40px!important;
+     margin-bottom: 10px;
+}

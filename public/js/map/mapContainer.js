@@ -3286,11 +3286,11 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
      date_time_max= date_time_max.toLocaleString();
     }
     var htm='';
-    htm+='<div class=" form-horizontal">';  
-    htm+='<div class="form-group">';
-    htm+='  <label style="    text-align: right;" class="col-sm-1" for="date_time_min">From:</label>'; 
+    htm+='<div class="gtm-setting-bar form-horizontal">';  
+    htm+='<div class="gtm-setting-datetime form-group ">';
+    htm+='  <label style="    text-align: right;" class="gtm-from-label col-sm-1" for="date_time_min">From:</label>'; 
     htm+='  <div class="col-sm-3">'; 
-    htm+='  <div class="input-group date" id="date_time_min_picker">';
+    htm+='  <div class="input-group date gtm-datetime-picker gtm-datetime-picker-from" id="date_time_min_picker">';
     htm+='           <input id="date_time_min" type="text" class="form-control" value="'+date_time_min+'" />';
     htm+='           <span class="input-group-addon">';
     htm+='              <span class="glyphicon glyphicon-calendar"></span>';
@@ -3299,10 +3299,10 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
     htm+='  </div>';
     //htm+='</div>';
     //htm+='<div class="form-group">';
-    htm+='  <label style="    text-align: right;" class="col-sm-1" for="date_time_max">To:</label>'; 
+    htm+='  <label style="    text-align: right;" class="gtm-to-label col-sm-1" for="date_time_max">To:</label>'; 
     htm+='  <div class="col-sm-3">';
-    htm+='  <div class="input-group date" id="date_time_max_picker">';
-    htm+='           <input id="date_time_max" type="text" class="form-control" value="'+date_time_max+'" />';
+    htm+='  <div class="input-group date gtm-datetime-picker gtm-datetime-picker-to" id="date_time_max_picker">';
+    htm+='           <input id="date_time_max" type="text" class=" form-control" value="'+date_time_max+'" />';
     htm+='           <span class="input-group-addon">';
     htm+='              <span class="glyphicon glyphicon-calendar"></span>';
     htm+='            </span>';
@@ -3310,12 +3310,12 @@ MapContainer.prototype.showGtmSettingBar= function(layer){
     htm+='  </div>';
     if(app.identity.isAdministrator || (app.identity.roles && app.identity.roles.indexOf('gtmEventListeners')>-1))
     {
-        htm+='<div class="col-sm-1"><a id="cmdRegisterNewGtmEvent" target="_blank" title="Register event notification" href="/gtm/event/-1" class="btn btn-xs btn-primary"><span class="	glyphicon glyphicon-bell"></span></a></div>';
+        htm+='<div class="gtm-register col-sm-1"><a id="cmdRegisterNewGtmEvent" target="_blank" title="Register event notification" href="/gtm/event/-1" class="btn btn-xs btn-primary"><span class="	glyphicon glyphicon-bell"></span></a></div>';
     }
     htm+='</div>';
 
     
-    htm+='<div class="form-group " style="margin-left: 12px;    margin-right: 40px">';
+    htm+='<div class="form-group gtm-datetime-track " style="">';
     //htm+='  <label class="col-sm-3" for="">Trackbar:</label>'; 
     //htm+='<div id="slider-date" class="noUi-target noUi-ltr noUi-horizontal noUi-txt-dir-ltr"></div>';
     htm+='<div id="slider-date" class="col-sm-7 col-sm-offset-1" ></div>';
