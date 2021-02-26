@@ -845,6 +845,45 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
             items: items ||[]
         });
     };
+      /**
+     * GET /gtm/eventslist
+     */
+    module.eventslistGet = async function (req, res) {
+        var items;
+        var isAdmin =(res.locals.identity.isAdministrator);
+       
+        var userId=req.user.id;
+        var queryTemplate;
+        var values=[];
+        if(isAdmin){
+            queryTemplate = `SELECT "GtmEvents".*, "Users"."userName","Users"."email","Users"."firstName","Users"."lastName"
+            FROM "GtmEvents"  
+            INNER JOIN "Users"   
+                ON ("GtmEvents"."ownerUser"  = "Users".id)
+            ; `;
+        }else{
+            values.push(userId);
+            queryTemplate = ` SELECT "GtmEvents".*, "Users"."userName","Users"."email","Users"."firstName","Users"."lastName"
+            FROM "GtmEvents"  
+            INNER JOIN "Users"   
+                ON ("GtmEvents"."ownerUser"  = "Users".id)
+             WHERE "GtmEvents"."ownerUser" =$1
+            ; `;
+            
+        }
+        
+        try {
+            var qResult = await module.query({text:queryTemplate,values:values},'adb');
+            items = qResult.rows;
+        } catch (ex) {
+            //throw ex;
+            console.log(ex);
+
+        }
+
+        return res.json(items);
+    };
+    
      /**
      * GET /gtm/event/:id
      */
@@ -1100,12 +1139,12 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                     await util.saveSession(req);
                     return res.redirect(pagePath + itemId);
                 }
-               
+               var ownerUser= item.ownerUser;
                 var isDuplicated;
                 try {
                     var qResult = await module.query({
                         text:` SELECT *  FROM   "GtmEvents" WHERE id <> $1 ANd name = $2 AND "ownerUser" = $3 ; `,
-                        values:[itemId,model.name,req.user.id]},'adb');
+                        values:[itemId,model.name,ownerUser]},'adb');
                     isDuplicated = qResult.rows.length;
                     if(isDuplicated){
                         req.flash('error', {
@@ -1161,7 +1200,7 @@ module.exports = function (connectionSettings,adb_connectionSettings) {
                     }
                     var qResult = await module.queryPgClient(client,{
                         text:` SELECT count(*) n  FROM   public."GtmEvents" WHERE active = true AND "ownerUser" = $1 ; `,
-                        values:[req.user.id]
+                        values:[ownerUser]
                         });
                     if(qResult.rows && qResult.rows[0]['n']> maxEvents){
                         throw new Error('Maximum active event count reached');

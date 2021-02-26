@@ -13,7 +13,26 @@ var pageTask={
     
     init:function(){
         var self=this;
-      
+        this.tasksSource = new ol.source.Vector();
+        this.tasksLayer = new ol.layer.Vector({
+            source: this.tasksSource,
+            custom: {
+                type: 'drawing',
+                keepOnTop:true,
+                skipSaving:true,
+                hiddenInToc: true
+            },
+            style:new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#FF0000',
+                    width:1,
+                    lineDash: [2, 2],
+                }),
+                fill: new ol.style.Fill({
+                    color: 'rgba(0,255,0,0.2)'
+                })
+            })
+        });
         this.drawsource = new ol.source.Vector();
         this.drawlayer = new ol.layer.Vector({
                 source: this.drawsource,
@@ -32,6 +51,7 @@ var pageTask={
                       source: new ol.source.OSM()
                       
                   }),
+                  this.tasksLayer,
                   this.drawlayer
             ],
             controls: ol.control.defaults({attribution: false}),
@@ -72,19 +92,48 @@ var pageTask={
           this.fillUI();
           $('#min_x,#min_y,#max_x,#max_y').on('keyup paste',function(){
               self.fillUI();
-          })
+          });
+
+            
+            $.ajax( {    url: '/gtm/taskslist', dataType: 'json', success: function (data) {
+            if(data){
+                for(var i=0;i<data.length;i++){
+                    if( window.location && window.location.pathname && window.location.pathname.endsWith('/'+ data[i]['task_id'])){
+                        continue;
+                    }
+                    self.addExtentToMap(
+                        self.tasksLayer,
+                        parseFloat(data[i]['min_x']),
+                        parseFloat(data[i]['min_y']),
+                        parseFloat(data[i]['max_x']),
+                        parseFloat(data[i]['max_y']),
+                    
+                        false,
+                        false
+                    );
+                }
+                
+            }
+           }});
+
+
 
     },
     fillUI:function(){
         this.addExtentToMap(
+            this.drawlayer,
             parseFloat($('#min_x').val()),
             parseFloat($('#min_y').val()),
             parseFloat($('#max_x').val()),
-            parseFloat($('#max_y').val())
+            parseFloat($('#max_y').val()),
+            true,
+            true
           );
     },
-    addExtentToMap : function(west,south,east,north) {
-        this.drawsource.clear();
+    addExtentToMap : function(layer,west,south,east,north,zoomToShape,clear) {
+        if(clear){
+            layer.getSource().clear();
+        }
         if(typeof west =='undefined')
             return;
         if(typeof south =='undefined')
@@ -110,24 +159,29 @@ var pageTask={
         extent = ol.extent.applyTransform(extent, ol.proj.getTransform("EPSG:4326", mapProjectionCode));
         var geom= ol.geom.Polygon.fromExtent(extent);
         var feature= new ol.Feature({geometry: geom});
-        this.addShape(feature);
+        this.addShape(layer,feature,zoomToShape,clear);
     },
-    addShape:function(feature){
-        this.drawsource.clear();
+    addShape:function(layer,feature,zoomToShape,clear){
+        var source= layer.getSource();
+        if(clear){
+            source.clear();
+        }
         if(feature){
-            this.drawsource.addFeatures([feature]);
-            try{
-                var extent= feature.getGeometry().getExtent();
-                var w= extent[2]- extent[0];
-                var h= extent[3]-extent[1];
-                extent[0]= extent[0]- w/4;
-                extent[2]= extent[2]+ w/4;
-                extent[1]= extent[1]- h/4;
-                extent[3]= extent[3]+ h/4;
-                this.map.getView().fit(extent,{duration:1000,size:this.map.getSize()});
+            source.addFeatures([feature]);
+            if(zoomToShape){
+                try{
+                    var extent= feature.getGeometry().getExtent();
+                    var w= extent[2]- extent[0];
+                    var h= extent[3]-extent[1];
+                    extent[0]= extent[0]- w/4;
+                    extent[2]= extent[2]+ w/4;
+                    extent[1]= extent[1]- h/4;
+                    extent[3]= extent[3]+ h/4;
+                    this.map.getView().fit(extent,{duration:1000,size:this.map.getSize()});
+                    
+                }catch(ex){
                 
-            }catch(ex){
-            
+                }
             }
         }
         
@@ -174,7 +228,17 @@ var pageTask={
                 $('#min_y').val(ext_south);
                 $('#max_x').val(ext_east);
                 $('#max_y').val(ext_north);
-                self.addShape(e.feature);
+                self.addShape(self.drawlayer, e.feature,true,true);
+
+                $form=$('#task_form');
+                var origIgone= $.validator.defaults.ignore;
+                $.validator.setDefaults({ ignore:'' });
+                $.validator.unobtrusive.parse($form);
+                $.validator.setDefaults({ ignore:origIgone });
+            
+                $form.validate();
+                $form.valid();
+               
                },0)
                
                 

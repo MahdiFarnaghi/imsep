@@ -13,7 +13,46 @@ var pageTask={
     
     init:function(){
         var self=this;
-      
+        this.tasksSource = new ol.source.Vector();
+        this.tasksLayer = new ol.layer.Vector({
+            source: this.tasksSource,
+            custom: {
+                type: 'drawing',
+                keepOnTop:true,
+                skipSaving:true,
+                hiddenInToc: true
+            },
+            style:new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color:'rgba(255,0,0,0.5)',
+                    width:1,
+                    lineDash: [2, 2],
+                }),
+                fill: new ol.style.Fill({
+                    color: 'rgba(0,255,0,0.05)'
+                })
+            })
+        });
+        this.eventsSource = new ol.source.Vector();
+        this.eventsLayer = new ol.layer.Vector({
+            source: this.eventsSource,
+            custom: {
+                type: 'drawing',
+                keepOnTop:true,
+                skipSaving:true,
+                hiddenInToc: true
+            },
+            style:new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#7fbddc',
+                    width:1,
+                    lineDash: [2, 2],
+                }),
+                fill: new ol.style.Fill({
+                    color:'#ebfbffc7'//rgba(0,255,0,0.2)'
+                })
+            })
+        });
         this.drawsource = new ol.source.Vector();
         this.drawlayer = new ol.layer.Vector({
                 source: this.drawsource,
@@ -32,6 +71,8 @@ var pageTask={
                       source: new ol.source.OSM()
                       
                   }),
+                  this.tasksLayer,
+                  this.eventsLayer,
                   this.drawlayer
             ],
             controls: ol.control.defaults({attribution: false}),
@@ -73,18 +114,64 @@ var pageTask={
           $('#longitude_min,#latitude_min,#longitude_max,#latitude_max').on('keyup paste',function(){
               self.fillUI();
           })
+           
+          $.ajax( {    url: '/gtm/taskslist', dataType: 'json', success: function (data) {
+            if(data){
+                for(var i=0;i<data.length;i++){
+                    // if( window.location && window.location.pathname && window.location.pathname.endsWith('/'+ data[i]['task_id'])){
+                    //     continue;
+                    // }
+                    self.addExtentToMap(
+                        self.tasksLayer,
+                        parseFloat(data[i]['min_x']),
+                        parseFloat(data[i]['min_y']),
+                        parseFloat(data[i]['max_x']),
+                        parseFloat(data[i]['max_y']),
+                    
+                        false,
+                        false
+                    );
+                }
+                
+            }
+           }});
+           $.ajax( {    url: '/gtm/eventslist', dataType: 'json', success: function (data) {
+            if(data){
+                for(var i=0;i<data.length;i++){
+                     if( window.location && window.location.pathname && window.location.pathname.endsWith('/'+ data[i]['id'])){
+                         continue;
+                     }
+                    self.addExtentToMap(
+                        self.eventsLayer,
+                        parseFloat(data[i]['longitude_min']),
+                        parseFloat(data[i]['latitude_min']),
+                        parseFloat(data[i]['longitude_max']),
+                        parseFloat(data[i]['latitude_max']),
+                    
+                        false,
+                        false
+                    );
+                }
+                
+            }
+           }});
 
     },
     fillUI:function(){
         this.addExtentToMap(
+            this.drawlayer,
             parseFloat($('#longitude_min').val()),
             parseFloat($('#latitude_min').val()),
             parseFloat($('#longitude_max').val()),
-            parseFloat($('#latitude_max').val())
+            parseFloat($('#latitude_max').val()),
+            true,
+            true
           );
     },
-    addExtentToMap : function(west,south,east,north) {
-        this.drawsource.clear();
+    addExtentToMap : function(layer,west,south,east,north,zoomToShape,clear) {
+        if(clear){
+            layer.getSource().clear();
+        }
         if(typeof west =='undefined')
             return;
         if(typeof south =='undefined')
@@ -110,24 +197,29 @@ var pageTask={
         extent = ol.extent.applyTransform(extent, ol.proj.getTransform("EPSG:4326", mapProjectionCode));
         var geom= ol.geom.Polygon.fromExtent(extent);
         var feature= new ol.Feature({geometry: geom});
-        this.addShape(feature);
+        this.addShape(layer,feature,zoomToShape,clear);
     },
-    addShape:function(feature){
-        this.drawsource.clear();
+    addShape:function(layer,feature,zoomToShape,clear){
+        var source= layer.getSource();
+        if(clear){
+            source.clear();
+        }
         if(feature){
-            this.drawsource.addFeatures([feature]);
-            try{
-                var extent= feature.getGeometry().getExtent();
-                var w= extent[2]- extent[0];
-                var h= extent[3]-extent[1];
-                extent[0]= extent[0]- w/4;
-                extent[2]= extent[2]+ w/4;
-                extent[1]= extent[1]- h/4;
-                extent[3]= extent[3]+ h/4;
-                this.map.getView().fit(extent,{duration:1000,size:this.map.getSize()});
+            source.addFeatures([feature]);
+            if(zoomToShape){
+                try{
+                    var extent= feature.getGeometry().getExtent();
+                    var w= extent[2]- extent[0];
+                    var h= extent[3]-extent[1];
+                    extent[0]= extent[0]- w/4;
+                    extent[2]= extent[2]+ w/4;
+                    extent[1]= extent[1]- h/4;
+                    extent[3]= extent[3]+ h/4;
+                    this.map.getView().fit(extent,{duration:1000,size:this.map.getSize()});
+                    
+                }catch(ex){
                 
-            }catch(ex){
-            
+                }
             }
         }
         
@@ -174,7 +266,17 @@ var pageTask={
                 $('#latitude_min').val(ext_south);
                 $('#longitude_max').val(ext_east);
                 $('#latitude_max').val(ext_north);
-                self.addShape(e.feature);
+                self.addShape(self.drawlayer, e.feature,true,true);
+
+                $form=$('#event_form');
+                var origIgone= $.validator.defaults.ignore;
+                $.validator.setDefaults({ ignore:'' });
+                $.validator.unobtrusive.parse($form);
+                $.validator.setDefaults({ ignore:origIgone });
+            
+                $form.validate();
+                $form.valid();
+
                },0)
                
                 
@@ -193,3 +295,4 @@ var pageTask={
    
 
 };
+

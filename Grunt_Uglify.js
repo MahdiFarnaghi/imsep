@@ -154,9 +154,17 @@ module.exports = {
         src:['public/js/pages/gtm/task_page.js'],
         dest: 'public/dist/js/task_page-<%= pkg.version %>-min.js'
     },
+    tasks_page:{
+        src:['public/js/pages/gtm/tasks_page.js'],
+        dest: 'public/dist/js/tasks_page-<%= pkg.version %>-min.js'
+    },
     event_page:{
         src:['public/js/pages/gtm/event_page.js'],
         dest: 'public/dist/js/event_page-<%= pkg.version %>-min.js'
+    },
+    events_page:{
+        src:['public/js/pages/gtm/events_page.js'],
+        dest: 'public/dist/js/events_page-<%= pkg.version %>-min.js'
     }
 
   }

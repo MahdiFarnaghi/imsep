@@ -462,6 +462,46 @@ $.validator.unobtrusive.adapters.add(
     });
 
 
+	$.validator.addMethod('mindistance', function (value, element, params) {
+		if(value==="")
+			return true;
+		try{
+			value=parseFloat(value);
+		}catch(e){}
+		var other = params.other;
+		var distance= parseFloat(params.distance);
+
+		var otherValue=value;
+		var $element = $(element);
+		var otherElem = $element.closest('form').find('[name=' + other + ']');
+		try{
+			otherValue=parseFloat(otherElem.val());
+		}catch(ex){}
+		
+		return  Math.abs(value - otherValue)<= distance;
+	}, '');
+
+	$.validator.unobtrusive.adapters.add('mindistance', ['other','distance'], function (options) {
+		options.rules['mindistance'] = options.params;
+		if (options.message) {
+			options.messages['mindistance'] = options.message;
+		}
+	});
+
+	$.validator.addMethod( "minkeywords", function( value, element, params ) {
+		var keys= (value+'').split(',');
+		return keys.length >= params.count;
+	}, '' );
+
+	$.validator.unobtrusive.adapters.add('minkeywords' ,['count'], function (options) {
+		options.rules['minkeywords'] = options.params;
+		if (options.message) {
+			options.messages['minkeywords'] = options.message;
+		}
+	});
+
+
+
   } (jQuery));
 
 

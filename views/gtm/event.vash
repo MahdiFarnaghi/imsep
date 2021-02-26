@@ -23,6 +23,25 @@
     border: solid 1px rgba(160, 160, 160, 0.3);
     box-shadow: 5px 5px 4px 0 rgba(150, 148, 148, 0.65);
 }
+.task_area{
+    min-width: 40px;
+    height: 1em;
+    display: inline-block;
+   
+    border-style: dashed;
+    border-color: red;
+    border-width: 1px;
+    background-color: #c2f2ba;
+}
+.event_area{
+    min-width: 40px;
+    height: 1em;
+    display: inline-block;
+    border-style: solid;
+    border-color: #7fbddc;
+    border-width: 2px;
+    background-color: #ebfbff;
+}
         </style>
         
     })
@@ -30,15 +49,17 @@
 <div class="container">
     <div class="panel">
         <div class="panel-body">
-             <form method="POST"  class="form-horizontal" action="/gtm/event/@(model.item.id)">
+             <form id="event_form" method="POST"  class="form-horizontal" action="/gtm/event/@(model.item.id)">
                 <legend>@(model.title)
                 
                 <a title="Help" class="close help-link" style=" " target="_blank" href="/help#event">?</a>
                 </legend>
+                @if(model.item.userName){
                <div class="form-group">
                     <label class="col-sm-3" for="">UserName</label>
                     <div class="col-sm-7">@model.item.userName</div>
                 </div>    
+                }
                 <div class="form-group">
                     <label class="col-sm-3" for="name">Name</label>
                     @if(model.item.id && !html.equals(model.item.id, -1) && model.item.updatedAt){
@@ -68,9 +89,12 @@
                                 <textarea type="text" name="topicwords" rows="2" id="topicwords"  placeholder="Topic words" class="form-control"
                                  data-val="true" data-val-length="Input length exceeds maximum length of 500 characters" data-val-length-max="500" 
                                  data-val-required="No topic word is defined" 
+                                 data-val-minkeywords="Enter at least 3 comma-separated words." data-val-minkeywords-count="3"
+
                                 >@html.raw(model.item.topicwords)</textarea>
-                             <span class="field-validation-valid" data-valmsg-for="topicwords" data-valmsg-replace="true"></span>
+                           <span class="field-validation-valid" data-valmsg-for="topicwords" data-valmsg-replace="true"></span>
                             </div>
+                              
                 </div>
                 
               
@@ -84,9 +108,13 @@
                                         data-val-range-min="-180"
                                         data-val-range-max="180"
                                         data-val-range="Value must be >= -180 and <= 180"
+                                           data-val-lessthanorequal="Value is greater than Max x"
+                                        data-val-lessthanorequal-other="longitude_max"
+                                       
                                           />
-                                     <span class="field-validation-valid" data-valmsg-for="longitude_min" data-valmsg-replace="true"></span>
+                                    
                                 </div>
+                                 <span class="field-validation-valid" data-valmsg-for="longitude_min" data-valmsg-replace="true"></span>
                 </div>
                 <div class="form-group">
                                 <label class=" col-sm-3" for="latitude_min">Min y</label>
@@ -98,9 +126,12 @@
                                         data-val-range-min="-90"
                                         data-val-range-max="90"
                                         data-val-range="Value must be >= -90 and <= 90"
+                                          data-val-lessthanorequal="Value is greater than Max y"
+                                        data-val-lessthanorequal-other="latitude_max"
                                             />
-                                     <span class="field-validation-valid" data-valmsg-for="latitude_min" data-valmsg-replace="true"></span>
+                                     
                                 </div>
+                                <span class="field-validation-valid" data-valmsg-for="latitude_min" data-valmsg-replace="true"></span>
                 </div>
                 <div class="form-group">
                                 <label class=" col-sm-3" for="longitude_max">Max x</label>
@@ -112,9 +143,13 @@
                                         data-val-range-min="-180"
                                         data-val-range-max="180"
                                         data-val-range="Value must be >= -180 and <= 180"
+                                          data-val-mindistance="Maximum size of task area is @process.env.GTM_MAX_EVENT_SIZE_DEGREE degrees "
+                                        data-val-mindistance-other="longitude_min"
+                                        data-val-mindistance-distance="@process.env.GTM_MAX_EVENT_SIZE_DEGREE"
                                             />
-                                     <span class="field-validation-valid" data-valmsg-for="longitude_max" data-valmsg-replace="true"></span>
+
                                 </div>
+                              <span class="field-validation-valid" data-valmsg-for="longitude_max" data-valmsg-replace="true"></span>
                 </div>
                  <div class="form-group">
                                 <label class=" col-sm-3" for="latitude_max">Max y</label>
@@ -126,9 +161,13 @@
                                         data-val-range-min="-90"
                                         data-val-range-max="90"
                                         data-val-range="Value must be >= -90 and <= 90"
+                                          data-val-mindistance="Maximum size of task area is @process.env.GTM_MAX_EVENT_SIZE_DEGREE degrees "
+                                        data-val-mindistance-other="latitude_min"
+                                        data-val-mindistance-distance="@process.env.GTM_MAX_EVENT_SIZE_DEGREE"
                                            />
-                                     <span class="field-validation-valid" data-valmsg-for="latitude_max" data-valmsg-replace="true"></span>
+                                     
                                 </div>
+                                <span class="field-validation-valid" data-valmsg-for="latitude_max" data-valmsg-replace="true"></span>
                 </div>
                 
                
@@ -138,7 +177,7 @@
                             <div class="panel">
                                 <div class="panel-body" style="    padding: 4px;">
                                     <div class="form-horizontal" style="padding:0.5em;">
-                                        <legend style="margin-bottom: 0px;" ><i class="fas fa-map-marked-alt"></i> Extent</legend>
+                                         <legend style="margin-bottom: 0px;" ><i style="" class="event_area"></i> Event monitoring area</legend>
                                         <div class="form-group" style="margin: 0; padding: 0;">
                                             <div id="extMap" class="map col-sm-12"  tabindex="0" style="margin:0;    padding: 0;width:100% ;height:250px;" ></div>
                                         </div>

@@ -734,6 +734,8 @@ if(process.env.GTM=='true'){
     })],
     handleErrors(gtmController.eventsGet));
 
+    app.get('/gtm/eventslist',  [Authenticated],
+    handleErrors(gtmController.eventslistGet));
 
     //app.get('/gtm/eventslist',  [Authenticated],
     //handleErrors(gtmController.eventslistGet));

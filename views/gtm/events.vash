@@ -1,4 +1,52 @@
 @html.extend('layout', function(model) {
+     @html.block('styles', function(model) {
+        <link rel='stylesheet' href='/css/ol/ol.css' /> 
+        <style>
+           .dual-list .list-group {
+            margin-top: 8px;
+        }
+
+        .list-left li, .list-right li {
+            cursor: pointer;
+        }
+
+        .list-arrows {
+            padding-top: 100px;
+        }
+
+            .list-arrows button {
+                margin-bottom: 20px;
+            }
+
+#extMap {
+       clear:both;
+    border: solid 1px rgba(160, 160, 160, 0.3);
+    box-shadow: 5px 5px 4px 0 rgba(150, 148, 148, 0.65);
+}
+.task_area{
+    min-width: 40px;
+    height: 1em;
+    display: inline-block;
+   
+    border-style: dashed;
+    border-color: red;
+    border-width: 1px;
+    background-color: #c2f2ba;
+}
+.event_area{
+    min-width: 40px;
+    height: 1em;
+    display: inline-block;
+   
+    border-style: dashed;
+    border-color: #7fbddc;
+    border-width: 1px;
+    background-color: #ebfbffc7;
+}
+
+        </style>
+        
+    })
   @html.block('content', function(model) {
 <style>
     img.avatar {
@@ -79,6 +127,26 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="form-group" style="">
+
+                    <div class="col-sm-6">    
+                            <div class="panel">
+                                <div class="panel-body" style="    padding: 4px;">
+                                    <div class="form-horizontal" style="padding:0.5em;">
+                                        <legend style="margin-bottom: 0px;" ><i style="" class="event_area"></i> Covering area</legend>
+                                        <div class="form-group" style="margin: 0; padding: 0;">
+                                            <div id="extMap" class="map col-sm-12"  tabindex="0" style="margin:0;    padding: 0;width:100% ;height:250px;" ></div>
+                                        </div>
+                                    </div>
+
+                                    
+                                </div>    
+                        </div> 
+                    </div>
+                    
+            </div>
+
             </div>
         </div>
     </div>
@@ -98,6 +166,18 @@
             });
         });
     </script>
+ <script src="/js/lib/proj4.js"></script>
+  <script src="/js/lib/ol.js"></script>
+
+   @if(process.env.NODE_ENV=='development'){
+       @model.uglify.events_page.src.forEach(function(item) {
+            @{item=item.replace('public/js','/js')}
+            <script src="@item"></script>    
+        })
+   }else{
+       <script src="/dist/js/events_page-@(process.env.PACKAGE_VERSION)-min.js"></script>
+   }
+
     })
 })
 

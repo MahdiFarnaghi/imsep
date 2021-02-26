@@ -120,6 +120,9 @@
         app.BING_MAPS_KEY='@process.env.BING_MAPS_KEY';
         app.COPY_RIGHTS='@process.env.COPY_RIGHTS';
         app.MAPS_COPY_RIGHTS='@process.env.MAPS_COPY_RIGHTS';
+        app.GTM_MAX_TASK_SIZE_DEGREE= @process.env.GTM_MAX_TASK_SIZE_DEGREE;
+        app.GTM_MAX_EVENT_SIZE_DEGREE= @process.env.GTM_MAX_EVENT_SIZE_DEGREE;
+
         app.set_UPLOAD_SHAPEFILE_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_SHAPEFILE_MAX_SIZE_MB')) ;
         app.set_UPLOAD_RASTER_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_RASTER_MAX_SIZE_MB')) ;
         app.set_UPLOAD_FILE_MAX_SIZE_MB(parseFloat('@process.env.UPLOAD_FILE_MAX_SIZE_MB')) ;
