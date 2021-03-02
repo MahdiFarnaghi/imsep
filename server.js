@@ -128,7 +128,11 @@ var InitIdentityInfo = accountController.initIdentityInfo;
 
 
 var app = express();
-app.use(cors());
+//app.use(cors());
+app.use(cors({
+    origin: '*',
+  //  origin:'http://localhost:8081',
+     credentials: true}));
 //#region LOG Settings 
 var logDirectory = path.join(__dirname, 'log');
 fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory);// ensure log directory exists
@@ -272,6 +276,8 @@ app.post('/proxy',
 
 app.get('/', [Authenticated],handleErrors(homeController.index));
 app.post('/api/login',handleErrors(accountController.api_loginPost));
+app.post('/api/login2',handleErrors(accountController.api_loginPost));
+app.get('/api/login',handleErrors(accountController.api_loginPost));
 
 app.get('/help', handleErrors(homeController.help));
 app.get('/about',  handleErrors(homeController.aboutGet));

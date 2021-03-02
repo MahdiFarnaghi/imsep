@@ -275,11 +275,14 @@ module.exports = function (passportConfig) {
                    
                     try {
                         await transporter.sendMail(mailOptions);
-                        
+                        req.flash('info', { msg: 'We have sent an email with a confirmation link to your email address. Please, follow the instructions in it to activate your account.' });               
                     } catch (ex) {
+                        req.flash('error', {
+                            msg: 'Failed to send activation email.'
+                          });
                     }
                       
-                    req.flash('info', { msg: 'We have sent an email with a confirmation link to your email address. Please, follow the instructions in it to activate your account.' });      
+               
                     delete req.session.returnToUrl;
                     res.clearCookie('remember_me');
                     req.logout();
