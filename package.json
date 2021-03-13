@@ -57,7 +57,7 @@
     "vash": "^0.12.6",
     "winston": "^3.2.1",
     "xlsx": "^0.15.5",
-    "xmldom": "^0.3.0"
+    "xmldom": "^0.5.0"
   },
   "devDependencies": {
     "grunt": "^1.0.4",
